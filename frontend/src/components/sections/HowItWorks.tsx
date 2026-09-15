@@ -3,7 +3,7 @@ import { howItWorksSteps } from '@/data/content'
 
 export function HowItWorks() {
   return (
-    <section id="nasil-calisir" className="border-b border-border py-20 sm:py-24">
+    <section id="nasil-calisir" className="scroll-mt-24 border-b border-border py-20 sm:py-24">
       <div className="mx-auto max-w-[1280px] px-4 sm:px-6 lg:px-8">
         <div className="mb-16">
           <SectionHeading

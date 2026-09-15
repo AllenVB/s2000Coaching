@@ -8,7 +8,7 @@ export function Faq() {
   const [openIndex, setOpenIndex] = useState<number | null>(0)
 
   return (
-    <section id="sss" className="border-b border-border bg-surface/40 py-20 sm:py-24">
+    <section id="sss" className="scroll-mt-24 border-b border-border bg-surface/40 py-20 sm:py-24">
       <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
         <div className="mb-12 mx-auto">
           <SectionHeading eyebrow="Merak Edilenler" title="Sıkça Sorulan Sorular" />

@@ -2,7 +2,7 @@ import { Button } from '@/components/ui/Button'
 
 export function Hero() {
   return (
-    <section id="ana-sayfa" className="relative overflow-hidden border-b border-border py-20 sm:py-24">
+    <section id="ana-sayfa" className="relative scroll-mt-24 overflow-hidden border-b border-border py-20 sm:py-24">
       <div
         className="pointer-events-none absolute -top-40 left-1/2 h-[450px] w-[1000px] -translate-x-1/2 rounded-full bg-accent/10 blur-[140px]"
         aria-hidden

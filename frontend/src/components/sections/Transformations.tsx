@@ -3,7 +3,7 @@ import { transformations } from '@/data/content'
 
 export function Transformations() {
   return (
-    <section id="basari-hikayeleri" className="border-b border-border bg-surface/40 py-20 sm:py-24">
+    <section id="basari-hikayeleri" className="scroll-mt-24 border-b border-border bg-surface/40 py-20 sm:py-24">
       <div className="mx-auto max-w-[1280px] px-4 sm:px-6 lg:px-8">
         <div className="mb-16 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <SectionHeading

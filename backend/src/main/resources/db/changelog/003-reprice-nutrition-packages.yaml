@@ -1,0 +1,32 @@
+databaseChangeLog:
+  - changeSet:
+      id: 006-reprice-nutrition-only-packages-below-coaching-tier
+      author: s2000coaching
+      comment: >
+        Beslenme-only packages must read as a clearly cheaper tier than the coaching packages
+        (which already bundle nutrition planning), so people buying nutrition-only get a fair price.
+      changes:
+        - update:
+            tableName: coaching_package
+            columns:
+              - column: { name: price_minor, value: 129000 }
+              - column: { name: original_price_minor, value: 160000 }
+            where: "id = '11111111-1111-4111-8111-111111111104'"
+        - update:
+            tableName: coaching_package
+            columns:
+              - column: { name: price_minor, value: 249000 }
+              - column: { name: original_price_minor, value: 320000 }
+            where: "id = '11111111-1111-4111-8111-111111111105'"
+        - update:
+            tableName: coaching_package
+            columns:
+              - column: { name: price_minor, value: 399000 }
+              - column: { name: original_price_minor, value: 520000 }
+            where: "id = '11111111-1111-4111-8111-111111111106'"
+        - update:
+            tableName: coaching_package
+            columns:
+              - column: { name: price_minor, value: 690000 }
+              - column: { name: original_price_minor, value: 920000 }
+            where: "id = '11111111-1111-4111-8111-111111111107'"

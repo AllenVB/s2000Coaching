@@ -1,6 +1,7 @@
-export const navLinks = [
+export const navLinks: { label: string; href: string; category?: 'KOCLUK' | 'BESLENME' }[] = [
   { label: 'Ana Sayfa', href: '#ana-sayfa' },
-  { label: 'Paketler', href: '#paketler' },
+  { label: 'Online Koçluk', href: '#paketler', category: 'KOCLUK' },
+  { label: 'Beslenme', href: '#paketler', category: 'BESLENME' },
   { label: 'Nasıl Çalışır?', href: '#nasil-calisir' },
   { label: 'Başarı Hikayeleri', href: '#basari-hikayeleri' },
   { label: 'SSS', href: '#sss' },

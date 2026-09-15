@@ -1,23 +1,21 @@
-import { useState } from 'react'
-
 import { usePackages } from '@/api/packagesApi'
 import { SectionHeading } from '@/components/ui/SectionHeading'
 import { ClockIcon, CreditCardIcon, ShieldIcon } from '@/components/ui/icons'
 import { trustBadges } from '@/data/content'
-import type { PackageCategory } from '@/types/package'
+import { usePricingCategory } from '@/context/PricingCategoryContext'
 
 import { PricingCard } from './PricingCard'
 
 const badgeIcons = { credit_card: CreditCardIcon, schedule: ClockIcon, lock: ShieldIcon }
 
 export function Pricing() {
-  const [category, setCategory] = useState<PackageCategory>('KOCLUK')
+  const { category, setCategory } = usePricingCategory()
   const { data: packages, isLoading, isError } = usePackages()
 
   const filtered = packages?.filter((pkg) => pkg.category === category) ?? []
 
   return (
-    <section id="paketler" className="border-b border-border py-20 sm:py-24">
+    <section id="paketler" className="scroll-mt-24 border-b border-border py-20 sm:py-24">
       <div className="mx-auto max-w-[1280px] px-4 sm:px-6 lg:px-8">
         <div className="mb-12">
           <SectionHeading

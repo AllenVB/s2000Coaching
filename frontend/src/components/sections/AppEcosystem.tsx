@@ -7,12 +7,14 @@ export function AppEcosystem() {
     <section className="border-b border-border bg-surface/40 py-20 sm:py-24">
       <div className="mx-auto grid max-w-[1280px] grid-cols-1 items-center gap-12 px-4 sm:px-6 lg:grid-cols-12 lg:gap-16 lg:px-8">
         <div className="lg:col-span-6">
-          <div className="overflow-hidden rounded-2xl border border-border bg-surface shadow-2xl">
+          <div className="aspect-[4/3] overflow-hidden rounded-2xl border border-border bg-surface shadow-2xl">
             <img
               src="https://images.unsplash.com/photo-1552674605-db6ffd4facb5?auto=format&fit=crop&w=900&q=80"
               alt="S2000 Coaching dijital performans takip kokpiti"
-              className="h-auto w-full object-cover"
+              className="h-full w-full object-cover"
               loading="lazy"
+              width={900}
+              height={675}
             />
           </div>
         </div>

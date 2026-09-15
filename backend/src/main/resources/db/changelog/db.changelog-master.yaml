@@ -3,3 +3,5 @@ databaseChangeLog:
       file: db/changelog/001-init-schema.yaml
   - include:
       file: db/changelog/002-seed-packages.yaml
+  - include:
+      file: db/changelog/003-reprice-nutrition-packages.yaml

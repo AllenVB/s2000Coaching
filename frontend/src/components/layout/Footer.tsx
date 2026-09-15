@@ -1,8 +1,18 @@
-const programs = ['Hipertrofi & Kas Kütlesi', 'Yağ Yakımı & Definasyon', 'Esnek Makro Beslenme', 'Yarışma & Peak Week']
+import { usePricingCategory } from '@/context/PricingCategoryContext'
+import type { PackageCategory } from '@/types/package'
+
+const programs: { label: string; category: PackageCategory }[] = [
+  { label: 'Hipertrofi & Kas Kütlesi', category: 'KOCLUK' },
+  { label: 'Yağ Yakımı & Definasyon', category: 'KOCLUK' },
+  { label: 'Esnek Makro Beslenme', category: 'BESLENME' },
+  { label: 'Yarışma & Peak Week', category: 'KOCLUK' },
+]
 const platform = ['Nasıl Çalışır?', 'Başarı Hikayeleri', 'Sıkça Sorulan Sorular']
 const legal = ['Kullanım Koşulları', 'KVKK & Aydınlatma Metni', 'Mesafeli Satış Sözleşmesi', 'İptal ve İade Koşulları']
 
 export function Footer() {
+  const { setCategory } = usePricingCategory()
+
   return (
     <footer className="w-full border-t border-border bg-surface py-16">
       <div className="mx-auto max-w-[1280px] px-4 sm:px-6 lg:px-8">
@@ -22,7 +32,20 @@ export function Footer() {
             </p>
           </div>
 
-          <FooterColumn title="Programlar" items={programs} />
+          <div className="flex flex-col space-y-2.5">
+            <div className="mb-1 text-xs font-semibold uppercase tracking-wider text-text-primary">Programlar</div>
+            {programs.map((program) => (
+              <a
+                key={program.label}
+                href="#paketler"
+                onClick={() => setCategory(program.category)}
+                className="text-xs text-text-secondary transition-colors hover:text-text-primary"
+              >
+                {program.label}
+              </a>
+            ))}
+          </div>
+
           <FooterColumn title="Platform" items={platform} hrefs={['#nasil-calisir', '#basari-hikayeleri', '#sss']} />
           <FooterColumn title="Yasal & Gizlilik" items={legal} />
         </div>

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 
 import { useCart } from '@/context/CartContext'
+import { usePricingCategory } from '@/context/PricingCategoryContext'
 import { navLinks } from '@/data/content'
 import { Button } from '@/components/ui/Button'
 import { CartIcon, CloseIcon, MenuIcon } from '@/components/ui/icons'
@@ -8,7 +9,14 @@ import { CartIcon, CloseIcon, MenuIcon } from '@/components/ui/icons'
 export function Header() {
   const [isMobileMenuOpen, setMobileMenuOpen] = useState(false)
   const { selectedPackage, openDrawer } = useCart()
+  const { setCategory } = usePricingCategory()
   const cartCount = selectedPackage ? 1 : 0
+
+  const handleNavClick = (category?: 'KOCLUK' | 'BESLENME') => {
+    if (category) {
+      setCategory(category)
+    }
+  }
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border bg-canvas/90 backdrop-blur-md">
@@ -30,8 +38,9 @@ export function Header() {
         <nav className="hidden items-center gap-7 md:flex">
           {navLinks.map((link) => (
             <a
-              key={link.href}
+              key={link.label}
               href={link.href}
+              onClick={() => handleNavClick(link.category)}
               className="text-sm font-medium text-text-secondary transition-colors hover:text-text-primary"
             >
               {link.label}
@@ -72,9 +81,12 @@ export function Header() {
           <div className="flex flex-col space-y-3">
             {navLinks.map((link) => (
               <a
-                key={link.href}
+                key={link.label}
                 href={link.href}
-                onClick={() => setMobileMenuOpen(false)}
+                onClick={() => {
+                  handleNavClick(link.category)
+                  setMobileMenuOpen(false)
+                }}
                 className="py-1 text-sm font-medium text-text-secondary hover:text-text-primary"
               >
                 {link.label}

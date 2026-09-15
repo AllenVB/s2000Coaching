@@ -12,25 +12,28 @@ import { Testimonials } from '@/components/sections/Testimonials'
 import { Transformations } from '@/components/sections/Transformations'
 import { TrustStats } from '@/components/sections/TrustStats'
 import { CartProvider } from '@/context/CartContext'
+import { PricingCategoryProvider } from '@/context/PricingCategoryContext'
 
 export default function App() {
   return (
     <CartProvider>
-      <Header />
-      <main>
-        <Hero />
-        <TrustStats />
-        <HowItWorks />
-        <AppEcosystem />
-        <Pricing />
-        <Transformations />
-        <Testimonials />
-        <Faq />
-        <FinalCta />
-      </main>
-      <Footer />
-      <CartDrawer />
-      <CheckoutModal />
+      <PricingCategoryProvider>
+        <Header />
+        <main>
+          <Hero />
+          <TrustStats />
+          <HowItWorks />
+          <AppEcosystem />
+          <Pricing />
+          <Transformations />
+          <Testimonials />
+          <Faq />
+          <FinalCta />
+        </main>
+        <Footer />
+        <CartDrawer />
+        <CheckoutModal />
+      </PricingCategoryProvider>
     </CartProvider>
   )
 }
