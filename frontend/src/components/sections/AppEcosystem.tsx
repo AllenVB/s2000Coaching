@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/Button'
 import { CheckIcon } from '@/components/ui/icons'
 import { ecosystemFeatures } from '@/data/content'
+import { navigateToSection } from '@/lib/scroll'
 
 export function AppEcosystem() {
   return (
@@ -44,7 +45,7 @@ export function AppEcosystem() {
             ))}
           </div>
 
-          <Button variant="secondary" className="w-fit" onClick={() => (window.location.hash = '#paketler')}>
+          <Button variant="secondary" className="w-fit" onClick={() => navigateToSection('#paketler', 'paketler')}>
             Paketleri İncele
           </Button>
         </div>

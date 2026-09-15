@@ -1,10 +1,11 @@
-import { useState } from 'react'
+import { useState, type MouseEvent } from 'react'
 
 import { useCart } from '@/context/CartContext'
 import { usePricingCategory } from '@/context/PricingCategoryContext'
-import { navLinks } from '@/data/content'
+import { navLinks, type NavLink } from '@/data/content'
 import { Button } from '@/components/ui/Button'
 import { CartIcon, CloseIcon, MenuIcon } from '@/components/ui/icons'
+import { isPlainLeftClick, navigateToSection } from '@/lib/scroll'
 
 export function Header() {
   const [isMobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -12,16 +13,37 @@ export function Header() {
   const { setCategory } = usePricingCategory()
   const cartCount = selectedPackage ? 1 : 0
 
-  const handleNavClick = (category?: 'KOCLUK' | 'BESLENME') => {
-    if (category) {
-      setCategory(category)
+  const handleNavLinkClick = (event: MouseEvent<HTMLAnchorElement>, link: NavLink) => {
+    if (!isPlainLeftClick(event)) {
+      return
     }
+    event.preventDefault()
+    if (link.category) {
+      setCategory(link.category)
+    }
+    navigateToSection(link.href, link.targetId)
+  }
+
+  const handleCtaClick = (event: MouseEvent<HTMLAnchorElement>) => {
+    if (!isPlainLeftClick(event)) {
+      return
+    }
+    event.preventDefault()
+    navigateToSection('#paketler', 'paketler')
   }
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border bg-canvas/90 backdrop-blur-md">
       <div className="mx-auto flex h-[72px] max-w-[1280px] items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
-        <a href="#ana-sayfa" className="flex shrink-0 items-center gap-3 rounded-md py-1">
+        <a
+          href="#ana-sayfa"
+          onClick={(event) => {
+            if (!isPlainLeftClick(event)) return
+            event.preventDefault()
+            navigateToSection('#ana-sayfa', 'ana-sayfa')
+          }}
+          className="flex shrink-0 items-center gap-3 rounded-md py-1"
+        >
           <div className="flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-surface font-display text-sm font-black tracking-wider text-primary">
             FC
           </div>
@@ -40,7 +62,7 @@ export function Header() {
             <a
               key={link.label}
               href={link.href}
-              onClick={() => handleNavClick(link.category)}
+              onClick={(event) => handleNavLinkClick(event, link)}
               className="text-sm font-medium text-text-secondary transition-colors hover:text-text-primary"
             >
               {link.label}
@@ -62,7 +84,11 @@ export function Header() {
             ) : null}
           </button>
 
-          <Button size="md" className="hidden sm:inline-flex" onClick={() => (window.location.hash = '#paketler')}>
+          <Button
+            size="md"
+            className="hidden sm:inline-flex"
+            onClick={() => navigateToSection('#paketler', 'paketler')}
+          >
             Koçluğa Başla
           </Button>
 
@@ -83,8 +109,8 @@ export function Header() {
               <a
                 key={link.label}
                 href={link.href}
-                onClick={() => {
-                  handleNavClick(link.category)
+                onClick={(event) => {
+                  handleNavLinkClick(event, link)
                   setMobileMenuOpen(false)
                 }}
                 className="py-1 text-sm font-medium text-text-secondary hover:text-text-primary"
@@ -95,7 +121,10 @@ export function Header() {
           </div>
           <a
             href="#paketler"
-            onClick={() => setMobileMenuOpen(false)}
+            onClick={(event) => {
+              handleCtaClick(event)
+              setMobileMenuOpen(false)
+            }}
             className="flex h-11 w-full items-center justify-center rounded-xl bg-primary text-sm font-semibold uppercase tracking-wide text-canvas transition-colors hover:bg-primary-hover"
           >
             Koçluğa Başla

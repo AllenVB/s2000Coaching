@@ -1,10 +1,19 @@
-export const navLinks: { label: string; href: string; category?: 'KOCLUK' | 'BESLENME' }[] = [
-  { label: 'Ana Sayfa', href: '#ana-sayfa' },
-  { label: 'Online Koçluk', href: '#paketler', category: 'KOCLUK' },
-  { label: 'Beslenme', href: '#paketler', category: 'BESLENME' },
-  { label: 'Nasıl Çalışır?', href: '#nasil-calisir' },
-  { label: 'Başarı Hikayeleri', href: '#basari-hikayeleri' },
-  { label: 'SSS', href: '#sss' },
+import type { PackageCategory } from '@/types/package'
+
+export interface NavLink {
+  label: string
+  href: string
+  targetId: string
+  category?: PackageCategory
+}
+
+export const navLinks: NavLink[] = [
+  { label: 'Ana Sayfa', href: '#ana-sayfa', targetId: 'ana-sayfa' },
+  { label: 'Online Koçluk', href: '#paketler', targetId: 'paketler', category: 'KOCLUK' },
+  { label: 'Beslenme', href: '#paketler-beslenme', targetId: 'paketler', category: 'BESLENME' },
+  { label: 'Nasıl Çalışır?', href: '#nasil-calisir', targetId: 'nasil-calisir' },
+  { label: 'Başarı Hikayeleri', href: '#basari-hikayeleri', targetId: 'basari-hikayeleri' },
+  { label: 'SSS', href: '#sss', targetId: 'sss' },
 ]
 
 export const trustStats = [

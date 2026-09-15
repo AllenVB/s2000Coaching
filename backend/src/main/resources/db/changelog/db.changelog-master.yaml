@@ -1,3 +1,6 @@
+# Changelog file names are numbered by creation order only. ChangeSet `id`s inside
+# them are a separate, repo-wide monotonic counter (currently at 007) — always
+# continue that counter for a new changeSet id, never reuse a file's own ordinal.
 databaseChangeLog:
   - include:
       file: db/changelog/001-init-schema.yaml
@@ -5,3 +8,5 @@ databaseChangeLog:
       file: db/changelog/002-seed-packages.yaml
   - include:
       file: db/changelog/003-reprice-nutrition-packages.yaml
+  - include:
+      file: db/changelog/004-fix-nutrition-12-month-tier-price.yaml

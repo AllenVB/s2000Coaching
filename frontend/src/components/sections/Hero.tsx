@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/Button'
+import { navigateToSection } from '@/lib/scroll'
 
 export function Hero() {
   return (
@@ -36,14 +37,18 @@ export function Hero() {
           </p>
 
           <div className="mb-10 flex w-full flex-wrap items-center gap-3 sm:w-auto">
-            <Button size="lg" className="w-full sm:w-auto" onClick={() => (window.location.hash = '#paketler')}>
+            <Button
+              size="lg"
+              className="w-full sm:w-auto"
+              onClick={() => navigateToSection('#paketler', 'paketler')}
+            >
               Hemen Koçluğa Başla
             </Button>
             <Button
               variant="secondary"
               size="lg"
               className="w-full sm:w-auto"
-              onClick={() => (window.location.hash = '#paketler')}
+              onClick={() => navigateToSection('#paketler', 'paketler')}
             >
               Paketleri İncele
             </Button>

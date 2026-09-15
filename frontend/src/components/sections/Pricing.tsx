@@ -3,6 +3,8 @@ import { SectionHeading } from '@/components/ui/SectionHeading'
 import { ClockIcon, CreditCardIcon, ShieldIcon } from '@/components/ui/icons'
 import { trustBadges } from '@/data/content'
 import { usePricingCategory } from '@/context/PricingCategoryContext'
+import { setSectionHash } from '@/lib/scroll'
+import type { PackageCategory } from '@/types/package'
 
 import { PricingCard } from './PricingCard'
 
@@ -13,6 +15,11 @@ export function Pricing() {
   const { data: packages, isLoading, isError } = usePackages()
 
   const filtered = packages?.filter((pkg) => pkg.category === category) ?? []
+
+  const selectCategory = (next: PackageCategory) => {
+    setCategory(next)
+    setSectionHash(next === 'BESLENME' ? '#paketler-beslenme' : '#paketler')
+  }
 
   return (
     <section id="paketler" className="scroll-mt-24 border-b border-border py-20 sm:py-24">
@@ -28,7 +35,7 @@ export function Pricing() {
             <div className="inline-flex items-center gap-1 rounded-xl bg-surface p-1.5">
               <button
                 type="button"
-                onClick={() => setCategory('KOCLUK')}
+                onClick={() => selectCategory('KOCLUK')}
                 className={`rounded-lg px-6 py-2.5 text-xs font-semibold uppercase tracking-wider transition-all ${
                   category === 'KOCLUK' ? 'bg-primary text-canvas' : 'text-text-secondary hover:text-text-primary'
                 }`}
@@ -37,7 +44,7 @@ export function Pricing() {
               </button>
               <button
                 type="button"
-                onClick={() => setCategory('BESLENME')}
+                onClick={() => selectCategory('BESLENME')}
                 className={`rounded-lg px-6 py-2.5 text-xs font-semibold uppercase tracking-wider transition-all ${
                   category === 'BESLENME' ? 'bg-primary text-canvas' : 'text-text-secondary hover:text-text-primary'
                 }`}

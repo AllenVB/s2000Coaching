@@ -1,4 +1,5 @@
 import { Button } from '@/components/ui/Button'
+import { navigateToSection } from '@/lib/scroll'
 
 export function FinalCta() {
   return (
@@ -18,10 +19,10 @@ export function FinalCta() {
             kestirme yoldan ulaş.
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-4">
-            <Button size="lg" onClick={() => (window.location.hash = '#paketler')}>
+            <Button size="lg" onClick={() => navigateToSection('#paketler', 'paketler')}>
               Koçluğa Başla
             </Button>
-            <Button variant="secondary" size="lg" onClick={() => (window.location.hash = '#sss')}>
+            <Button variant="secondary" size="lg" onClick={() => navigateToSection('#sss', 'sss')}>
               Sorularım Var
             </Button>
           </div>

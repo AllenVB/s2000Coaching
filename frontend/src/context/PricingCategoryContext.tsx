@@ -1,4 +1,4 @@
-import { createContext, useContext, useMemo, useState, type ReactNode } from 'react'
+import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 
 import type { PackageCategory } from '@/types/package'
 
@@ -9,12 +9,24 @@ interface PricingCategoryContextValue {
 
 const PricingCategoryContext = createContext<PricingCategoryContextValue | null>(null)
 
+function categoryFromHash(hash: string): PackageCategory {
+  return hash === '#paketler-beslenme' ? 'BESLENME' : 'KOCLUK'
+}
+
 export function PricingCategoryProvider({ children }: { children: ReactNode }) {
-  const [category, setCategory] = useState<PackageCategory>('KOCLUK')
+  const [category, setCategory] = useState<PackageCategory>(() =>
+    typeof window === 'undefined' ? 'KOCLUK' : categoryFromHash(window.location.hash),
+  )
 
-  const value = useMemo<PricingCategoryContextValue>(() => ({ category, setCategory }), [category])
+  useEffect(() => {
+    const onHashChange = () => setCategory(categoryFromHash(window.location.hash))
+    window.addEventListener('hashchange', onHashChange)
+    return () => window.removeEventListener('hashchange', onHashChange)
+  }, [])
 
-  return <PricingCategoryContext.Provider value={value}>{children}</PricingCategoryContext.Provider>
+  return (
+    <PricingCategoryContext.Provider value={{ category, setCategory }}>{children}</PricingCategoryContext.Provider>
+  )
 }
 
 export function usePricingCategory(): PricingCategoryContextValue {

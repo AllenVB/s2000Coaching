@@ -1,14 +1,32 @@
+import type { MouseEvent } from 'react'
+
 import { usePricingCategory } from '@/context/PricingCategoryContext'
+import { isPlainLeftClick, navigateToSection } from '@/lib/scroll'
 import type { PackageCategory } from '@/types/package'
 
-const programs: { label: string; category: PackageCategory }[] = [
-  { label: 'Hipertrofi & Kas Kütlesi', category: 'KOCLUK' },
-  { label: 'Yağ Yakımı & Definasyon', category: 'KOCLUK' },
-  { label: 'Esnek Makro Beslenme', category: 'BESLENME' },
-  { label: 'Yarışma & Peak Week', category: 'KOCLUK' },
+interface FooterLink {
+  label: string
+  href: string
+  targetId: string
+}
+
+const programs: (FooterLink & { category: PackageCategory })[] = [
+  { label: 'Hipertrofi & Kas Kütlesi', href: '#paketler', targetId: 'paketler', category: 'KOCLUK' },
+  { label: 'Yağ Yakımı & Definasyon', href: '#paketler', targetId: 'paketler', category: 'KOCLUK' },
+  { label: 'Esnek Makro Beslenme', href: '#paketler-beslenme', targetId: 'paketler', category: 'BESLENME' },
+  { label: 'Yarışma & Peak Week', href: '#paketler', targetId: 'paketler', category: 'KOCLUK' },
 ]
-const platform = ['Nasıl Çalışır?', 'Başarı Hikayeleri', 'Sıkça Sorulan Sorular']
-const legal = ['Kullanım Koşulları', 'KVKK & Aydınlatma Metni', 'Mesafeli Satış Sözleşmesi', 'İptal ve İade Koşulları']
+const platform: FooterLink[] = [
+  { label: 'Nasıl Çalışır?', href: '#nasil-calisir', targetId: 'nasil-calisir' },
+  { label: 'Başarı Hikayeleri', href: '#basari-hikayeleri', targetId: 'basari-hikayeleri' },
+  { label: 'Sıkça Sorulan Sorular', href: '#sss', targetId: 'sss' },
+]
+const legal: FooterLink[] = [
+  { label: 'Kullanım Koşulları', href: '#paketler', targetId: 'paketler' },
+  { label: 'KVKK & Aydınlatma Metni', href: '#paketler', targetId: 'paketler' },
+  { label: 'Mesafeli Satış Sözleşmesi', href: '#paketler', targetId: 'paketler' },
+  { label: 'İptal ve İade Koşulları', href: '#paketler', targetId: 'paketler' },
+]
 
 export function Footer() {
   const { setCategory } = usePricingCategory()
@@ -32,21 +50,17 @@ export function Footer() {
             </p>
           </div>
 
-          <div className="flex flex-col space-y-2.5">
-            <div className="mb-1 text-xs font-semibold uppercase tracking-wider text-text-primary">Programlar</div>
-            {programs.map((program) => (
-              <a
-                key={program.label}
-                href="#paketler"
-                onClick={() => setCategory(program.category)}
-                className="text-xs text-text-secondary transition-colors hover:text-text-primary"
-              >
-                {program.label}
-              </a>
-            ))}
-          </div>
-
-          <FooterColumn title="Platform" items={platform} hrefs={['#nasil-calisir', '#basari-hikayeleri', '#sss']} />
+          <FooterColumn
+            title="Programlar"
+            items={programs}
+            onLinkClick={(event, program) => {
+              if (!isPlainLeftClick(event)) return
+              event.preventDefault()
+              setCategory(program.category)
+              navigateToSection(program.href, program.targetId)
+            }}
+          />
+          <FooterColumn title="Platform" items={platform} />
           <FooterColumn title="Yasal & Gizlilik" items={legal} />
         </div>
 
@@ -69,17 +83,33 @@ export function Footer() {
   )
 }
 
-function FooterColumn({ title, items, hrefs }: { title: string; items: string[]; hrefs?: string[] }) {
+function FooterColumn<T extends FooterLink>({
+  title,
+  items,
+  onLinkClick,
+}: {
+  title: string
+  items: T[]
+  onLinkClick?: (event: MouseEvent<HTMLAnchorElement>, item: T) => void
+}) {
   return (
     <div className="flex flex-col space-y-2.5">
       <div className="mb-1 text-xs font-semibold uppercase tracking-wider text-text-primary">{title}</div>
-      {items.map((item, index) => (
+      {items.map((item) => (
         <a
-          key={item}
-          href={hrefs?.[index] ?? '#paketler'}
+          key={item.label}
+          href={item.href}
+          onClick={(event) => {
+            if (onLinkClick) {
+              onLinkClick(event, item)
+            } else if (isPlainLeftClick(event)) {
+              event.preventDefault()
+              navigateToSection(item.href, item.targetId)
+            }
+          }}
           className="text-xs text-text-secondary transition-colors hover:text-text-primary"
         >
-          {item}
+          {item.label}
         </a>
       ))}
     </div>
