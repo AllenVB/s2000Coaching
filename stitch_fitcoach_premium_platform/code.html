@@ -1,0 +1,1300 @@
+<!DOCTYPE html><html class="dark scroll-smooth" lang="tr"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>FITCOACH PERFORMANCE — Kişiselleştirilmiş Online Fitness &amp; Koçluk Platformu</title>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            appBg: "#0B0D0F",
+            secondaryBg: "#111418",
+            cardBg: "#171A1F",
+            appBorder: "#292E35",
+            textPrimary: "#F5F5F5",
+            textSecondary: "#9CA3AF",
+            textMuted: "#6B7280",
+            limeAccent: "#C7F000",
+            limeHover: "#B3DD00",
+            statusSuccess: "#22C55E",
+            statusError: "#EF4444"
+          },
+          fontFamily: {
+            sans: ["Inter", "system-ui", "-apple-system", "sans-serif"]
+          }
+        }
+      }
+    };
+  </script>
+<style>
+    body {
+      background-color: #0B0D0F;
+      color: #F5F5F5;
+      font-family: 'Inter', sans-serif;
+      overflow-x: hidden;
+    }
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+    .material-symbols-outlined.filled {
+      font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+    }
+    /* Clean custom scrollbar for drawer & modal */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0B0D0F;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #292E35;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #3c434d;
+    }
+  </style>
+</head>
+<body class="bg-appBg text-textPrimary antialiased selection:bg-limeAccent selection:text-appBg">
+<!-- ==================== NAVBAR ==================== -->
+<header class="sticky top-0 z-40 w-full h-[72px] bg-appBg/90 backdrop-blur-md border-b border-appBorder transition-colors">
+<div class="max-w-[1200px] mx-auto h-full px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-4">
+<!-- Brand Logo -->
+<a class="flex items-center gap-3 shrink-0 focus:outline-none focus:ring-1 focus:ring-limeAccent rounded-md py-1" href="#">
+<div class="w-8 h-8 rounded-lg bg-[#171A1F] border border-appBorder flex items-center justify-center text-limeAccent font-black text-sm tracking-wider">
+          FC
+        </div>
+<div class="flex flex-col"><span class="font-bold text-base tracking-wider uppercase text-textPrimary leading-none">s2000</span>
+<span class="text-[10px] font-semibold tracking-[0.22em] text-limeAccent uppercase leading-tight mt-0.5">COACHING</span></div>
+</a>
+<!-- Center Desktop Nav Links -->
+<nav class="hidden md:flex items-center gap-6 lg:gap-8">
+<a class="text-sm font-medium text-textPrimary transition-colors hover:text-limeAccent" href="#ana-sayfa">Ana Sayfa</a>
+<a class="text-sm font-medium text-textSecondary transition-colors hover:text-textPrimary" href="#paketler">Online Koçluk</a>
+<a class="text-sm font-medium text-textSecondary transition-colors hover:text-textPrimary" href="#paketler" onclick="switchPricingTab('beslenme')">Beslenme</a>
+<a class="text-sm font-medium text-textSecondary transition-colors hover:text-textPrimary" href="#nasil-calisir">Nasıl Çalışır?</a>
+<a class="text-sm font-medium text-textSecondary transition-colors hover:text-textPrimary" href="#basari-hikayeleri">Başarı Hikayeleri</a>
+<a class="text-sm font-medium text-textSecondary transition-colors hover:text-textPrimary" href="#sss">SSS</a>
+</nav>
+<!-- Right Controls -->
+<div class="flex items-center gap-3">
+<!-- Cart Trigger Button -->
+<button aria-label="Sepeti Görüntüle" class="relative flex items-center justify-center w-11 h-11 rounded-lg bg-cardBg border border-appBorder text-textSecondary hover:text-textPrimary hover:border-gray-500 transition-colors" id="nav-cart-btn" onclick="openCart()" type="button">
+<span class="material-symbols-outlined text-[20px]">shopping_bag</span>
+<span class="absolute -top-1.5 -right-1.5 min-w-[20px] h-5 px-1 rounded-full bg-limeAccent text-appBg text-[11px] font-bold flex items-center justify-center leading-none" id="cart-badge-count">1</span>
+</button>
+<!-- Primary CTA Button -->
+<a class="hidden sm:inline-flex items-center justify-center h-[48px] px-6 rounded-[10px] bg-limeAccent hover:bg-limeHover text-appBg font-semibold text-sm transition-all shadow-sm" href="#paketler">
+          Koçluğa Başla
+        </a>
+<!-- Mobile Menu Toggle -->
+<button aria-label="Menü" class="md:hidden flex items-center justify-center w-11 h-11 rounded-lg bg-cardBg border border-appBorder text-textSecondary hover:text-textPrimary" id="mobile-menu-btn" onclick="toggleMobileMenu()" type="button">
+<span class="material-symbols-outlined text-[24px]" id="mobile-menu-icon">menu</span>
+</button>
+</div>
+</div>
+<!-- Mobile Nav Collapsible Dropdown -->
+<div class="hidden md:hidden border-b border-appBorder bg-secondaryBg px-4 py-6 space-y-4" id="mobile-nav-panel">
+<div class="flex flex-col space-y-3">
+<a class="text-sm font-medium text-textPrimary py-1" href="#ana-sayfa" onclick="toggleMobileMenu()">Ana Sayfa</a>
+<a class="text-sm font-medium text-textSecondary hover:text-textPrimary py-1" href="#paketler" onclick="toggleMobileMenu(); switchPricingTab('kocluk');">Online Koçluk</a>
+<a class="text-sm font-medium text-textSecondary hover:text-textPrimary py-1" href="#paketler" onclick="toggleMobileMenu(); switchPricingTab('beslenme');">Beslenme</a>
+<a class="text-sm font-medium text-textSecondary hover:text-textPrimary py-1" href="#nasil-calisir" onclick="toggleMobileMenu()">Nasıl Çalışır?</a>
+<a class="text-sm font-medium text-textSecondary hover:text-textPrimary py-1" href="#basari-hikayeleri" onclick="toggleMobileMenu()">Başarı Hikayeleri</a>
+<a class="text-sm font-medium text-textSecondary hover:text-textPrimary py-1" href="#sss" onclick="toggleMobileMenu()">SSS</a>
+</div>
+<div class="pt-2">
+<a class="w-full inline-flex items-center justify-center h-[48px] rounded-[10px] bg-limeAccent hover:bg-limeHover text-appBg font-semibold text-sm transition-all" href="#paketler" onclick="toggleMobileMenu()">
+          Koçluğa Başla
+        </a>
+</div>
+</div>
+</header>
+<main class="w-full" id="ana-sayfa">
+<!-- ==================== HERO SECTION ==================== -->
+<section class="py-24 border-b border-appBorder">
+<div class="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8">
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center min-h-[560px]">
+<!-- Left Column: Content (7 cols on lg) -->
+<div class="lg:col-span-6 xl:col-span-6 flex flex-col items-start">
+<!-- Category Badge -->
+<div class="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-cardBg border border-appBorder text-xs font-semibold text-limeAccent tracking-wider uppercase mb-6">
+<span class="w-1.5 h-1.5 rounded-full bg-limeAccent"></span>
+              ONLINE FITNESS &amp; BODYBUILDING COACHING
+            </div>
+<!-- Main Heading -->
+<h1 class="text-4xl sm:text-5xl lg:text-[56px] font-bold text-textPrimary leading-[1.15] tracking-tight max-w-[650px] mb-6">
+              Vücudunu Değil, <br class="hidden sm:inline">Hayatını Dönüştür.
+            </h1>
+<!-- Supporting Paragraph -->
+<p class="text-base sm:text-lg text-textSecondary leading-relaxed max-w-[550px] mb-8">
+              Hedeflerine, yaşam tarzına ve biyomekaniğine göre kişiselleştirilmiş bilimsel antrenman ve esnek beslenme protokolleriyle gerçek potansiyeline ulaş.
+            </p>
+<!-- CTA Group -->
+<div class="flex flex-wrap items-center gap-3 w-full sm:w-auto mb-10">
+<a class="w-full sm:w-auto inline-flex items-center justify-center h-[48px] px-8 rounded-[10px] bg-limeAccent hover:bg-limeHover text-appBg font-semibold text-sm transition-colors" href="#paketler">
+                Koçluğa Başla →
+              </a>
+<a class="w-full sm:w-auto inline-flex items-center justify-center h-[48px] px-6 rounded-[10px] bg-cardBg hover:bg-secondaryBg border border-appBorder text-textPrimary font-medium text-sm transition-colors" href="#paketler">
+                Paketleri İncele
+              </a>
+</div>
+<!-- Trust Indicators -->
+<div class="flex items-center gap-4 pt-6 border-t border-appBorder w-full max-w-[500px]">
+<div class="flex -space-x-2 shrink-0">
+<div class="w-9 h-9 rounded-full bg-secondaryBg border-2 border-appBg flex items-center justify-center text-xs font-bold text-textSecondary">MK</div>
+<div class="w-9 h-9 rounded-full bg-cardBg border-2 border-appBg flex items-center justify-center text-xs font-bold text-textSecondary">CY</div>
+<div class="w-9 h-9 rounded-full bg-[#20252D] border-2 border-appBg flex items-center justify-center text-xs font-bold text-limeAccent">SB</div>
+</div>
+<div class="text-xs sm:text-sm text-textSecondary">
+<div class="flex items-center gap-1 text-textPrimary font-semibold">
+<span class="text-limeAccent">★ 4.9/5</span>
+<span class="">Öğrenci Memnuniyeti</span>
+</div>
+<span class="text-textMuted">500+ aktif sporcu tarafından doğrulandı</span>
+</div>
+</div>
+</div>
+<!-- Right Column: Hero Visual (6 cols on lg) -->
+<div class="lg:col-span-6 xl:col-span-6">
+<div class="w-full rounded-[20px] overflow-hidden border border-appBorder bg-cardBg aspect-[4/3] sm:aspect-[4/3] relative">
+<img alt="FITCOACH Luxury Athletic Coaching" class="w-full h-full object-cover object-center" loading="eager" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCvim70N6ncBhCFtKjsg7f9rYcFQEiaDiuKNDV6UdYllPFV1pHqtClJpDXF1FIYTMxb5HaaKkEwjZ4sTsHo78vP3oxr3XjLGiVtCNJjtVwJiiu3pbfh4_AJW_W5RXwDx9vmzV3CoeYq1Rv0Zx8mcQXkOSboe-hBMUzHOJ0SAQO1GvTq0BL3HpLGiSTlVFkkA1K2D27xCi9rh1TXH_l8MK6RdpIZiLvXQSczgvEXN04dZaCc87gm7psmMQ">
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- ==================== TRUST STATS SECTION ==================== -->
+<section class="py-24 border-b border-appBorder bg-secondaryBg">
+<div class="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8">
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+<!-- Stat 1 -->
+<div class="bg-cardBg border border-appBorder rounded-[14px] p-6 flex flex-col justify-between">
+<div class="text-xs font-semibold uppercase tracking-wider text-textMuted mb-4">AKTİF TOPLULUK</div>
+<div>
+<div class="text-3xl lg:text-4xl font-extrabold text-textPrimary tracking-tight">500+</div>
+<div class="text-sm font-medium text-textSecondary mt-1">Aktif Öğrenci</div>
+</div>
+<p class="text-xs text-textMuted mt-4 pt-4 border-t border-appBorder">Hedef odaklı birebir koçluk alan sporcu kitlesi.</p>
+</div>
+<!-- Stat 2 -->
+<div class="bg-cardBg border border-appBorder rounded-[14px] p-6 flex flex-col justify-between">
+<div class="text-xs font-semibold uppercase tracking-wider text-textMuted mb-4">REÇETELENEN PROTOKOL</div>
+<div>
+<div class="text-3xl lg:text-4xl font-extrabold text-textPrimary tracking-tight">1.200+</div>
+<div class="text-sm font-medium text-textSecondary mt-1">Hazırlanan Program</div>
+</div>
+<p class="text-xs text-textMuted mt-4 pt-4 border-t border-appBorder">Anatomik ve metabolik ihtiyaçlara göre sıfırdan plan.</p>
+</div>
+<!-- Stat 3 -->
+<div class="bg-cardBg border border-appBorder rounded-[14px] p-6 flex flex-col justify-between">
+<div class="text-xs font-semibold uppercase tracking-wider text-textMuted mb-4">DOĞRULANMIŞ SKOR</div>
+<div>
+<div class="text-3xl lg:text-4xl font-extrabold text-textPrimary tracking-tight flex items-baseline gap-1">
+                4.9<span class="text-lg text-textMuted font-normal">/5</span>
+</div>
+<div class="text-sm font-medium text-textSecondary mt-1">Ortalama Memnuniyet</div>
+</div>
+<p class="text-xs text-textMuted mt-4 pt-4 border-t border-appBorder">Haftalık geri bildirim formları puan ortalaması.</p>
+</div>
+<!-- Stat 4 -->
+<div class="bg-cardBg border border-appBorder rounded-[14px] p-6 flex flex-col justify-between">
+<div class="text-xs font-semibold uppercase tracking-wider text-textMuted mb-4">SÜRDÜRÜLEBİLİRLİK</div>
+<div>
+<div class="text-3xl lg:text-4xl font-extrabold text-limeAccent tracking-tight">%95</div>
+<div class="text-sm font-medium text-textSecondary mt-1">Devam Oranı</div>
+</div>
+<p class="text-xs text-textMuted mt-4 pt-4 border-t border-appBorder">İlk 3 ayını tamamlayıp yıllık sürece geçenler.</p>
+</div>
+</div>
+</div>
+</section>
+<!-- ==================== HOW IT WORKS (4 STEPS) ==================== -->
+<section class="py-24 border-b border-appBorder bg-appBg" id="nasil-calisir">
+<div class="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8">
+<div class="max-w-2xl mb-16">
+<div class="text-xs font-semibold uppercase tracking-wider text-limeAccent mb-3">SİSTEMATİK SÜREÇ</div>
+<h2 class="text-3xl sm:text-4xl font-bold text-textPrimary tracking-tight">Koçluk Süreci Nasıl İlerliyor?</h2>
+<p class="text-base text-textSecondary mt-3">Bilimsel metodoloji ve kesintisiz dijital takip ile 4 adımda hedefe odaklanın.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+<!-- Step 1 -->
+<div class="bg-cardBg border border-appBorder rounded-2xl p-8 flex flex-col justify-between">
+<div>
+<div class="text-limeAccent font-black text-2xl tracking-tight mb-6">01</div>
+<h3 class="text-lg font-bold text-textPrimary mb-2">Paketi Seç</h3>
+<p class="text-sm text-textSecondary leading-relaxed">
+                Hedefinize, bütçenize ve koçluk sürenize en uygun protokolü seçip kaydınızı güvenle başlatın.
+              </p>
+</div>
+<div class="text-xs font-medium text-textMuted mt-6 pt-4 border-t border-appBorder flex items-center justify-between">
+<span class="">Süre: 1 Dakika</span>
+<span class="text-textSecondary">Anında Onay</span>
+</div>
+</div>
+<!-- Step 2 -->
+<div class="bg-cardBg border border-appBorder rounded-2xl p-8 flex flex-col justify-between">
+<div>
+<div class="text-limeAccent font-black text-2xl tracking-tight mb-6">02</div>
+<h3 class="text-lg font-bold text-textPrimary mb-2">Bilgilerini Paylaş</h3>
+<p class="text-sm text-textSecondary leading-relaxed">
+                Vücut ölçülerin, spor geçmişin, sakatlık durumun ve besin tercihlerini içeren analiz formunu doldur.
+              </p>
+</div>
+<div class="text-xs font-medium text-textMuted mt-6 pt-4 border-t border-appBorder flex items-center justify-between">
+<span class="">Süreç: Dijital Form</span>
+<span class="text-textSecondary">Detaylı Analiz</span>
+</div>
+</div>
+<!-- Step 3 -->
+<div class="bg-cardBg border border-appBorder rounded-2xl p-8 flex flex-col justify-between">
+<div>
+<div class="text-limeAccent font-black text-2xl tracking-tight mb-6">03</div>
+<h3 class="text-lg font-bold text-textPrimary mb-2">Programın Hazırlansın</h3>
+<p class="text-sm text-textSecondary leading-relaxed">
+                Baş antrenör verilerinizi inceler. 48 saat içerisinde kişisel antrenman ve makro beslenme planınız iletilir.
+              </p>
+</div>
+<div class="text-xs font-medium text-textMuted mt-6 pt-4 border-t border-appBorder flex items-center justify-between">
+<span class="">Teslimat: 48 Saat</span>
+<span class="text-textSecondary">Özel Kodlama</span>
+</div>
+</div>
+<!-- Step 4 -->
+<div class="bg-cardBg border border-appBorder rounded-2xl p-8 flex flex-col justify-between">
+<div>
+<div class="text-limeAccent font-black text-2xl tracking-tight mb-6">04</div>
+<h3 class="text-lg font-bold text-textPrimary mb-2">Takip Et &amp; Geliş</h3>
+<p class="text-sm text-textSecondary leading-relaxed">
+                Haftalık form fotoğrafları ve kilo check-in'leri yapın. Antrenman yüklerini koçunuzla sürekli optimize edin.
+              </p>
+</div>
+<div class="text-xs font-medium text-textMuted mt-6 pt-4 border-t border-appBorder flex items-center justify-between">
+<span class="">Frekans: Haftalık</span>
+<span class="text-textSecondary">Sürekli Revizyon</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- ==================== COACHING ECOSYSTEM (2 COLUMNS) ==================== -->
+<section class="py-24 border-b border-appBorder bg-secondaryBg">
+<div class="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8">
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
+<!-- Left: App Dashboard Mockup (6 cols) -->
+<div class="lg:col-span-6">
+<div class="rounded-2xl border border-appBorder overflow-hidden bg-cardBg">
+<img alt="FITCOACH Dijital Performans Takip Kokpiti" class="w-full h-auto object-cover" loading="lazy" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAetgT9YaUKZm7hTGWXJGNvUCFZwp3psLbQ5casWjSPSw7S8Bs_L_t5F0hTUE3Xlw8hGsADtJqtjhmA5UtTKsosj0IuSUHrLibW8uB9eY8czCSgPwU-qhbpxgIWXLPNIAJSJ995KfSrz41ObSeecQMuM7cUeJFCNAO7Sgf4gjR_68B6ym5I1d-pBlwN3qeE4iceGvVBftHn709cOM_KVQWmto1kcOE9ehZ0Yva0Eobnm-y3pQZI7q13Cg">
+</div>
+</div>
+<!-- Right: Checklist Details (6 cols) -->
+<div class="lg:col-span-6 flex flex-col">
+<div class="text-xs font-semibold uppercase tracking-wider text-limeAccent mb-3">DİJİTAL ALTYAPI</div>
+<h2 class="text-3xl sm:text-4xl font-bold text-textPrimary tracking-tight mb-4">
+              Tek Bir Program Değil, <br class="hidden sm:inline">Sana Özel Bir Sistem.
+            </h2>
+<p class="text-base text-textSecondary leading-relaxed mb-8">
+              Akıllı telefon veya tabletinizde çalışan modern sporcu takip altyapısı. Setler, tekrarlar, ağırlık artışları ve gramajlı beslenme tek bir mimaride buluşuyor.
+            </p>
+<!-- Feature Checkmark List with strict 14px gap -->
+<div class="space-y-[14px] mb-8">
+<div class="flex items-start gap-3">
+<span class="w-5 h-5 rounded-full bg-cardBg border border-appBorder text-limeAccent flex items-center justify-center shrink-0 text-xs font-bold mt-0.5">✓</span>
+<div>
+<div class="text-sm font-semibold text-textPrimary">Kişiye özel antrenman</div>
+<div class="text-xs text-textSecondary mt-0.5">Biyomekanik yapınıza uygun hareket seçimi ve periyodizasyon.</div>
+</div>
+</div>
+<div class="flex items-start gap-3">
+<span class="w-5 h-5 rounded-full bg-cardBg border border-appBorder text-limeAccent flex items-center justify-center shrink-0 text-xs font-bold mt-0.5">✓</span>
+<div>
+<div class="text-sm font-semibold text-textPrimary">Haftalık takip</div>
+<div class="text-xs text-textSecondary mt-0.5">Kilo, ölçüm ve form fotoğrafları üzerinden periyodik check-in.</div>
+</div>
+</div>
+<div class="flex items-start gap-3">
+<span class="w-5 h-5 rounded-full bg-cardBg border border-appBorder text-limeAccent flex items-center justify-center shrink-0 text-xs font-bold mt-0.5">✓</span>
+<div>
+<div class="text-sm font-semibold text-textPrimary">Performans analizi</div>
+<div class="text-xs text-textSecondary mt-0.5">Ağırlık artışları, RPE değerleri ve hipertrofi hacim telemetrisi.</div>
+</div>
+</div>
+<div class="flex items-start gap-3">
+<span class="w-5 h-5 rounded-full bg-cardBg border border-appBorder text-limeAccent flex items-center justify-center shrink-0 text-xs font-bold mt-0.5">✓</span>
+<div>
+<div class="text-sm font-semibold text-textPrimary">Program güncellemeleri</div>
+<div class="text-xs text-textSecondary mt-0.5">Plato dönemlerini aşmak için gerektiğinde dinamik revizyon.</div>
+</div>
+</div>
+<div class="flex items-start gap-3">
+<span class="w-5 h-5 rounded-full bg-cardBg border border-appBorder text-limeAccent flex items-center justify-center shrink-0 text-xs font-bold mt-0.5">✓</span>
+<div>
+<div class="text-sm font-semibold text-textPrimary">Koç desteği</div>
+<div class="text-xs text-textSecondary mt-0.5">Sorularınız ve form video analizleriniz için doğrudan koç iletişimi.</div>
+</div>
+</div>
+</div>
+<div>
+<a class="inline-flex items-center justify-center h-[48px] px-6 rounded-[10px] bg-cardBg hover:bg-[#1f232a] border border-appBorder text-textPrimary font-medium text-sm transition-colors" href="#paketler">
+                Paketleri İncele →
+              </a>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- ==================== PRICING SECTION (CRITICAL) ==================== -->
+<section class="py-24 border-b border-appBorder bg-appBg" id="paketler">
+<div class="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8">
+<!-- Section Header -->
+<div class="text-center max-w-2xl mx-auto mb-12">
+<div class="text-xs font-semibold uppercase tracking-wider text-limeAccent mb-3">PLANLAR &amp; FİYATLANDIRMA</div>
+<h2 class="text-3xl sm:text-4xl font-bold text-textPrimary tracking-tight">Size Uygun Planı Seçin.</h2>
+<p class="text-base text-textSecondary mt-3">
+            Hem antrenman hem beslenmeyi kapsayan tam koçluk protokolleri veya bağımsız beslenme danışmanlığı.
+          </p>
+<!-- Interactive Center Tabs (h-[48px]) -->
+<div class="inline-flex items-center p-1 rounded-xl bg-cardBg border border-appBorder mt-8 h-[48px]">
+<button class="h-full px-6 rounded-lg font-semibold text-xs uppercase tracking-wider transition-all bg-limeAccent text-appBg" id="tab-btn-kocluk" onclick="switchPricingTab('kocluk')" type="button">
+              ONLINE KOÇLUK
+            </button>
+<button class="h-full px-6 rounded-lg font-medium text-xs uppercase tracking-wider transition-all text-textSecondary hover:text-textPrimary" id="tab-btn-beslenme" onclick="switchPricingTab('beslenme')" type="button">
+              BESLENME
+            </button>
+</div>
+</div>
+<!-- ==================== TAB 1: ONLINE KOÇLUK (3 CARDS, 20px GAP) ==================== -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-[20px] items-stretch" id="tab-content-kocluk">
+<!-- Card 1: 3 Aylık -->
+<div class="bg-cardBg border border-appBorder rounded-2xl p-6 sm:p-8 flex flex-col justify-between">
+<div class="flex flex-col">
+<span class="text-[11px] font-semibold text-textMuted uppercase tracking-wider mb-2">BAŞLANGIÇ</span>
+<h3 class="text-2xl font-bold text-textPrimary">3 Aylık Koçluk</h3>
+<p class="text-xs text-textSecondary mt-1 leading-relaxed">Temel disiplini kazanmak ve belirgin bir kas kütlesi/yağ yakımı başlatmak için ideal.</p>
+<div class="my-6 pt-5 border-t border-appBorder">
+<div class="flex items-baseline gap-2">
+<span class="text-3xl font-extrabold text-textPrimary">₺3.900</span>
+<span class="text-xs text-textMuted line-through">₺4.800</span>
+</div>
+<div class="text-xs font-medium text-textSecondary mt-1">3 Aylık Tek Seferlik Ödeme</div>
+</div>
+<div class="border-t border-appBorder pt-6 mb-8">
+<ul class="space-y-3 text-xs text-textSecondary">
+<li class="flex items-center gap-2">
+<span class="text-limeAccent font-bold">✓</span>
+<span class="">Kişiye özel antrenman ve hipertrofi planı</span>
+</li>
+<li class="flex items-center gap-2">
+<span class="text-limeAccent font-bold">✓</span>
+<span class="">Gramajlı kalori ve makro beslenme planı</span>
+</li>
+<li class="flex items-center gap-2">
+<span class="text-limeAccent font-bold">✓</span>
+<span class="">Haftalık form ve kilo check-in değerlendirmesi</span>
+</li>
+<li class="flex items-center gap-2">
+<span class="text-limeAccent font-bold">✓</span>
+<span class="">Haftalık video egzersiz formu kontrolleri</span>
+</li>
+<li class="flex items-center gap-2">
+<span class="text-limeAccent font-bold">✓</span>
+<span class="">Hafta içi mesaj desteği</span>
+</li>
+</ul>
+</div>
+</div>
+<button class="w-full h-[48px] rounded-[10px] bg-secondaryBg hover:bg-[#1a1e24] border border-appBorder text-textPrimary font-semibold text-xs tracking-wider uppercase transition-colors flex items-center justify-center mt-auto" onclick="addToCart('3 Aylık Online Koçluk', 3900, 4800, '3 Ay')" type="button">
+              Paketi Seç
+            </button>
+</div>
+<!-- Card 2: 6 Aylık (FEATURED) -->
+<div class="bg-cardBg border-2 border-limeAccent rounded-2xl p-6 sm:p-8 flex flex-col justify-between relative">
+<div class="flex flex-col">
+<div class="flex items-center justify-between mb-2">
+<span class="text-[11px] font-bold text-limeAccent uppercase tracking-wider">RADİKAL DÖNÜŞÜM</span>
+<span class="text-[10px] font-bold bg-limeAccent text-appBg px-2 py-0.5 rounded uppercase tracking-wider">EN ÇOK TERCİH EDİLEN</span>
+</div>
+<h3 class="text-2xl font-bold text-textPrimary">6 Aylık Koçluk</h3>
+<p class="text-xs text-textSecondary mt-1 leading-relaxed">Fiziksel yapınızı kökten dönüştüren ve alışkanlıkları kalıcı kılan tam periyot.</p>
+<div class="my-6 pt-5 border-t border-appBorder">
+<div class="flex items-baseline gap-2">
+<span class="text-3xl font-extrabold text-textPrimary">₺6.900</span>
+<span class="text-xs text-textMuted line-through">₺8.900</span>
+</div>
+<div class="text-xs font-semibold text-limeAccent mt-1">₺1.150 / aylık maliyet (%22 İndirimli)</div>
+</div>
+<div class="border-t border-appBorder pt-6 mb-8">
+<ul class="space-y-3 text-xs text-textPrimary">
+<li class="flex items-center gap-2">
+<span class="text-limeAccent font-bold">✓</span>
+<span class="">3 Aylık Paketteki Tüm Özellikler</span>
+</li>
+<li class="flex items-center gap-2">
+<span class="text-limeAccent font-bold">✓</span>
+<span class="">2 Fazlı periyodizasyon (Yağ yakımı + Kütle)</span>
+</li>
+<li class="flex items-center gap-2">
+<span class="text-limeAccent font-bold">✓</span>
+<span class="">Öncelikli koç WhatsApp iletişim hattı</span>
+</li>
+<li class="flex items-center gap-2">
+<span class="text-limeAccent font-bold">✓</span>
+<span class="">Sınırsız video formu analizi &amp; sakatlık önleme</span>
+</li>
+<li class="flex items-center gap-2">
+<span class="text-limeAccent font-bold">✓</span>
+<span class="">15 Gün dondurma hakkı (seyahat/tatil)</span>
+</li>
+</ul>
+</div>
+</div>
+<button class="w-full h-[48px] rounded-[10px] bg-limeAccent hover:bg-limeHover text-appBg font-bold text-xs tracking-wider uppercase transition-colors flex items-center justify-center mt-auto" onclick="addToCart('6 Aylık Online Koçluk', 6900, 8900, '6 Ay')" type="button">
+              Paketi Seç
+            </button>
+</div>
+<!-- Card 3: 12 Aylık -->
+<div class="bg-cardBg border border-appBorder rounded-2xl p-6 sm:p-8 flex flex-col justify-between">
+<div class="flex flex-col">
+<span class="text-[11px] font-semibold text-textMuted uppercase tracking-wider mb-2">VIP PROTOKOL</span>
+<h3 class="text-2xl font-bold text-textPrimary">12 Aylık Koçluk</h3>
+<p class="text-xs text-textSecondary mt-1 leading-relaxed">Maksimum seviye disiplin ve bir tam yıl kesintisiz profesyonel atletik rehberlik.</p>
+<div class="my-6 pt-5 border-t border-appBorder">
+<div class="flex items-baseline gap-2">
+<span class="text-3xl font-extrabold text-textPrimary">₺11.900</span>
+<span class="text-xs text-textMuted line-through">₺15.600</span>
+</div>
+<div class="text-xs font-medium text-textSecondary mt-1">₺991 / aylık maliyet (%35 Tasarruf)</div>
+</div>
+<div class="border-t border-appBorder pt-6 mb-8">
+<ul class="space-y-3 text-xs text-textSecondary">
+<li class="flex items-center gap-2">
+<span class="text-limeAccent font-bold">✓</span>
+<span class="">Tüm 6 Aylık VIP Avantajları</span>
+</li>
+<li class="flex items-center gap-2">
+<span class="text-limeAccent font-bold">✓</span>
+<span class="">4 Mevsim Yıllık Periyodizasyon Mimarisi</span>
+</li>
+<li class="flex items-center gap-2">
+<span class="text-limeAccent font-bold">✓</span>
+<span class="">Sınırsız program ve makro revizyon hakkı</span>
+</li>
+<li class="flex items-center gap-2">
+<span class="text-limeAccent font-bold">✓</span>
+<span class="">Yarışma / Sahne / Çekim peak week protokolü</span>
+</li>
+<li class="flex items-center gap-2">
+<span class="text-limeAccent font-bold">✓</span>
+<span class="">30 Gün dondurma ve özel direkt hat</span>
+</li>
+</ul>
+</div>
+</div>
+<button class="w-full h-[48px] rounded-[10px] bg-secondaryBg hover:bg-[#1a1e24] border border-appBorder text-textPrimary font-semibold text-xs tracking-wider uppercase transition-colors flex items-center justify-center mt-auto" onclick="addToCart('12 Aylık Online Koçluk', 11900, 15600, '12 Ay')" type="button">
+              Paketi Seç
+            </button>
+</div>
+</div>
+<!-- ==================== TAB 2: BESLENME PAKETLERİ (4 CARDS) ==================== -->
+<div class="hidden grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 items-stretch" id="tab-content-beslenme">
+<!-- Beslenme 1 Ay -->
+<div class="bg-cardBg border border-appBorder rounded-2xl p-6 flex flex-col justify-between">
+<div>
+<span class="text-[11px] font-semibold text-textMuted uppercase tracking-wider block mb-1">1 AY SÜRE</span>
+<h3 class="text-xl font-bold text-textPrimary">1 Ay Beslenme</h3>
+<p class="text-xs text-textSecondary mt-1">Metabolik kalori hesaplama ve başlangıç makroları.</p>
+<div class="my-5 pt-4 border-t border-appBorder">
+<div class="text-2xl font-bold text-textPrimary">₺1.490</div>
+<div class="text-xs text-textMuted mt-0.5">Tek seferlik</div>
+</div>
+<div class="border-t border-appBorder pt-4 mb-6">
+<ul class="space-y-2 text-xs text-textSecondary">
+<li class="flex items-center gap-2"><span class="text-limeAccent font-bold">✓</span> Gramajlı makro planı</li>
+<li class="flex items-center gap-2"><span class="text-limeAccent font-bold">✓</span> Haftalık kilo takibi</li>
+<li class="flex items-center gap-2"><span class="text-limeAccent font-bold">✓</span> Temel supplement rehberi</li>
+</ul>
+</div>
+</div>
+<button class="w-full h-[44px] rounded-[10px] bg-secondaryBg hover:bg-[#1a1e24] border border-appBorder text-textPrimary font-semibold text-xs tracking-wider uppercase transition-colors" onclick="addToCart('1 Aylık Beslenme Protokolü', 1490, 1800, '1 Ay')" type="button">
+              Paketi Seç
+            </button>
+</div>
+<!-- Beslenme 3 Ay -->
+<div class="bg-cardBg border border-appBorder rounded-2xl p-6 flex flex-col justify-between">
+<div>
+<span class="text-[11px] font-semibold text-textMuted uppercase tracking-wider block mb-1">3 AY SÜRE</span>
+<h3 class="text-xl font-bold text-textPrimary">3 Ay Beslenme</h3>
+<p class="text-xs text-textSecondary mt-1">Yağ oranında net azalma ve esnek diyet sistemi.</p>
+<div class="my-5 pt-4 border-t border-appBorder">
+<div class="text-2xl font-bold text-textPrimary">₺3.490</div>
+<div class="text-xs text-textMuted mt-0.5">₺1.163 / ay</div>
+</div>
+<div class="border-t border-appBorder pt-4 mb-6">
+<ul class="space-y-2 text-xs text-textSecondary">
+<li class="flex items-center gap-2"><span class="text-limeAccent font-bold">✓</span> 3 Aylık kalori döngüsü</li>
+<li class="flex items-center gap-2"><span class="text-limeAccent font-bold">✓</span> Haftalık makro güncellemesi</li>
+<li class="flex items-center gap-2"><span class="text-limeAccent font-bold">✓</span> Dışarıda yeme rehberi</li>
+</ul>
+</div>
+</div>
+<button class="w-full h-[44px] rounded-[10px] bg-secondaryBg hover:bg-[#1a1e24] border border-appBorder text-textPrimary font-semibold text-xs tracking-wider uppercase transition-colors" onclick="addToCart('3 Aylık Beslenme Protokolü', 3490, 4200, '3 Ay')" type="button">
+              Paketi Seç
+            </button>
+</div>
+<!-- Beslenme 6 Ay -->
+<div class="bg-cardBg border border-limeAccent rounded-2xl p-6 flex flex-col justify-between relative">
+<div>
+<div class="flex items-center justify-between mb-1">
+<span class="text-[11px] font-bold text-limeAccent uppercase tracking-wider">ÖNERİLEN</span>
+<span class="text-[10px] font-bold bg-limeAccent text-appBg px-1.5 py-0.5 rounded">POPÜLER</span>
+</div>
+<h3 class="text-xl font-bold text-textPrimary">6 Ay Beslenme</h3>
+<p class="text-xs text-textSecondary mt-1">Reverse diet ve metabolizma optimizasyon döngüsü.</p>
+<div class="my-5 pt-4 border-t border-appBorder">
+<div class="text-2xl font-bold text-textPrimary">₺5.990</div>
+<div class="text-xs text-limeAccent font-semibold mt-0.5">₺998 / ay</div>
+</div>
+<div class="border-t border-appBorder pt-4 mb-6">
+<ul class="space-y-2 text-xs text-textPrimary">
+<li class="flex items-center gap-2"><span class="text-limeAccent font-bold">✓</span> Reverse Dieting metodu</li>
+<li class="flex items-center gap-2"><span class="text-limeAccent font-bold">✓</span> Kan tahlili değerlendirmesi</li>
+<li class="flex items-center gap-2"><span class="text-limeAccent font-bold">✓</span> Haftalık öncelikli analiz</li>
+</ul>
+</div>
+</div>
+<button class="w-full h-[44px] rounded-[10px] bg-limeAccent hover:bg-limeHover text-appBg font-bold text-xs tracking-wider uppercase transition-colors" onclick="addToCart('6 Aylık Beslenme Protokolü', 5990, 7500, '6 Ay')" type="button">
+              Paketi Seç
+            </button>
+</div>
+<!-- Beslenme 12 Ay -->
+<div class="bg-cardBg border border-appBorder rounded-2xl p-6 flex flex-col justify-between">
+<div>
+<span class="text-[11px] font-semibold text-textMuted uppercase tracking-wider block mb-1">1 YIL SÜRE</span>
+<h3 class="text-xl font-bold text-textPrimary">12 Ay Beslenme</h3>
+<p class="text-xs text-textSecondary mt-1">Ömür boyu form koruma ve hormonal denge.</p>
+<div class="my-5 pt-4 border-t border-appBorder">
+<div class="text-2xl font-bold text-textPrimary">₺9.900</div>
+<div class="text-xs text-textMuted mt-0.5">₺825 / ay</div>
+</div>
+<div class="border-t border-appBorder pt-4 mb-6">
+<ul class="space-y-2 text-xs text-textSecondary">
+<li class="flex items-center gap-2"><span class="text-limeAccent font-bold">✓</span> 365 Gün kesintisiz danışmanlık</li>
+<li class="flex items-center gap-2"><span class="text-limeAccent font-bold">✓</span> Sınırsız liste yenileme</li>
+<li class="flex items-center gap-2"><span class="text-limeAccent font-bold">✓</span> VIP beslenme direktör hattı</li>
+</ul>
+</div>
+</div>
+<button class="w-full h-[44px] rounded-[10px] bg-secondaryBg hover:bg-[#1a1e24] border border-appBorder text-textPrimary font-semibold text-xs tracking-wider uppercase transition-colors" onclick="addToCart('12 Aylık Beslenme Protokolü', 9900, 13000, '12 Ay')" type="button">
+              Paketi Seç
+            </button>
+</div>
+</div>
+</div>
+</section>
+<!-- ==================== SUCCESS STORIES & TRANSFORMATIONS ==================== -->
+<section class="py-24 border-b border-appBorder bg-secondaryBg" id="basari-hikayeleri">
+<div class="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8">
+<div class="flex flex-col md:flex-row md:items-end justify-between mb-16 gap-4">
+<div>
+<div class="text-xs font-semibold uppercase tracking-wider text-limeAccent mb-3">DOĞRULANMIŞ SONUÇLAR</div>
+<h2 class="text-3xl sm:text-4xl font-bold text-textPrimary tracking-tight">Değişimi Onlar Yaşadı.</h2>
+</div>
+<p class="text-sm text-textSecondary max-w-md">
+            Sadece tartıdaki rakamlar değil; duruş, özgüven ve yaşam tarzının yeniden inşası.
+          </p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<!-- Transformation 1 -->
+<div class="bg-cardBg border border-appBorder rounded-2xl overflow-hidden flex flex-col justify-between">
+<div>
+<div class="aspect-[4/5] bg-appBg overflow-hidden relative">
+<img alt="Mert K. 16 Hafta Dönüşümü" class="w-full h-full object-cover" loading="lazy" src="https://lh3.googleusercontent.com/aida-public/AB6AXuChPDyiJKBozHbuGmo56-bov_tkaE9BdSqZMqzWjtGhWUusE61X7NFkFrcbsGvr73y2C5zagJAm8Yme0-9c3b5ygn6Ocm2LZ5Xj4g1lVR6RwYPba8SeTqVuqMKb_qGGw9TJBezIOFOM4z0qndHeNBvXR_aSRO_IuBJDlYIXnarA2KiPFbpcBJlJGdkV7qoAPRky2Dva2XXYYdLISycezdVLKUjErNi68uhTMDcUE74eJQQTxXt6cEXt8A">
+<div class="absolute bottom-3 left-3 bg-appBg/90 border border-appBorder text-[11px] font-semibold text-textPrimary px-2.5 py-1 rounded-md">
+                  16 Hafta Dönüşümü
+                </div>
+</div>
+<div class="p-6">
+<div class="flex items-center justify-between mb-2">
+<h3 class="font-bold text-base text-textPrimary">Mert K., 28</h3>
+<span class="text-xs text-textMuted">Yazılım Mühendisi</span>
+</div>
+<p class="text-xs text-textSecondary leading-relaxed mb-6">
+                  "Masa başı çalıştığım için bel ağrılarım vardı ve yağ oranım %24'tü. 16 haftada hem ağrılarım bitti hem de hayatımda ilk defa belirgin karın kaslarına kavuştum."
+                </p>
+</div>
+</div>
+<div class="px-6 pb-6 pt-3 border-t border-appBorder grid grid-cols-2 gap-3 text-center">
+<div class="bg-secondaryBg p-2.5 rounded-lg border border-appBorder">
+<div class="text-sm font-bold text-limeAccent">-14 kg</div>
+<div class="text-[11px] text-textMuted mt-0.5">Yağ Kaybı</div>
+</div>
+<div class="bg-secondaryBg p-2.5 rounded-lg border border-appBorder">
+<div class="text-sm font-bold text-textPrimary">+4.2 kg</div>
+<div class="text-[11px] text-textMuted mt-0.5">Kas Kütlesi</div>
+</div>
+</div>
+</div>
+<!-- Transformation 2 -->
+<div class="bg-cardBg border border-appBorder rounded-2xl overflow-hidden flex flex-col justify-between">
+<div>
+<div class="aspect-[4/5] bg-appBg overflow-hidden relative">
+<img alt="Caner Y. 12 Hafta Dönüşümü" class="w-full h-full object-cover" loading="lazy" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDqUoBl0PAojCTYO3sy5DhFiOkfkceb1NA9DCAyh6viUS_NWS-72KrQdlLLHgnPAujEMKGBnMvfO9LdUN4Vgg_Dy-bC-WLXnSiNWtns5lPmaj5SgWp502bbZ5F5Izd8GBxUvPDMtlGVmpjcf7IxgoV_lehI32Rq2JtQOUZaRpq0DrfXhA4VBCxrYcCLJH0ufUTTtVR6oT_p3qzCQvXfPgx9NmCqrcmCfiNdDDFAZAAdK_pjyekTDc3C4w">
+<div class="absolute bottom-3 left-3 bg-appBg/90 border border-appBorder text-[11px] font-semibold text-textPrimary px-2.5 py-1 rounded-md">
+                  12 Hafta Dönüşümü
+                </div>
+</div>
+<div class="p-6">
+<div class="flex items-center justify-between mb-2">
+<h3 class="font-bold text-base text-textPrimary">Caner Y., 34</h3>
+<span class="text-xs text-textMuted">Finans Uzmanı</span>
+</div>
+<p class="text-xs text-textSecondary leading-relaxed mb-6">
+                  "Haftalık makro düzenlemeleri ve video analizleri sayesinde salonda harcadığım her dakikanın karşılığını aldım. Kuru ve estetik bir forma ulaştım."
+                </p>
+</div>
+</div>
+<div class="px-6 pb-6 pt-3 border-t border-appBorder grid grid-cols-2 gap-3 text-center">
+<div class="bg-secondaryBg p-2.5 rounded-lg border border-appBorder">
+<div class="text-sm font-bold text-limeAccent">%11</div>
+<div class="text-[11px] text-textMuted mt-0.5">Son Yağ Oranı</div>
+</div>
+<div class="bg-secondaryBg p-2.5 rounded-lg border border-appBorder">
+<div class="text-sm font-bold text-textPrimary">+35 kg</div>
+<div class="text-[11px] text-textMuted mt-0.5">Squat Artışı</div>
+</div>
+</div>
+</div>
+<!-- Transformation 3 -->
+<div class="bg-cardBg border border-appBorder rounded-2xl overflow-hidden flex flex-col justify-between">
+<div>
+<div class="aspect-[4/5] bg-appBg overflow-hidden relative">
+<img alt="Selin B. 20 Hafta Dönüşümü" class="w-full h-full object-cover" loading="lazy" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAa_Hhp_TeLeNRZBQu418yCrwgkLhlP3uSUFmzYxkpOd59Ky0cr8gQrGDMX1cz0s9t2b008n2sSIW7A-dSQuwm_1oBLByEf29mRB2GEKkK1OOYejom88kJHq9Lqy4oMwthEK7mGuVA_DlFc6k4i9hia8ynIcvWJvg0JvAcTLSsvGWETgTLC5xUgGE3eiueWJat18CeauYJGxTufaF0L357faqQTUQuzGRx-JThFzc7SX3wK2filbaJ4bQ">
+<div class="absolute bottom-3 left-3 bg-appBg/90 border border-appBorder text-[11px] font-semibold text-textPrimary px-2.5 py-1 rounded-md">
+                  20 Hafta Dönüşümü
+                </div>
+</div>
+<div class="p-6">
+<div class="flex items-center justify-between mb-2">
+<h3 class="font-bold text-base text-textPrimary">Selin B., 26</h3>
+<span class="text-xs text-textMuted">Mimar</span>
+</div>
+<p class="text-xs text-textSecondary leading-relaxed mb-6">
+                  "Katı diyetler olmadan, sosyal hayatımdan kopmadan sıkılaştım. Postürüm tamamen düzeldi ve sporu ilk defa bir yaşam biçimi haline getirdim."
+                </p>
+</div>
+</div>
+<div class="px-6 pb-6 pt-3 border-t border-appBorder grid grid-cols-2 gap-3 text-center">
+<div class="bg-secondaryBg p-2.5 rounded-lg border border-appBorder">
+<div class="text-sm font-bold text-limeAccent">-8 cm</div>
+<div class="text-[11px] text-textMuted mt-0.5">Bel İncelemesi</div>
+</div>
+<div class="bg-secondaryBg p-2.5 rounded-lg border border-appBorder">
+<div class="text-sm font-bold text-textPrimary">+18 kg</div>
+<div class="text-[11px] text-textMuted mt-0.5">Hip Thrust</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- ==================== TESTIMONIALS & FAQ ==================== -->
+<section class="py-24 border-b border-appBorder bg-appBg" id="sss">
+<div class="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8">
+<!-- Testimonials Header -->
+<div class="text-center max-w-2xl mx-auto mb-16">
+<div class="text-xs font-semibold uppercase tracking-wider text-limeAccent mb-3">GERÇEK DENEYİMLER</div>
+<h2 class="text-3xl sm:text-4xl font-bold text-textPrimary tracking-tight">Öğrencilerimiz Ne Diyor?</h2>
+</div>
+<!-- 3 Clean Testimonials -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-24">
+<div class="bg-cardBg border border-appBorder rounded-2xl p-6 flex flex-col justify-between">
+<div>
+<div class="flex text-limeAccent text-xs mb-3">★★★★★</div>
+<p class="text-xs text-textSecondary leading-relaxed mb-6">
+                "3 yıldır salonda boşa kürek çekiyormuşum. 6 aylık koçlukla aldığım kas kütlesi önceki 3 yılımın toplamından fazla oldu. Hocanın video analizi muazzam."
+              </p>
+</div>
+<div class="pt-4 border-t border-appBorder flex items-center justify-between">
+<div>
+<div class="text-sm font-bold text-textPrimary">Barış T.</div>
+<div class="text-[11px] text-textMuted">6 Aylık Öğrenci</div>
+</div>
+<span class="text-[11px] font-semibold text-statusSuccess bg-statusSuccess/10 px-2 py-0.5 rounded">Doğrulandı</span>
+</div>
+</div>
+<div class="bg-cardBg border border-appBorder rounded-2xl p-6 flex flex-col justify-between">
+<div>
+<div class="flex text-limeAccent text-xs mb-3">★★★★★</div>
+<p class="text-xs text-textSecondary leading-relaxed mb-6">
+                "En büyük korkum aç kalmaktı. Esnek beslenme modeliyle hem dışarıda yedim hem de 12 haftada 9 kilo yağ verdim. Sistem tam anlamıyla kusursuz."
+              </p>
+</div>
+<div class="pt-4 border-t border-appBorder flex items-center justify-between">
+<div>
+<div class="text-sm font-bold text-textPrimary">Derya A.</div>
+<div class="text-[11px] text-textMuted">3 Aylık Beslenme</div>
+</div>
+<span class="text-[11px] font-semibold text-statusSuccess bg-statusSuccess/10 px-2 py-0.5 rounded">Doğrulandı</span>
+</div>
+</div>
+<div class="bg-cardBg border border-appBorder rounded-2xl p-6 flex flex-col justify-between">
+<div>
+<div class="flex text-limeAccent text-xs mb-3">★★★★★</div>
+<p class="text-xs text-textSecondary leading-relaxed mb-6">
+                "Deadlift formumdaki hatayı video analiziyle fark edip belimi sakatlıktan kurtardılar. Bilimsel yaklaşım ve koçun hızı kesinlikle üst seviye."
+              </p>
+</div>
+<div class="pt-4 border-t border-appBorder flex items-center justify-between">
+<div>
+<div class="text-sm font-bold text-textPrimary">Emre Ö.</div>
+<div class="text-[11px] text-textMuted">12 Aylık VIP Sporcu</div>
+</div>
+<span class="text-[11px] font-semibold text-statusSuccess bg-statusSuccess/10 px-2 py-0.5 rounded">Doğrulandı</span>
+</div>
+</div>
+</div>
+<!-- FAQ Accordion -->
+<div class="max-w-3xl mx-auto">
+<div class="text-center mb-12">
+<div class="text-xs font-semibold uppercase tracking-wider text-limeAccent mb-3">MERAK EDİLENLER</div>
+<h2 class="text-2xl sm:text-3xl font-bold text-textPrimary tracking-tight">Sıkça Sorulan Sorular</h2>
+</div>
+<div class="space-y-3" id="faq-list">
+<!-- Item 1 -->
+<div class="bg-cardBg border border-appBorder rounded-xl overflow-hidden transition-colors">
+<button class="w-full p-5 text-left flex items-center justify-between gap-4 focus:outline-none" onclick="toggleFaq(1)" type="button">
+<span class="font-semibold text-sm text-textPrimary">Programlar gerçekten kişiye özel mi hazırlanıyor?</span>
+<span class="text-textSecondary font-mono text-base transition-transform duration-200" id="faq-icon-1">+</span>
+</button>
+<div class="hidden px-5 pb-5 pt-1 text-xs text-textSecondary leading-relaxed border-t border-appBorder" id="faq-body-1">
+                Evet, kesinlikle. Satın alım sonrası dolduracağınız kapsamlı analiz formundaki boy, kilo, yağ oranı, kas dengesizlikleri, sakatlık geçmişi ve spor salonunuzdaki ekipman listesi tek tek incelenir. Hazır şablon veya otomatik program asla kullanılmaz.
+              </div>
+</div>
+<!-- Item 2 -->
+<div class="bg-cardBg border border-appBorder rounded-xl overflow-hidden transition-colors">
+<button class="w-full p-5 text-left flex items-center justify-between gap-4 focus:outline-none" onclick="toggleFaq(2)" type="button">
+<span class="font-semibold text-sm text-textPrimary">Koçluk paketlerinde beslenme planı dahil mi?</span>
+<span class="text-textSecondary font-mono text-base transition-transform duration-200" id="faq-icon-2">+</span>
+</button>
+<div class="hidden px-5 pb-5 pt-1 text-xs text-textSecondary leading-relaxed border-t border-appBorder" id="faq-body-2">
+                Evet. "Online Koçluk" paketlerimizin tamamında hem kişiye özel antrenman programı hem de gramajlı kalori ve makro beslenme planlaması birlikte eksiksiz olarak sunulur. Yalnızca beslenmesini düzenlemek isteyenler için ayrıca bağımsız beslenme paketlerimiz de vardır.
+              </div>
+</div>
+<!-- Item 3 -->
+<div class="bg-cardBg border border-appBorder rounded-xl overflow-hidden transition-colors">
+<button class="w-full p-5 text-left flex items-center justify-between gap-4 focus:outline-none" onclick="toggleFaq(3)" type="button">
+<span class="font-semibold text-sm text-textPrimary">Programım ne kadar sürede teslim edilir?</span>
+<span class="text-textSecondary font-mono text-base transition-transform duration-200" id="faq-icon-3">+</span>
+</button>
+<div class="hidden px-5 pb-5 pt-1 text-xs text-textSecondary leading-relaxed border-t border-appBorder" id="faq-body-3">
+                Formunuzu doldurup sistemimize ilettiğiniz andan itibaren en geç 24 ila 48 saat içerisinde baş koçumuz tarafından hazırlanan protokolünüz onaylanır ve dijital kokpitinize yüklenir.
+              </div>
+</div>
+<!-- Item 4 -->
+<div class="bg-cardBg border border-appBorder rounded-xl overflow-hidden transition-colors">
+<button class="w-full p-5 text-left flex items-center justify-between gap-4 focus:outline-none" onclick="toggleFaq(4)" type="button">
+<span class="font-semibold text-sm text-textPrimary">Evde antrenman yapıyorum, sisteme katılabilir miyim?</span>
+<span class="text-textSecondary font-mono text-base transition-transform duration-200" id="faq-icon-4">+</span>
+</button>
+<div class="hidden px-5 pb-5 pt-1 text-xs text-textSecondary leading-relaxed border-t border-appBorder" id="faq-body-4">
+                Elbette. Evinizdeki dambıl, direnç lastiği veya barfiks barı gibi mevcut ekipmanlarınıza göre özel bir ev hipertrofi &amp; kondisyon planı tasarlayabiliriz. Spor salonuna gitme zorunluluğu yoktur.
+              </div>
+</div>
+<!-- Item 5 -->
+<div class="bg-cardBg border border-appBorder rounded-xl overflow-hidden transition-colors">
+<button class="w-full p-5 text-left flex items-center justify-between gap-4 focus:outline-none" onclick="toggleFaq(5)" type="button">
+<span class="font-semibold text-sm text-textPrimary">Süreç boyunca programım revize ediliyor mu?</span>
+<span class="text-textSecondary font-mono text-base transition-transform duration-200" id="faq-icon-5">+</span>
+</button>
+<div class="hidden px-5 pb-5 pt-1 text-xs text-textSecondary leading-relaxed border-t border-appBorder" id="faq-body-5">
+                Kesinlikle. Gelişim hızınıza, kilo değişimine ve ağırlık platosuna göre periyodik check-in'lerde antrenman hacimleriniz ve makrolarınız düzenli olarak güncellenir.
+              </div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- ==================== FINAL CLEAN CTA ==================== -->
+<section class="py-24 bg-appBg">
+<div class="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8">
+<div class="bg-secondaryBg border border-appBorder rounded-2xl p-10 sm:p-16 text-center max-w-4xl mx-auto flex flex-col items-center">
+<span class="text-xs font-semibold uppercase tracking-wider text-limeAccent mb-3">HEMEN BAŞLAYIN</span>
+<h2 class="text-3xl sm:text-4xl font-bold text-textPrimary tracking-tight max-w-2xl leading-tight">
+            Değişimin ilk adımını bugün at.
+          </h2>
+<p class="text-sm sm:text-base text-textSecondary max-w-xl mt-4 mb-8">
+            Daha fazla erteleme. Biyomekanik temelli antrenman protokolü ve kişisel beslenme koçluğu ile hedefine en kestirme yoldan ulaş.
+          </p>
+<div class="flex flex-wrap items-center justify-center gap-4">
+<a class="inline-flex items-center justify-center h-[48px] px-8 rounded-[10px] bg-limeAccent hover:bg-limeHover text-appBg font-bold text-sm transition-colors" href="#paketler">
+              Koçluğa Başla →
+            </a>
+<a class="inline-flex items-center justify-center h-[48px] px-6 rounded-[10px] bg-cardBg hover:bg-[#1a1e24] border border-appBorder text-textPrimary font-medium text-sm transition-colors" href="#sss">
+              Sorularım Var
+            </a>
+</div>
+<div class="mt-8 flex items-center justify-center gap-6 text-xs text-textMuted">
+<span class="flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-statusSuccess"></span> 256-Bit SSL Güvenli Ödeme
+            </span>
+<span class="flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-limeAccent"></span> 48 Saatte Program Teslimi
+            </span>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- ==================== FOOTER ==================== -->
+<footer class="w-full bg-secondaryBg border-t border-appBorder py-16">
+<div class="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8">
+<!-- 4 Columns Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10 pb-12 border-b border-appBorder">
+<!-- Col 1: Brand Info -->
+<div class="flex flex-col">
+<div class="flex items-center gap-2 mb-3">
+<div class="w-7 h-7 rounded bg-cardBg border border-appBorder flex items-center justify-center text-limeAccent font-bold text-xs">
+              FC
+            </div>
+<span class="font-bold text-sm tracking-wider uppercase text-textPrimary">FITCOACH PERFORMANCE</span>
+</div>
+<p class="text-xs text-textSecondary leading-relaxed mb-4">
+            Bilimsel hipertrofi, ileri seviye biyomekanik analiz ve esnek makro mimarisiyle tasarlanmış sporcu koçluk platformu.
+          </p>
+<div class="text-[11px] text-textMuted">
+            ISO Telemetry v4.2 • WADA Compliant
+          </div>
+</div>
+<!-- Col 2: Programlar -->
+<div class="flex flex-col space-y-2.5">
+<div class="text-xs font-semibold uppercase tracking-wider text-textPrimary mb-1">PROGRAMLAR</div>
+<a class="text-xs text-textSecondary hover:text-textPrimary transition-colors" href="#paketler">Hipertrofi &amp; Kas Kütlesi</a>
+<a class="text-xs text-textSecondary hover:text-textPrimary transition-colors" href="#paketler">Yağ Yakımı &amp; Definasyon</a>
+<a class="text-xs text-textSecondary hover:text-textPrimary transition-colors" href="#paketler" onclick="switchPricingTab('beslenme')">Esnek Makro Beslenme</a>
+<a class="text-xs text-textSecondary hover:text-textPrimary transition-colors" href="#paketler">Yarışma &amp; Peak Week</a>
+</div>
+<!-- Col 3: Platform -->
+<div class="flex flex-col space-y-2.5">
+<div class="text-xs font-semibold uppercase tracking-wider text-textPrimary mb-1">PLATFORM</div>
+<a class="text-xs text-textSecondary hover:text-textPrimary transition-colors" href="#nasil-calisir">Nasıl Çalışır?</a>
+<a class="text-xs text-textSecondary hover:text-textPrimary transition-colors" href="#basari-hikayeleri">Başarı Hikayeleri</a>
+<a class="text-xs text-textSecondary hover:text-textPrimary transition-colors" href="#sss">Sıkça Sorulan Sorular</a>
+<a class="text-xs text-textSecondary hover:text-textPrimary transition-colors" href="#paketler">Öğrenci Girişi</a>
+</div>
+<!-- Col 4: Yasal & İletişim -->
+<div class="flex flex-col space-y-2.5">
+<div class="text-xs font-semibold uppercase tracking-wider text-textPrimary mb-1">YASAL &amp; GİZLİLİK</div>
+<a class="text-xs text-textSecondary hover:text-textPrimary transition-colors" href="#">Kullanım Koşulları</a>
+<a class="text-xs text-textSecondary hover:text-textPrimary transition-colors" href="#">KVKK &amp; Aydınlatma Metni</a>
+<a class="text-xs text-textSecondary hover:text-textPrimary transition-colors" href="#">Mesafeli Satış Sözleşmesi</a>
+<a class="text-xs text-textSecondary hover:text-textPrimary transition-colors" href="#">İptal ve İade Koşulları</a>
+</div>
+</div>
+<!-- Bottom Bar -->
+<div class="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-textMuted">
+<div class="">© 2026 FITCOACH PERFORMANCE INC. Tüm hakları saklıdır.</div>
+<div class="flex items-center gap-6">
+<a class="hover:text-textPrimary transition-colors" href="#">INSTAGRAM</a>
+<a class="hover:text-textPrimary transition-colors" href="#">YOUTUBE</a>
+<a class="hover:text-textPrimary transition-colors" href="#">WHATSAPP</a>
+</div>
+</div>
+</div>
+</footer>
+<!-- ==================== CART SLIDE-OVER DRAWER ==================== -->
+<div class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 transition-opacity duration-200 opacity-0 pointer-events-none" id="cart-drawer-backdrop" onclick="closeCart()">
+</div>
+<aside class="fixed top-0 right-0 w-full sm:w-[400px] h-full bg-secondaryBg border-l border-appBorder z-50 transform translate-x-full transition-transform duration-300 ease-out flex flex-col justify-between shadow-2xl" id="cart-drawer">
+<!-- Drawer Header -->
+<div class="h-[72px] px-6 border-b border-appBorder flex items-center justify-between bg-cardBg">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-limeAccent text-[20px]">shopping_bag</span>
+<h3 class="text-sm font-bold uppercase tracking-wider text-textPrimary">Sepetiniz</h3>
+</div>
+<button class="w-8 h-8 rounded-lg bg-secondaryBg border border-appBorder flex items-center justify-center text-textSecondary hover:text-textPrimary" onclick="closeCart()" type="button">
+        ✕
+      </button>
+</div>
+<!-- Drawer Body -->
+<div class="flex-1 overflow-y-auto p-6 space-y-4" id="cart-items-container">
+        <div class="bg-cardBg border border-appBorder rounded-xl p-4 flex flex-col justify-between">
+          <div class="flex items-start justify-between gap-3 mb-3">
+            <div>
+              <span class="text-[10px] font-bold text-limeAccent uppercase tracking-wider">6 Ay Protokol</span>
+              <h4 class="text-sm font-bold text-textPrimary leading-snug mt-0.5">6 Aylık Online Koçluk</h4>
+              <p class="text-[11px] text-textSecondary mt-0.5">Kişiselleştirilmiş Biyomekanik &amp; Beslenme</p>
+            </div>
+            <button onclick="removeCartItem()" class="text-textMuted hover:text-statusError transition-colors p-1" title="Kaldır">
+              <span class="material-symbols-outlined text-[18px]">delete</span>
+            </button>
+          </div>
+          <div class="pt-3 border-t border-appBorder flex items-center justify-between">
+            <span class="text-xs text-textMuted">Tutar:</span>
+            <div class="text-right">
+              <span class="text-sm font-bold text-limeAccent">₺6.900</span>
+              <span class="text-xs text-textMuted line-through ml-1.5">₺8.900</span>
+            </div>
+          </div>
+        </div>
+      </div>
+<!-- Drawer Footer -->
+<div class="p-6 border-t border-appBorder bg-cardBg space-y-4">
+<div class="space-y-2 text-xs">
+<div class="flex items-center justify-between text-textSecondary">
+<span class="">Ara Toplam</span>
+<span class="font-medium text-textPrimary" id="cart-subtotal">₺8.900</span>
+</div>
+<div class="flex items-center justify-between text-limeAccent">
+<span class="">Lansman İndirimi</span>
+<span id="cart-discount" class="">-₺2.000</span>
+</div>
+<div class="pt-2 border-t border-appBorder flex items-center justify-between text-sm font-bold">
+<span class="text-textPrimary">Toplam Tutar</span>
+<span class="text-limeAccent text-base" id="cart-total">₺6.900</span>
+</div>
+</div>
+<button class="w-full h-[48px] rounded-[10px] bg-limeAccent hover:bg-limeHover text-appBg font-bold text-xs uppercase tracking-wider transition-colors flex items-center justify-center gap-2" id="cart-checkout-btn" onclick="openCheckoutModal()" type="button">
+<span class="">Ödemeye Geç →</span>
+</button>
+<div class="text-center text-[11px] text-textMuted">
+        🔒 256-Bit SSL Şifreleme ile Güvenli Altyapı
+      </div>
+</div>
+</aside>
+<!-- ==================== 2-COLUMN CHECKOUT MODAL ==================== -->
+<div class="fixed inset-0 z-50 hidden flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-sm" id="checkout-modal">
+<div class="relative w-full max-w-4xl bg-secondaryBg border border-appBorder rounded-2xl overflow-hidden shadow-2xl max-h-[90vh] flex flex-col">
+<!-- Modal Header -->
+<div class="h-[64px] px-6 border-b border-appBorder flex items-center justify-between bg-cardBg shrink-0">
+<div class="flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-limeAccent"></span>
+<h3 class="text-sm font-bold uppercase tracking-wider text-textPrimary">Siparişi Tamamla &amp; Kayıt</h3>
+</div>
+<button class="w-8 h-8 rounded-lg bg-secondaryBg border border-appBorder flex items-center justify-center text-textSecondary hover:text-textPrimary" onclick="closeCheckoutModal()" type="button">
+          ✕
+        </button>
+</div>
+<!-- Modal Body (2-Column Grid) -->
+<div class="p-6 overflow-y-auto flex-1">
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-8" id="checkout-main-grid">
+<!-- Left Column: Athlete Form (7 cols) -->
+<div class="lg:col-span-7 flex flex-col">
+<h4 class="text-sm font-bold text-textPrimary uppercase tracking-wider mb-4 pb-2 border-b border-appBorder">
+              1. Sporcu Bilgileri
+            </h4>
+<form class="space-y-4" id="checkout-form" onsubmit="handlePaymentSubmit(event)">
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+<div>
+<label class="block text-xs font-medium text-textSecondary mb-1.5">Ad Soyad *</label>
+<input class="w-full h-11 px-3.5 rounded-lg bg-cardBg border border-appBorder text-textPrimary text-xs focus:border-limeAccent focus:ring-0 focus:outline-none" placeholder="Adınız ve Soyadınız" required="" type="text">
+</div>
+<div>
+<label class="block text-xs font-medium text-textSecondary mb-1.5">E-Posta Adresi *</label>
+<input class="w-full h-11 px-3.5 rounded-lg bg-cardBg border border-appBorder text-textPrimary text-xs focus:border-limeAccent focus:ring-0 focus:outline-none" placeholder="ornek@fitcoach.com" required="" type="email">
+</div>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+<div>
+<label class="block text-xs font-medium text-textSecondary mb-1.5">WhatsApp / Telefon *</label>
+<input class="w-full h-11 px-3.5 rounded-lg bg-cardBg border border-appBorder text-textPrimary text-xs focus:border-limeAccent focus:ring-0 focus:outline-none" placeholder="+90 5XX XXX XX XX" required="" type="tel">
+</div>
+<div>
+<label class="block text-xs font-medium text-textSecondary mb-1.5">Şehir &amp; Yaş</label>
+<input class="w-full h-11 px-3.5 rounded-lg bg-cardBg border border-appBorder text-textPrimary text-xs focus:border-limeAccent focus:ring-0 focus:outline-none" placeholder="Örn: 28, İstanbul" type="text">
+</div>
+</div>
+<!-- Payment Simulation Inputs -->
+<div class="pt-2">
+<label class="block text-xs font-medium text-textSecondary mb-1.5">Kart Bilgileri (256-Bit SSL Korumalı)</label>
+<div class="p-3.5 rounded-lg bg-cardBg border border-appBorder space-y-3">
+<input class="w-full h-9 px-3 rounded bg-secondaryBg border border-appBorder text-textPrimary text-xs font-mono focus:outline-none" type="text" value="4543 •••• •••• 9241">
+<div class="grid grid-cols-2 gap-3">
+<input class="h-9 px-3 rounded bg-secondaryBg border border-appBorder text-textPrimary text-xs font-mono focus:outline-none" type="text" value="12/28">
+<input class="h-9 px-3 rounded bg-secondaryBg border border-appBorder text-textPrimary text-xs font-mono focus:outline-none" type="text" value="782">
+</div>
+</div>
+</div>
+<div class="flex items-start gap-2 pt-2">
+<input class="rounded bg-cardBg border-appBorder text-limeAccent focus:ring-0 mt-0.5" id="agree-checkbox" required="" type="checkbox">
+<label class="text-[11px] text-textMuted leading-tight" for="agree-checkbox">
+                  Mesafeli Satış Sözleşmesi ve KVKK Onam Metnini okudum, kabul ediyorum.
+                </label>
+</div>
+<button class="w-full h-[48px] rounded-[10px] bg-limeAccent hover:bg-limeHover text-appBg font-bold text-xs uppercase tracking-wider transition-colors flex items-center justify-center" id="submit-payment-btn" type="submit">
+<span id="submit-payment-text" class="">Güvenli Ödeme Yap</span>
+</button>
+</form>
+</div>
+<!-- Right Column: Order Summary (5 cols) -->
+<div class="lg:col-span-5 flex flex-col justify-between bg-cardBg p-6 rounded-xl border border-appBorder">
+<div>
+<h4 class="text-sm font-bold text-textPrimary uppercase tracking-wider mb-4 pb-2 border-b border-appBorder">
+                2. Sipariş Özeti
+              </h4>
+<div class="space-y-3" id="checkout-summary-item">
+<div class="text-xs font-bold text-limeAccent uppercase" id="summary-badge">6 AY PROTOKOL</div>
+<div class="text-base font-bold text-textPrimary" id="summary-title">6 Aylık Online Koçluk</div>
+<div class="text-xs text-textSecondary" id="summary-desc">Kişiye özel antrenman, makro beslenme &amp; WhatsApp desteği.</div>
+</div>
+<div class="mt-6 pt-4 border-t border-appBorder space-y-2 text-xs">
+<div class="flex items-center justify-between text-textSecondary">
+<span class="">Liste Fiyatı</span>
+<span class="line-through text-textMuted" id="summary-list-price">₺8.900</span>
+</div>
+<div class="flex items-center justify-between text-limeAccent">
+<span class="">Özel Lansman İndirimi</span>
+<span id="summary-discount" class="">-₺2.000</span>
+</div>
+<div class="pt-3 border-t border-appBorder flex items-center justify-between text-sm font-bold">
+<span class="text-textPrimary">Toplam Ödenecek</span>
+<span class="text-limeAccent text-lg" id="summary-final-price">₺6.900</span>
+</div>
+</div>
+</div>
+<div class="pt-6 border-t border-appBorder mt-6 space-y-2 text-[11px] text-textMuted">
+<div class="flex items-center gap-1.5">
+<span class="text-statusSuccess font-bold">✓</span> 48 Saat İçinde Program Teslimi
+              </div>
+<div class="flex items-center gap-1.5">
+<span class="text-statusSuccess font-bold">✓</span> Anında Sporcu Analiz Formu Gönderimi
+              </div>
+<div class="flex items-center gap-1.5">
+<span class="text-statusSuccess font-bold">✓</span> WhatsApp Koç Tanışma Mesajı
+              </div>
+</div>
+</div>
+</div>
+<!-- Success Confirmation View (Hidden Initially) -->
+<div class="hidden text-center py-12 px-4 flex flex-col items-center" id="checkout-success-box">
+<div class="w-14 h-14 rounded-full bg-statusSuccess/15 text-statusSuccess flex items-center justify-center text-2xl font-black mb-4">
+            ✓
+          </div>
+<h3 class="text-2xl font-bold text-textPrimary mb-2">Siparişiniz Başarıyla Tamamlandı!</h3>
+<p class="text-xs sm:text-sm text-textSecondary max-w-md mb-6 leading-relaxed">
+            Kaydınız oluşturuldu. WhatsApp ve e-posta adresinize sporcu analiz formunuz iletildi. Koçunuz 30 dakika içinde sizinle temas kuracaktır.
+          </p>
+<button class="h-[44px] px-8 rounded-[10px] bg-limeAccent hover:bg-limeHover text-appBg font-semibold text-xs tracking-wider uppercase transition-colors" onclick="finishOrder()" type="button">
+            Kapat ve Ana Sayfaya Dön
+          </button>
+</div>
+</div>
+</div>
+</div>
+<!-- ==================== VANILLA JAVASCRIPT ==================== -->
+<script>
+    // Cart State
+    let cartItem = {
+      name: "6 Aylık Online Koçluk",
+      price: 6900,
+      originalPrice: 8900,
+      duration: "6 Ay"
+    };
+
+    // Mobile Nav Toggle
+    function toggleMobileMenu() {
+      const panel = document.getElementById('mobile-nav-panel');
+      const icon = document.getElementById('mobile-menu-icon');
+      if (panel.classList.contains('hidden')) {
+        panel.classList.remove('hidden');
+        icon.textContent = 'close';
+      } else {
+        panel.classList.add('hidden');
+        icon.textContent = 'menu';
+      }
+    }
+
+    // Interactive Tab Switching: Online Koçluk vs Beslenme
+    function switchPricingTab(tab) {
+      const btnKocluk = document.getElementById('tab-btn-kocluk');
+      const btnBeslenme = document.getElementById('tab-btn-beslenme');
+      const contentKocluk = document.getElementById('tab-content-kocluk');
+      const contentBeslenme = document.getElementById('tab-content-beslenme');
+
+      if (tab === 'kocluk') {
+        btnKocluk.className = "h-full px-6 rounded-lg font-semibold text-xs uppercase tracking-wider transition-all bg-limeAccent text-appBg";
+        btnBeslenme.className = "h-full px-6 rounded-lg font-medium text-xs uppercase tracking-wider transition-all text-textSecondary hover:text-textPrimary";
+        contentKocluk.classList.remove('hidden');
+        contentBeslenme.classList.add('hidden');
+      } else {
+        btnBeslenme.className = "h-full px-6 rounded-lg font-semibold text-xs uppercase tracking-wider transition-all bg-limeAccent text-appBg";
+        btnKocluk.className = "h-full px-6 rounded-lg font-medium text-xs uppercase tracking-wider transition-all text-textSecondary hover:text-textPrimary";
+        contentBeslenme.classList.remove('hidden');
+        contentKocluk.classList.add('hidden');
+      }
+    }
+
+    // FAQ Accordion
+    function toggleFaq(index) {
+      const body = document.getElementById(`faq-body-${index}`);
+      const icon = document.getElementById(`faq-icon-${index}`);
+      
+      const isOpen = !body.classList.contains('hidden');
+      
+      // Close all first for clean accordion
+      for (let i = 1; i <= 5; i++) {
+        const b = document.getElementById(`faq-body-${i}`);
+        const ic = document.getElementById(`faq-icon-${i}`);
+        if (b && ic) {
+          b.classList.add('hidden');
+          ic.textContent = '+';
+        }
+      }
+
+      // If it was closed, open it
+      if (!isOpen) {
+        body.classList.remove('hidden');
+        icon.textContent = '—';
+      }
+    }
+
+    // Cart Operations
+    function openCart() {
+      renderCart();
+      const drawer = document.getElementById('cart-drawer');
+      const backdrop = document.getElementById('cart-drawer-backdrop');
+      drawer.classList.remove('translate-x-full');
+      backdrop.classList.remove('opacity-0', 'pointer-events-none');
+      backdrop.classList.add('opacity-100');
+    }
+
+    function closeCart() {
+      const drawer = document.getElementById('cart-drawer');
+      const backdrop = document.getElementById('cart-drawer-backdrop');
+      drawer.classList.add('translate-x-full');
+      backdrop.classList.remove('opacity-100');
+      backdrop.classList.add('opacity-0', 'pointer-events-none');
+    }
+
+    function addToCart(name, price, originalPrice, duration) {
+      cartItem = { name, price, originalPrice, duration };
+      renderCart();
+      openCart();
+    }
+
+    function removeCartItem() {
+      cartItem = null;
+      renderCart();
+    }
+
+    function renderCart() {
+      const container = document.getElementById('cart-items-container');
+      const subtotalEl = document.getElementById('cart-subtotal');
+      const discountEl = document.getElementById('cart-discount');
+      const totalEl = document.getElementById('cart-total');
+      const badgeCount = document.getElementById('cart-badge-count');
+      const checkoutBtn = document.getElementById('cart-checkout-btn');
+
+      if (!cartItem) {
+        badgeCount.textContent = '0';
+        container.innerHTML = `
+          <div class="h-full flex flex-col items-center justify-center text-center py-16">
+            <span class="material-symbols-outlined text-textMuted text-4xl mb-3">production_quantity_limits</span>
+            <p class="text-sm font-medium text-textSecondary">Sepetiniz boş.</p>
+            <p class="text-xs text-textMuted mt-1">Lütfen bir koçluk veya beslenme paketi seçin.</p>
+          </div>
+        `;
+        subtotalEl.textContent = "₺0";
+        discountEl.textContent = "-₺0";
+        totalEl.textContent = "₺0";
+        checkoutBtn.disabled = true;
+        checkoutBtn.classList.add('opacity-50', 'cursor-not-allowed');
+        return;
+      }
+
+      badgeCount.textContent = '1';
+      checkoutBtn.disabled = false;
+      checkoutBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+
+      const discount = cartItem.originalPrice > cartItem.price ? (cartItem.originalPrice - cartItem.price) : 0;
+
+      container.innerHTML = `
+        <div class="bg-cardBg border border-appBorder rounded-xl p-4 flex flex-col justify-between">
+          <div class="flex items-start justify-between gap-3 mb-3">
+            <div>
+              <span class="text-[10px] font-bold text-limeAccent uppercase tracking-wider">${cartItem.duration} Protokol</span>
+              <h4 class="text-sm font-bold text-textPrimary leading-snug mt-0.5">${cartItem.name}</h4>
+              <p class="text-[11px] text-textSecondary mt-0.5">Kişiselleştirilmiş Biyomekanik & Beslenme</p>
+            </div>
+            <button 
+              onclick="removeCartItem()" 
+              class="text-textMuted hover:text-statusError transition-colors p-1"
+              title="Kaldır">
+              <span class="material-symbols-outlined text-[18px]">delete</span>
+            </button>
+          </div>
+          <div class="pt-3 border-t border-appBorder flex items-center justify-between">
+            <span class="text-xs text-textMuted">Tutar:</span>
+            <div class="text-right">
+              <span class="text-sm font-bold text-limeAccent">₺${cartItem.price.toLocaleString('tr-TR')}</span>
+              ${cartItem.originalPrice ? `<span class="text-xs text-textMuted line-through ml-1.5">₺${cartItem.originalPrice.toLocaleString('tr-TR')}</span>` : ''}
+            </div>
+          </div>
+        </div>
+      `;
+
+      subtotalEl.textContent = `₺${(cartItem.originalPrice || cartItem.price).toLocaleString('tr-TR')}`;
+      discountEl.textContent = discount > 0 ? `-₺${discount.toLocaleString('tr-TR')}` : '₺0';
+      totalEl.textContent = `₺${cartItem.price.toLocaleString('tr-TR')}`;
+    }
+
+    // Checkout Modal
+    function openCheckoutModal() {
+      if (!cartItem) return;
+      closeCart();
+
+      const modal = document.getElementById('checkout-modal');
+      const mainGrid = document.getElementById('checkout-main-grid');
+      const successBox = document.getElementById('checkout-success-box');
+
+      // Update Order Summary in Modal
+      document.getElementById('summary-badge').textContent = `${cartItem.duration} PROTOKOL`;
+      document.getElementById('summary-title').textContent = cartItem.name;
+      document.getElementById('summary-list-price').textContent = `₺${(cartItem.originalPrice || cartItem.price).toLocaleString('tr-TR')}`;
+      const discount = cartItem.originalPrice > cartItem.price ? (cartItem.originalPrice - cartItem.price) : 0;
+      document.getElementById('summary-discount').textContent = discount > 0 ? `-₺${discount.toLocaleString('tr-TR')}` : '₺0';
+      document.getElementById('summary-final-price').textContent = `₺${cartItem.price.toLocaleString('tr-TR')}`;
+      document.getElementById('submit-payment-text').textContent = `₺${cartItem.price.toLocaleString('tr-TR')} Güvenli Ödeme Yap`;
+
+      mainGrid.classList.remove('hidden');
+      successBox.classList.add('hidden');
+      modal.classList.remove('hidden');
+    }
+
+    function closeCheckoutModal() {
+      document.getElementById('checkout-modal').classList.add('hidden');
+    }
+
+    function handlePaymentSubmit(e) {
+      e.preventDefault();
+      const btn = document.getElementById('submit-payment-btn');
+      const mainGrid = document.getElementById('checkout-main-grid');
+      const successBox = document.getElementById('checkout-success-box');
+
+      btn.disabled = true;
+      btn.innerHTML = `<span class="inline-block animate-spin mr-2">⏳</span><span>İşlem Onaylanıyor...</span>`;
+
+      setTimeout(() => {
+        btn.disabled = false;
+        btn.innerHTML = `<span id="submit-payment-text">Güvenli Ödeme Yap</span>`;
+        mainGrid.classList.add('hidden');
+        successBox.classList.remove('hidden');
+      }, 1000);
+    }
+
+    function finishOrder() {
+      closeCheckoutModal();
+      cartItem = null;
+      renderCart();
+    }
+
+    // Initialize Default Cart
+    renderCart();
+  </script>
+
+
+</body></html>

@@ -1,0 +1,166 @@
+databaseChangeLog:
+  - changeSet:
+      id: 001-create-coaching-package-table
+      author: s2000coaching
+      changes:
+        - createTable:
+            tableName: coaching_package
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: slug
+                  type: varchar(80)
+                  constraints:
+                    nullable: false
+                    unique: true
+              - column:
+                  name: category
+                  type: varchar(20)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: name
+                  type: varchar(120)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: tagline
+                  type: varchar(255)
+              - column:
+                  name: duration_months
+                  type: int
+                  constraints:
+                    nullable: false
+              - column:
+                  name: price_minor
+                  type: bigint
+                  constraints:
+                    nullable: false
+              - column:
+                  name: original_price_minor
+                  type: bigint
+                  constraints:
+                    nullable: false
+              - column:
+                  name: badge
+                  type: varchar(60)
+              - column:
+                  name: featured
+                  type: boolean
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+              - column:
+                  name: display_order
+                  type: int
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: active
+                  type: boolean
+                  defaultValueBoolean: true
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: 002-create-coaching-package-feature-table
+      author: s2000coaching
+      changes:
+        - createTable:
+            tableName: coaching_package_feature
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: package_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_package_feature_package
+                    references: coaching_package(id)
+              - column:
+                  name: label
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: display_order
+                  type: int
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: 003-create-customer-order-table
+      author: s2000coaching
+      changes:
+        - createTable:
+            tableName: customer_order
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: order_number
+                  type: varchar(24)
+                  constraints:
+                    nullable: false
+                    unique: true
+              - column:
+                  name: package_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_order_package
+                    references: coaching_package(id)
+              - column:
+                  name: customer_name
+                  type: varchar(160)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: email
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: phone
+                  type: varchar(40)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: city_age
+                  type: varchar(120)
+              - column:
+                  name: price_minor
+                  type: bigint
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status
+                  type: varchar(20)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: kvkk_consent
+                  type: boolean
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false

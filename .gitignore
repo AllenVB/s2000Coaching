@@ -1,0 +1,23 @@
+# Backend (Gradle)
+backend/build/
+backend/.gradle/
+backend/bin/
+!backend/gradle/wrapper/gradle-wrapper.jar
+
+# Frontend (Node/Vite)
+frontend/node_modules/
+frontend/dist/
+frontend/.env
+frontend/*.local
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Claude
+.claude/launch.json

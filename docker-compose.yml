@@ -1,0 +1,14 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: s2000coaching
+      POSTGRES_USER: s2000coaching
+      POSTGRES_PASSWORD: s2000coaching
+    ports:
+      - '5432:5432'
+    volumes:
+      - s2000coaching_postgres_data:/var/lib/postgresql/data
+
+volumes:
+  s2000coaching_postgres_data:

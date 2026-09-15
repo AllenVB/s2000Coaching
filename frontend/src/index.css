@@ -1,0 +1,69 @@
+@import 'tailwindcss';
+
+@theme {
+  /* Surfaces — merged from both Stitch concepts: obsidian base + elevated glass layers */
+  --color-canvas: #0b0d0f;
+  --color-surface: #12141a;
+  --color-surface-elevated: #171a1f;
+  --color-surface-high: #1e222a;
+  --color-border: rgba(255, 255, 255, 0.08);
+  --color-border-strong: rgba(255, 255, 255, 0.16);
+
+  /* Brand accents — s2000's lime as primary CTA color, emerald borrowed from the
+     FITCOACH concept for gradients/glows so featured elements read as premium */
+  --color-primary: #c7f000;
+  --color-primary-hover: #b3dd00;
+  --color-accent: #10b981;
+  --color-accent-hover: #34d399;
+
+  --color-text-primary: #f5f5f5;
+  --color-text-secondary: #9ca3af;
+  --color-text-muted: #6b7280;
+
+  --color-success: #22c55e;
+  --color-error: #ef4444;
+  --color-warning: #f59e0b;
+
+  --font-display: 'Montserrat', system-ui, sans-serif;
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+
+  --animate-pulse-slow: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+@layer base {
+  html {
+    color-scheme: dark;
+  }
+
+  body {
+    background-color: var(--color-canvas);
+    color: var(--color-text-primary);
+    font-family: var(--font-sans);
+    overflow-x: hidden;
+  }
+
+  ::selection {
+    background-color: var(--color-primary);
+    color: var(--color-canvas);
+  }
+
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: var(--color-canvas);
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--color-border-strong);
+    border-radius: 9999px;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
