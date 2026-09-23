@@ -3,6 +3,7 @@ import { CheckoutModal } from '@/components/cart/CheckoutModal'
 import { Footer } from '@/components/layout/Footer'
 import { Header } from '@/components/layout/Header'
 import { AppEcosystem } from '@/components/sections/AppEcosystem'
+import { Experience } from '@/components/sections/Experience'
 import { Faq } from '@/components/sections/Faq'
 import { FinalCta } from '@/components/sections/FinalCta'
 import { Hero } from '@/components/sections/Hero'
@@ -26,6 +27,7 @@ export default function App() {
           <AppEcosystem />
           <Pricing />
           <Transformations />
+          <Experience />
           <Testimonials />
           <Faq />
           <FinalCta />

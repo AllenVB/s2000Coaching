@@ -36,6 +36,13 @@ anında `MOCK_PAID` durumuyla oluşturulur; checkout formu kart bilgisi toplamaz
 istendiğinde `backend/src/main/java/com/s2000coaching/payment/PaymentGateway.java` arayüzünün yeni bir
 implementasyonu yazılması yeterlidir — controller/service/frontend akışı değişmez.
 
+## Tecrübelerim (Antrenman / Beslenme / Kardiyo)
+
+Herkese açık bir bölüm, ama içeriği yalnızca doğru düzenleme parolasını bilen kişi değiştirebilir. Parola
+`EXPERIENCE_EDIT_TOKEN` ortam değişkeniyle ayarlanır; **yerel geliştirme dışında mutlaka gerçek bir değerle
+ayarlayın** — ayarlanmazsa `s2000-dev-edit` varsayılanı kullanılır ve backend başlangıçta bunu loglarda uyarır.
+Siteden "Düzenle"ye basıldığında parola bir kere sorulur ve tarayıcının `localStorage`'ında saklanır.
+
 ## Testler
 
 ```bash

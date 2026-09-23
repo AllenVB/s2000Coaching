@@ -1,0 +1,56 @@
+databaseChangeLog:
+  - changeSet:
+      id: 008-create-experience-note-table
+      author: s2000coaching
+      changes:
+        - createTable:
+            tableName: experience_note
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: category
+                  type: varchar(20)
+                  constraints:
+                    nullable: false
+                    unique: true
+              - column:
+                  name: content
+                  type: text
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: 009-seed-experience-note-categories
+      author: s2000coaching
+      changes:
+        - insert:
+            tableName: experience_note
+            columns:
+              - column: { name: id, value: "33333333-3333-4333-8333-333333333301" }
+              - column: { name: category, value: "ANTRENMAN" }
+              - column: { name: content, value: "" }
+              - column: { name: updated_at, valueDate: "2026-01-01T00:00:00" }
+        - insert:
+            tableName: experience_note
+            columns:
+              - column: { name: id, value: "33333333-3333-4333-8333-333333333302" }
+              - column: { name: category, value: "BESLENME" }
+              - column: { name: content, value: "" }
+              - column: { name: updated_at, valueDate: "2026-01-01T00:00:00" }
+        - insert:
+            tableName: experience_note
+            columns:
+              - column: { name: id, value: "33333333-3333-4333-8333-333333333303" }
+              - column: { name: category, value: "KARDIYO" }
+              - column: { name: content, value: "" }
+              - column: { name: updated_at, valueDate: "2026-01-01T00:00:00" }

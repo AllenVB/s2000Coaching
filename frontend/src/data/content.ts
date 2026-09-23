@@ -13,6 +13,7 @@ export const navLinks: NavLink[] = [
   { label: 'Beslenme', href: '#paketler-beslenme', targetId: 'paketler', category: 'BESLENME' },
   { label: 'Nasıl Çalışır?', href: '#nasil-calisir', targetId: 'nasil-calisir' },
   { label: 'Başarı Hikayeleri', href: '#basari-hikayeleri', targetId: 'basari-hikayeleri' },
+  { label: 'Tecrübelerim', href: '#tecrubelerim', targetId: 'tecrubelerim' },
   { label: 'SSS', href: '#sss', targetId: 'sss' },
 ]
 
