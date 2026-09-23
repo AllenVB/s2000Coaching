@@ -18,8 +18,3 @@ server:
 app:
   cors:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173}
-  experience:
-    # Shared passphrase required to edit "Tecrübelerim" content. Override with a real
-    # secret via EXPERIENCE_EDIT_TOKEN in any non-local environment — this default is
-    # for local development only and is logged as a warning on startup if left unset.
-    edit-token: ${EXPERIENCE_EDIT_TOKEN:s2000-dev-edit}

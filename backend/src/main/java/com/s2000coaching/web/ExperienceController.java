@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -35,50 +34,41 @@ public class ExperienceController {
 
 	@PostMapping("/api/experience-categories")
 	public ResponseEntity<ExperienceCategoryResponse> createCategory(
-			@Valid @RequestBody UpsertCategoryRequest request,
-			@RequestHeader(value = "X-Edit-Token", required = false) String editToken) {
-		return ResponseEntity.status(HttpStatus.CREATED)
-				.body(experienceService.createCategory(request.name(), editToken));
+			@Valid @RequestBody UpsertCategoryRequest request) {
+		return ResponseEntity.status(HttpStatus.CREATED).body(experienceService.createCategory(request.name()));
 	}
 
 	@PutMapping("/api/experience-categories/{categoryId}")
 	public ExperienceCategoryResponse renameCategory(
 			@PathVariable UUID categoryId,
-			@Valid @RequestBody UpsertCategoryRequest request,
-			@RequestHeader(value = "X-Edit-Token", required = false) String editToken) {
-		return experienceService.renameCategory(categoryId, request.name(), editToken);
+			@Valid @RequestBody UpsertCategoryRequest request) {
+		return experienceService.renameCategory(categoryId, request.name());
 	}
 
 	@DeleteMapping("/api/experience-categories/{categoryId}")
-	public ResponseEntity<Void> deleteCategory(
-			@PathVariable UUID categoryId,
-			@RequestHeader(value = "X-Edit-Token", required = false) String editToken) {
-		experienceService.deleteCategory(categoryId, editToken);
+	public ResponseEntity<Void> deleteCategory(@PathVariable UUID categoryId) {
+		experienceService.deleteCategory(categoryId);
 		return ResponseEntity.noContent().build();
 	}
 
 	@PostMapping("/api/experience-categories/{categoryId}/items")
 	public ResponseEntity<ExperienceItemResponse> createItem(
 			@PathVariable UUID categoryId,
-			@Valid @RequestBody UpsertItemRequest request,
-			@RequestHeader(value = "X-Edit-Token", required = false) String editToken) {
+			@Valid @RequestBody UpsertItemRequest request) {
 		return ResponseEntity.status(HttpStatus.CREATED)
-				.body(experienceService.createItem(categoryId, request.title(), request.description(), editToken));
+				.body(experienceService.createItem(categoryId, request.title(), request.description()));
 	}
 
 	@PutMapping("/api/experience-items/{itemId}")
 	public ExperienceItemResponse updateItem(
 			@PathVariable UUID itemId,
-			@Valid @RequestBody UpsertItemRequest request,
-			@RequestHeader(value = "X-Edit-Token", required = false) String editToken) {
-		return experienceService.updateItem(itemId, request.title(), request.description(), editToken);
+			@Valid @RequestBody UpsertItemRequest request) {
+		return experienceService.updateItem(itemId, request.title(), request.description());
 	}
 
 	@DeleteMapping("/api/experience-items/{itemId}")
-	public ResponseEntity<Void> deleteItem(
-			@PathVariable UUID itemId,
-			@RequestHeader(value = "X-Edit-Token", required = false) String editToken) {
-		experienceService.deleteItem(itemId, editToken);
+	public ResponseEntity<Void> deleteItem(@PathVariable UUID itemId) {
+		experienceService.deleteItem(itemId);
 		return ResponseEntity.noContent().build();
 	}
 }

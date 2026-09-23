@@ -122,7 +122,7 @@ export function Experience() {
               </div>
               <p className="mt-3 text-[11px] leading-relaxed text-text-muted">
                 {isEditMode
-                  ? 'Kategori ve tecrübe ekleyip düzenleyebilirsiniz. Değişiklikler parola ile korunur.'
+                  ? 'Kategori ve tecrübe ekleyip düzenleyebilirsiniz.'
                   : 'Ziyaretçilerin gördüğü halidir.'}
               </p>
             </div>

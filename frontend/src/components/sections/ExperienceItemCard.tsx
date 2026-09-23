@@ -3,7 +3,6 @@ import { useState } from 'react'
 import { useDeleteItem, useUpdateItem } from '@/api/experienceApi'
 import { Button } from '@/components/ui/Button'
 import { PencilIcon, TrashIcon } from '@/components/ui/icons'
-import { ensureEditToken } from '@/lib/editToken'
 import type { ExperienceItem } from '@/types/experience'
 
 const inputClasses =
@@ -26,7 +25,6 @@ export function ExperienceItemCard({ item, isEditMode }: { item: ExperienceItem;
   }
 
   const save = () => {
-    if (!ensureEditToken()) return
     updateItem.mutate(
       { itemId: item.id, title: titleDraft.trim(), description: descriptionDraft.trim() },
       { onSuccess: () => setIsEditing(false) },
@@ -34,7 +32,6 @@ export function ExperienceItemCard({ item, isEditMode }: { item: ExperienceItem;
   }
 
   const confirmDelete = () => {
-    if (!ensureEditToken()) return
     deleteItem.mutate({ itemId: item.id })
   }
 
@@ -76,8 +73,8 @@ export function ExperienceItemCard({ item, isEditMode }: { item: ExperienceItem;
 
   return (
     <div className="group relative flex flex-col gap-2 rounded-2xl border border-border bg-surface p-5 transition-colors hover:border-white/16">
-      <h3 className="pr-14 text-base font-bold text-text-primary">{item.title}</h3>
-      <p className="whitespace-pre-wrap text-sm leading-relaxed text-text-secondary">{item.description}</p>
+      <h3 className="pr-14 text-base font-bold text-accent-orange">{item.title}</h3>
+      <p className="whitespace-pre-wrap text-sm leading-relaxed text-text-primary">{item.description}</p>
 
       {isEditMode ? (
         <div className="absolute right-4 top-4 flex items-center gap-1.5">

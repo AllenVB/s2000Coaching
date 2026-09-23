@@ -2,7 +2,6 @@ import { useState } from 'react'
 
 import { useCreateCategory } from '@/api/experienceApi'
 import { PlusIcon } from '@/components/ui/icons'
-import { ensureEditToken } from '@/lib/editToken'
 
 export function ExperienceAddCategoryTab({ onCreated }: { onCreated: (categoryId: string) => void }) {
   const [isOpen, setIsOpen] = useState(false)
@@ -19,7 +18,6 @@ export function ExperienceAddCategoryTab({ onCreated }: { onCreated: (categoryId
   const save = () => {
     const trimmed = name.trim()
     if (!trimmed) return
-    if (!ensureEditToken()) return
     createCategory.mutate(
       { name: trimmed },
       { onSuccess: (category) => { close(); onCreated(category.id) } },

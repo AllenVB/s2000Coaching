@@ -2,11 +2,8 @@ package com.s2000coaching.web;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.ArgumentMatchers.isNull;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 
-import com.s2000coaching.exception.ForbiddenException;
 import com.s2000coaching.service.ExperienceService;
 import com.s2000coaching.web.dto.ExperienceCategoryResponse;
 import com.s2000coaching.web.dto.UpsertCategoryRequest;
@@ -34,12 +31,11 @@ class ExperienceControllerTest {
 	private ExperienceService experienceService;
 
 	@Test
-	void shouldCreateCategoryWhenTokenHeaderIsValid() {
+	void shouldCreateCategory() {
 		var response = new ExperienceCategoryResponse(UUID.randomUUID(), "Yoga", List.of());
-		when(experienceService.createCategory(eq("Yoga"), eq("right-token"))).thenReturn(response);
+		when(experienceService.createCategory(eq("Yoga"))).thenReturn(response);
 
 		assertThat(mvc.post().uri("/api/experience-categories")
-				.header("X-Edit-Token", "right-token")
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(jsonMapper.writeValueAsString(new UpsertCategoryRequest("Yoga"))))
 				.hasStatus(HttpStatus.CREATED)
@@ -48,40 +44,18 @@ class ExperienceControllerTest {
 	}
 
 	@Test
-	void shouldReturn403WhenCreatingCategoryWithoutToken() {
-		when(experienceService.createCategory(eq("Yoga"), isNull()))
-				.thenThrow(new ForbiddenException("Düzenleme parolası geçersiz"));
-
-		assertThat(mvc.post().uri("/api/experience-categories")
-				.contentType(MediaType.APPLICATION_JSON)
-				.content(jsonMapper.writeValueAsString(new UpsertCategoryRequest("Yoga"))))
-				.hasStatus(HttpStatus.FORBIDDEN);
-	}
-
-	@Test
 	void shouldReturn400WhenCategoryNameIsBlank() {
 		assertThat(mvc.post().uri("/api/experience-categories")
-				.header("X-Edit-Token", "right-token")
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(jsonMapper.writeValueAsString(new UpsertCategoryRequest(""))))
 				.hasStatus(HttpStatus.BAD_REQUEST);
 	}
 
 	@Test
-	void shouldReturn204WhenDeletingItemWithValidToken() {
+	void shouldReturn204WhenDeletingItem() {
 		UUID itemId = UUID.randomUUID();
-
-		assertThat(mvc.delete().uri("/api/experience-items/" + itemId).header("X-Edit-Token", "right-token"))
-				.hasStatus(HttpStatus.NO_CONTENT);
-	}
-
-	@Test
-	void shouldReturn403WhenDeletingItemWithoutToken() {
-		UUID itemId = UUID.randomUUID();
-		doThrow(new ForbiddenException("Düzenleme parolası geçersiz"))
-				.when(experienceService).deleteItem(eq(itemId), isNull());
 
 		assertThat(mvc.delete().uri("/api/experience-items/" + itemId))
-				.hasStatus(HttpStatus.FORBIDDEN);
+				.hasStatus(HttpStatus.NO_CONTENT);
 	}
 }

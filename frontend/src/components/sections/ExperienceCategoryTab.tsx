@@ -2,7 +2,6 @@ import { useState } from 'react'
 
 import { useDeleteCategory, useRenameCategory } from '@/api/experienceApi'
 import { PencilIcon, TrashIcon } from '@/components/ui/icons'
-import { ensureEditToken } from '@/lib/editToken'
 import type { ExperienceCategory } from '@/types/experience'
 
 export function ExperienceCategoryTab({
@@ -32,7 +31,6 @@ export function ExperienceCategoryTab({
   const saveRename = () => {
     const trimmed = nameDraft.trim()
     if (!trimmed) return
-    if (!ensureEditToken()) return
     renameCategory.mutate(
       { categoryId: category.id, name: trimmed },
       { onSuccess: () => setIsRenaming(false) },
@@ -78,10 +76,7 @@ export function ExperienceCategoryTab({
         <span className="px-1.5 text-[11px] font-medium text-text-secondary">"{category.name}" silinsin mi?</span>
         <button
           type="button"
-          onClick={() => {
-            if (!ensureEditToken()) return
-            deleteCategory.mutate({ categoryId: category.id })
-          }}
+          onClick={() => deleteCategory.mutate({ categoryId: category.id })}
           disabled={deleteCategory.isPending}
           className="rounded-md bg-error/15 px-2 py-1.5 text-[11px] font-semibold text-error hover:bg-error/25"
         >

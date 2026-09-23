@@ -3,7 +3,6 @@ import { useState } from 'react'
 import { useCreateItem } from '@/api/experienceApi'
 import { Button } from '@/components/ui/Button'
 import { PlusIcon } from '@/components/ui/icons'
-import { ensureEditToken } from '@/lib/editToken'
 
 const inputClasses =
   'w-full rounded-lg border border-border bg-surface-elevated px-3.5 py-2.5 text-sm text-text-primary focus:border-primary focus:outline-none'
@@ -23,7 +22,6 @@ export function ExperienceAddItemCard({ categoryId }: { categoryId: string }) {
   }
 
   const save = () => {
-    if (!ensureEditToken()) return
     createItem.mutate(
       { categoryId, title: title.trim(), description: description.trim() },
       { onSuccess: close },

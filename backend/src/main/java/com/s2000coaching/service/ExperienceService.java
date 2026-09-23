@@ -18,13 +18,11 @@ public class ExperienceService {
 
 	private final ExperienceCategoryRepository categoryRepository;
 	private final ExperienceItemRepository itemRepository;
-	private final EditTokenValidator editTokenValidator;
 
-	public ExperienceService(ExperienceCategoryRepository categoryRepository, ExperienceItemRepository itemRepository,
-			EditTokenValidator editTokenValidator) {
+	public ExperienceService(ExperienceCategoryRepository categoryRepository,
+			ExperienceItemRepository itemRepository) {
 		this.categoryRepository = categoryRepository;
 		this.itemRepository = itemRepository;
-		this.editTokenValidator = editTokenValidator;
 	}
 
 	@Transactional(readOnly = true)
@@ -35,30 +33,26 @@ public class ExperienceService {
 	}
 
 	@Transactional
-	public ExperienceCategoryResponse createCategory(String name, String editToken) {
-		editTokenValidator.requireValid(editToken);
+	public ExperienceCategoryResponse createCategory(String name) {
 		ExperienceCategory category = new ExperienceCategory(UUID.randomUUID(), name, Instant.now());
 		return ExperienceCategoryResponse.from(categoryRepository.save(category));
 	}
 
 	@Transactional
-	public ExperienceCategoryResponse renameCategory(UUID categoryId, String name, String editToken) {
-		editTokenValidator.requireValid(editToken);
+	public ExperienceCategoryResponse renameCategory(UUID categoryId, String name) {
 		ExperienceCategory category = getCategoryOrThrow(categoryId);
 		category.setName(name);
 		return ExperienceCategoryResponse.from(category);
 	}
 
 	@Transactional
-	public void deleteCategory(UUID categoryId, String editToken) {
-		editTokenValidator.requireValid(editToken);
+	public void deleteCategory(UUID categoryId) {
 		ExperienceCategory category = getCategoryOrThrow(categoryId);
 		categoryRepository.delete(category);
 	}
 
 	@Transactional
-	public ExperienceItemResponse createItem(UUID categoryId, String title, String description, String editToken) {
-		editTokenValidator.requireValid(editToken);
+	public ExperienceItemResponse createItem(UUID categoryId, String title, String description) {
 		ExperienceCategory category = getCategoryOrThrow(categoryId);
 		Instant now = Instant.now();
 		ExperienceItem item = new ExperienceItem(UUID.randomUUID(), category, title, description, now, now);
@@ -66,8 +60,7 @@ public class ExperienceService {
 	}
 
 	@Transactional
-	public ExperienceItemResponse updateItem(UUID itemId, String title, String description, String editToken) {
-		editTokenValidator.requireValid(editToken);
+	public ExperienceItemResponse updateItem(UUID itemId, String title, String description) {
 		ExperienceItem item = getItemOrThrow(itemId);
 		item.setTitle(title);
 		item.setDescription(description);
@@ -76,8 +69,7 @@ public class ExperienceService {
 	}
 
 	@Transactional
-	public void deleteItem(UUID itemId, String editToken) {
-		editTokenValidator.requireValid(editToken);
+	public void deleteItem(UUID itemId) {
 		ExperienceItem item = getItemOrThrow(itemId);
 		itemRepository.delete(item);
 	}

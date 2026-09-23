@@ -18,12 +18,6 @@ public class GlobalExceptionHandler {
 				.body(new ApiError(Instant.now(), 404, "Not Found", List.of(ex.getMessage())));
 	}
 
-	@ExceptionHandler(ForbiddenException.class)
-	public ResponseEntity<ApiError> handleForbidden(ForbiddenException ex) {
-		return ResponseEntity.status(HttpStatus.FORBIDDEN)
-				.body(new ApiError(Instant.now(), 403, "Forbidden", List.of(ex.getMessage())));
-	}
-
 	@ExceptionHandler(MethodArgumentNotValidException.class)
 	public ResponseEntity<ApiError> handleValidation(MethodArgumentNotValidException ex) {
 		List<String> messages = ex.getBindingResult().getFieldErrors().stream()
