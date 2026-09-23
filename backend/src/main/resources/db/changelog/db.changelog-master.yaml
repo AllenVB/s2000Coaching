@@ -1,6 +1,10 @@
 # Changelog file names are numbered by creation order only. ChangeSet `id`s inside
-# them are a separate, repo-wide monotonic counter (currently at 009) — always
+# them are a separate, repo-wide monotonic counter (currently at 012) — always
 # continue that counter for a new changeSet id, never reuse a file's own ordinal.
+#
+# `experience_note` (005) is superseded by `experience_category` + `experience_item`
+# (006) and is intentionally left in place, unused — dropping a table needs explicit
+# user confirmation first (see project conventions), so it's just orphaned, not deleted.
 databaseChangeLog:
   - include:
       file: db/changelog/001-init-schema.yaml
@@ -12,3 +16,5 @@ databaseChangeLog:
       file: db/changelog/004-fix-nutrition-12-month-tier-price.yaml
   - include:
       file: db/changelog/005-create-experience-note-table.yaml
+  - include:
+      file: db/changelog/006-create-experience-category-and-item-tables.yaml

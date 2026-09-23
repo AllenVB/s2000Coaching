@@ -1,86 +1,38 @@
 import { useEffect, useState } from 'react'
 
-import { useExperiences, useUpdateExperience } from '@/api/experienceApi'
-import { Button } from '@/components/ui/Button'
+import { useExperienceCategories } from '@/api/experienceApi'
 import { SectionHeading } from '@/components/ui/SectionHeading'
-import { clearStoredEditToken, getStoredEditToken, setStoredEditToken } from '@/lib/editToken'
-import { ApiError } from '@/lib/api'
-import type { ExperienceCategory } from '@/types/experience'
+import { EyeIcon, PencilIcon } from '@/components/ui/icons'
 
-const categories: { value: ExperienceCategory; label: string }[] = [
-  { value: 'ANTRENMAN', label: 'Antrenman' },
-  { value: 'BESLENME', label: 'Beslenme' },
-  { value: 'KARDIYO', label: 'Kardiyo' },
-]
+import { ExperienceAddCategoryTab } from './ExperienceAddCategoryTab'
+import { ExperienceAddItemCard } from './ExperienceAddItemCard'
+import { ExperienceCategoryTab } from './ExperienceCategoryTab'
+import { ExperienceItemCard } from './ExperienceItemCard'
 
-function promptForEditToken(): string | null {
-  const token = window.prompt('Düzenleme parolasını girin:')
-  if (!token) {
-    return null
-  }
-  setStoredEditToken(token)
-  return token
-}
+type ViewMode = 'read' | 'edit'
 
 export function Experience() {
-  const [activeCategory, setActiveCategory] = useState<ExperienceCategory>('ANTRENMAN')
-  const [isEditing, setIsEditing] = useState(false)
-  const [draft, setDraft] = useState('')
-  const [errorMessage, setErrorMessage] = useState<string | null>(null)
-
-  const { data: notes, isLoading } = useExperiences()
-  const updateExperience = useUpdateExperience()
-
-  const activeNote = notes?.find((note) => note.category === activeCategory)
+  const { data: categories, isLoading } = useExperienceCategories()
+  const [mode, setMode] = useState<ViewMode>('read')
+  const [activeCategoryId, setActiveCategoryId] = useState<string | null>(null)
 
   useEffect(() => {
-    setIsEditing(false)
-    setErrorMessage(null)
-  }, [activeCategory])
-
-  const startEditing = () => {
-    setErrorMessage(null)
-    if (!getStoredEditToken() && !promptForEditToken()) {
+    if (!categories || categories.length === 0) {
+      setActiveCategoryId(null)
       return
     }
-    setDraft(activeNote?.content ?? '')
-    setIsEditing(true)
-  }
-
-  const cancelEditing = () => {
-    setIsEditing(false)
-    setErrorMessage(null)
-  }
-
-  const save = () => {
-    setErrorMessage(null)
-    updateExperience.mutate(
-      { category: activeCategory, content: draft },
-      {
-        onSuccess: () => setIsEditing(false),
-        onError: (error) => {
-          if (error instanceof ApiError && (error.status === 401 || error.status === 403)) {
-            clearStoredEditToken()
-            setErrorMessage('Parola yanlış görünüyor. Tekrar "Kaydet"e basıp parolayı yeniden girin.')
-          } else {
-            setErrorMessage('Kaydedilemedi, lütfen tekrar deneyin.')
-          }
-        },
-      },
-    )
-  }
-
-  const handleSaveClick = () => {
-    if (!getStoredEditToken() && !promptForEditToken()) {
-      return
+    if (!activeCategoryId || !categories.some((category) => category.id === activeCategoryId)) {
+      setActiveCategoryId(categories[0].id)
     }
-    save()
-  }
+  }, [categories, activeCategoryId])
+
+  const isEditMode = mode === 'edit'
+  const activeCategory = categories?.find((category) => category.id === activeCategoryId) ?? null
 
   return (
     <section id="tecrubelerim" className="scroll-mt-24 border-b border-border bg-surface/40 py-20 sm:py-24">
       <div className="mx-auto max-w-[1280px] px-4 sm:px-6 lg:px-8">
-        <div className="mb-10">
+        <div className="mb-10 mx-auto">
           <SectionHeading
             eyebrow="Sahadan Notlar"
             title="Tecrübelerim"
@@ -88,62 +40,93 @@ export function Experience() {
           />
         </div>
 
-        <div className="mb-8 flex justify-center">
-          <div className="inline-flex items-center gap-1 rounded-xl bg-surface p-1.5">
-            {categories.map((category) => (
-              <button
-                key={category.value}
-                type="button"
-                onClick={() => setActiveCategory(category.value)}
-                className={`rounded-lg px-6 py-2.5 text-xs font-semibold uppercase tracking-wider transition-all ${
-                  activeCategory === category.value
-                    ? 'bg-primary text-canvas'
-                    : 'text-text-secondary hover:text-text-primary'
-                }`}
-              >
-                {category.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="mx-auto max-w-3xl rounded-2xl border border-border bg-surface p-6 sm:p-8">
-          {isLoading ? (
-            <div className="h-40 animate-pulse rounded-xl bg-surface-elevated" />
-          ) : isEditing ? (
-            <div className="flex flex-col gap-4">
-              <textarea
-                value={draft}
-                onChange={(event) => setDraft(event.target.value)}
-                rows={10}
-                maxLength={20000}
-                placeholder="Tecrübelerinizi buraya yazın…"
-                className="w-full resize-y rounded-lg border border-border bg-surface-elevated p-4 text-sm leading-relaxed text-text-primary focus:border-primary focus:outline-none"
-              />
-              {errorMessage ? <p className="text-xs text-error">{errorMessage}</p> : null}
-              <div className="flex items-center gap-3">
-                <Button onClick={handleSaveClick} disabled={updateExperience.isPending}>
-                  {updateExperience.isPending ? 'Kaydediliyor…' : 'Kaydet'}
-                </Button>
-                <Button variant="secondary" onClick={cancelEditing} disabled={updateExperience.isPending}>
-                  İptal
-                </Button>
+        <div className="flex flex-col gap-8 lg:flex-row lg:items-start">
+          <div className="min-w-0 flex-1">
+            {isLoading ? (
+              <div className="grid gap-4 sm:grid-cols-2">
+                {[0, 1].map((i) => (
+                  <div key={i} className="h-32 animate-pulse rounded-2xl border border-border bg-surface" />
+                ))}
               </div>
+            ) : (
+              <>
+                <div className="mb-8 flex flex-wrap items-center gap-2">
+                  {categories?.map((category) => (
+                    <ExperienceCategoryTab
+                      key={category.id}
+                      category={category}
+                      isActive={category.id === activeCategoryId}
+                      isEditMode={isEditMode}
+                      onSelect={() => setActiveCategoryId(category.id)}
+                    />
+                  ))}
+                  {isEditMode ? (
+                    <ExperienceAddCategoryTab onCreated={setActiveCategoryId} />
+                  ) : null}
+                </div>
+
+                {activeCategory ? (
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    {activeCategory.items.map((item) => (
+                      <ExperienceItemCard key={item.id} item={item} isEditMode={isEditMode} />
+                    ))}
+                    {isEditMode ? (
+                      <ExperienceAddItemCard categoryId={activeCategory.id} />
+                    ) : activeCategory.items.length === 0 ? (
+                      <p className="text-sm italic text-text-muted sm:col-span-2">
+                        Bu kategori için henüz tecrübe eklenmedi.
+                      </p>
+                    ) : null}
+                  </div>
+                ) : (
+                  <p className="text-sm italic text-text-muted">
+                    {isEditMode
+                      ? 'Başlamak için sağdaki "Düzenleme Modu"ndayken bir kategori ekleyin.'
+                      : 'Henüz kategori eklenmedi.'}
+                  </p>
+                )}
+              </>
+            )}
+          </div>
+
+          <div className="lg:sticky lg:top-24 lg:w-56 lg:shrink-0">
+            <div className="rounded-2xl border border-border bg-surface p-4">
+              <span className="mb-3 block text-[11px] font-semibold uppercase tracking-wider text-text-muted">
+                Görünüm
+              </span>
+              <div className="flex flex-col gap-2">
+                <button
+                  type="button"
+                  onClick={() => setMode('read')}
+                  className={`flex items-center gap-2.5 rounded-xl px-3.5 py-3 text-left text-sm font-semibold transition-all ${
+                    mode === 'read'
+                      ? 'bg-primary text-canvas shadow-[0_0_20px_rgba(199,240,0,0.2)]'
+                      : 'text-text-secondary hover:bg-white/5 hover:text-text-primary'
+                  }`}
+                >
+                  <EyeIcon className="h-4 w-4 shrink-0" />
+                  Okuma Modu
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMode('edit')}
+                  className={`flex items-center gap-2.5 rounded-xl px-3.5 py-3 text-left text-sm font-semibold transition-all ${
+                    mode === 'edit'
+                      ? 'bg-primary text-canvas shadow-[0_0_20px_rgba(199,240,0,0.2)]'
+                      : 'text-text-secondary hover:bg-white/5 hover:text-text-primary'
+                  }`}
+                >
+                  <PencilIcon className="h-4 w-4 shrink-0" />
+                  Düzenleme Modu
+                </button>
+              </div>
+              <p className="mt-3 text-[11px] leading-relaxed text-text-muted">
+                {isEditMode
+                  ? 'Kategori ve tecrübe ekleyip düzenleyebilirsiniz. Değişiklikler parola ile korunur.'
+                  : 'Ziyaretçilerin gördüğü halidir.'}
+              </p>
             </div>
-          ) : (
-            <div className="flex flex-col gap-6">
-              {activeNote?.content ? (
-                <p className="whitespace-pre-wrap text-sm leading-relaxed text-text-secondary">
-                  {activeNote.content}
-                </p>
-              ) : (
-                <p className="text-sm italic text-text-muted">Bu kategori için henüz içerik eklenmedi.</p>
-              )}
-              <Button variant="secondary" className="w-fit" onClick={startEditing}>
-                Düzenle
-              </Button>
-            </div>
-          )}
+          </div>
         </div>
       </div>
     </section>

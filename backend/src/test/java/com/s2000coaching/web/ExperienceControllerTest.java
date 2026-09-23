@@ -1,17 +1,17 @@
 package com.s2000coaching.web;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 
-import com.s2000coaching.domain.ExperienceCategory;
 import com.s2000coaching.exception.ForbiddenException;
 import com.s2000coaching.service.ExperienceService;
-import com.s2000coaching.web.dto.ExperienceNoteResponse;
-import com.s2000coaching.web.dto.UpdateExperienceRequest;
-import java.time.Instant;
+import com.s2000coaching.web.dto.ExperienceCategoryResponse;
+import com.s2000coaching.web.dto.UpsertCategoryRequest;
+import java.util.List;
+import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
@@ -34,37 +34,54 @@ class ExperienceControllerTest {
 	private ExperienceService experienceService;
 
 	@Test
-	void shouldUpdateAndReturnNoteWhenTokenHeaderIsValid() {
-		var response = new ExperienceNoteResponse(ExperienceCategory.ANTRENMAN, "güncel içerik", Instant.now());
-		when(experienceService.update(eq(ExperienceCategory.ANTRENMAN), any(), eq("right-token")))
-				.thenReturn(response);
+	void shouldCreateCategoryWhenTokenHeaderIsValid() {
+		var response = new ExperienceCategoryResponse(UUID.randomUUID(), "Yoga", List.of());
+		when(experienceService.createCategory(eq("Yoga"), eq("right-token"))).thenReturn(response);
 
-		assertThat(mvc.put().uri("/api/experiences/ANTRENMAN")
+		assertThat(mvc.post().uri("/api/experience-categories")
 				.header("X-Edit-Token", "right-token")
 				.contentType(MediaType.APPLICATION_JSON)
-				.content(jsonMapper.writeValueAsString(new UpdateExperienceRequest("güncel içerik"))))
-				.hasStatusOk()
+				.content(jsonMapper.writeValueAsString(new UpsertCategoryRequest("Yoga"))))
+				.hasStatus(HttpStatus.CREATED)
 				.bodyJson()
-				.extractingPath("$.content").isEqualTo("güncel içerik");
+				.extractingPath("$.name").isEqualTo("Yoga");
 	}
 
 	@Test
-	void shouldReturn403WhenTokenHeaderIsMissing() {
-		when(experienceService.update(eq(ExperienceCategory.ANTRENMAN), any(), isNull()))
+	void shouldReturn403WhenCreatingCategoryWithoutToken() {
+		when(experienceService.createCategory(eq("Yoga"), isNull()))
 				.thenThrow(new ForbiddenException("Düzenleme parolası geçersiz"));
 
-		assertThat(mvc.put().uri("/api/experiences/ANTRENMAN")
+		assertThat(mvc.post().uri("/api/experience-categories")
 				.contentType(MediaType.APPLICATION_JSON)
-				.content(jsonMapper.writeValueAsString(new UpdateExperienceRequest("x"))))
+				.content(jsonMapper.writeValueAsString(new UpsertCategoryRequest("Yoga"))))
 				.hasStatus(HttpStatus.FORBIDDEN);
 	}
 
 	@Test
-	void shouldReturn400WhenContentIsBlankPayloadMissing() {
-		assertThat(mvc.put().uri("/api/experiences/ANTRENMAN")
+	void shouldReturn400WhenCategoryNameIsBlank() {
+		assertThat(mvc.post().uri("/api/experience-categories")
 				.header("X-Edit-Token", "right-token")
 				.contentType(MediaType.APPLICATION_JSON)
-				.content("{}"))
+				.content(jsonMapper.writeValueAsString(new UpsertCategoryRequest(""))))
 				.hasStatus(HttpStatus.BAD_REQUEST);
+	}
+
+	@Test
+	void shouldReturn204WhenDeletingItemWithValidToken() {
+		UUID itemId = UUID.randomUUID();
+
+		assertThat(mvc.delete().uri("/api/experience-items/" + itemId).header("X-Edit-Token", "right-token"))
+				.hasStatus(HttpStatus.NO_CONTENT);
+	}
+
+	@Test
+	void shouldReturn403WhenDeletingItemWithoutToken() {
+		UUID itemId = UUID.randomUUID();
+		doThrow(new ForbiddenException("Düzenleme parolası geçersiz"))
+				.when(experienceService).deleteItem(eq(itemId), isNull());
+
+		assertThat(mvc.delete().uri("/api/experience-items/" + itemId))
+				.hasStatus(HttpStatus.FORBIDDEN);
 	}
 }

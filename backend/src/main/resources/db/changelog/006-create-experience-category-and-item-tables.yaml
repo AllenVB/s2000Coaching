@@ -1,0 +1,92 @@
+databaseChangeLog:
+  - changeSet:
+      id: 010-create-experience-category-table
+      author: s2000coaching
+      comment: >
+        Replaces the fixed ANTRENMAN/BESLENME/KARDIYO enum model (experience_note table,
+        left in place unused) with user-managed categories. Categories can now be added,
+        renamed, and deleted from the site itself.
+      changes:
+        - createTable:
+            tableName: experience_category
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: name
+                  type: varchar(60)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: 011-create-experience-item-table
+      author: s2000coaching
+      changes:
+        - createTable:
+            tableName: experience_item
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: category_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_experience_item_category
+                    references: experience_category(id)
+              - column:
+                  name: title
+                  type: varchar(160)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: description
+                  type: text
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: 012-seed-default-experience-categories
+      author: s2000coaching
+      changes:
+        - insert:
+            tableName: experience_category
+            columns:
+              - column: { name: id, value: "44444444-4444-4444-8444-444444444401" }
+              - column: { name: name, value: "Antrenman" }
+              - column: { name: created_at, valueDate: "2026-01-01T00:00:00" }
+        - insert:
+            tableName: experience_category
+            columns:
+              - column: { name: id, value: "44444444-4444-4444-8444-444444444402" }
+              - column: { name: name, value: "Beslenme" }
+              - column: { name: created_at, valueDate: "2026-01-01T00:00:01" }
+        - insert:
+            tableName: experience_category
+            columns:
+              - column: { name: id, value: "44444444-4444-4444-8444-444444444403" }
+              - column: { name: name, value: "Kardiyo" }
+              - column: { name: created_at, valueDate: "2026-01-01T00:00:02" }
