@@ -1,0 +1,72 @@
+databaseChangeLog:
+  - changeSet:
+      id: 013-seed-nutrition-experience-topics
+      author: s2000coaching
+      comment: >
+        Seeds the Beslenme category (id ...402) with the coach's nutrition topics.
+        Protein carries real curated content; the rest are placeholders the coach
+        fills in later (in-app or via a follow-up migration).
+      changes:
+        - insert:
+            tableName: experience_item
+            columns:
+              - column: { name: id, value: "55555555-5555-4555-8555-555555555501" }
+              - column: { name: category_id, value: "44444444-4444-4444-8444-444444444402" }
+              - column: { name: title, value: "Protein" }
+              - column: { name: description, value: "Günlük protein alımını vücut ağırlığının her kilogramı başına 1,2-2 gram aralığında tutmak çoğu sporcu için fazlasıyla yeterlidir. Kişi ne kadar çok kas inşa edebiliyorsa protein alımını da bununla doğru orantılı olarak artırmalıdır; örneğin aynı kişinin sporun 2. yılında ihtiyaç duyduğu protein, 2. ayında ihtiyaç duyduğundan daha fazladır, çünkü kas kütlesi arttıkça protein ihtiyacı da artar." }
+              - column: { name: created_at, valueDate: "2026-01-02T00:00:00" }
+              - column: { name: updated_at, valueDate: "2026-01-02T00:00:00" }
+        - insert:
+            tableName: experience_item
+            columns:
+              - column: { name: id, value: "55555555-5555-4555-8555-555555555502" }
+              - column: { name: category_id, value: "44444444-4444-4444-8444-444444444402" }
+              - column: { name: title, value: "Karbonhidrat" }
+              - column: { name: description, value: "İçerik yakında eklenecek." }
+              - column: { name: created_at, valueDate: "2026-01-02T00:00:01" }
+              - column: { name: updated_at, valueDate: "2026-01-02T00:00:01" }
+        - insert:
+            tableName: experience_item
+            columns:
+              - column: { name: id, value: "55555555-5555-4555-8555-555555555503" }
+              - column: { name: category_id, value: "44444444-4444-4444-8444-444444444402" }
+              - column: { name: title, value: "Yağ" }
+              - column: { name: description, value: "İçerik yakında eklenecek." }
+              - column: { name: created_at, valueDate: "2026-01-02T00:00:02" }
+              - column: { name: updated_at, valueDate: "2026-01-02T00:00:02" }
+        - insert:
+            tableName: experience_item
+            columns:
+              - column: { name: id, value: "55555555-5555-4555-8555-555555555504" }
+              - column: { name: category_id, value: "44444444-4444-4444-8444-444444444402" }
+              - column: { name: title, value: "Sebzeler" }
+              - column: { name: description, value: "İçerik yakında eklenecek." }
+              - column: { name: created_at, valueDate: "2026-01-02T00:00:03" }
+              - column: { name: updated_at, valueDate: "2026-01-02T00:00:03" }
+        - insert:
+            tableName: experience_item
+            columns:
+              - column: { name: id, value: "55555555-5555-4555-8555-555555555505" }
+              - column: { name: category_id, value: "44444444-4444-4444-8444-444444444402" }
+              - column: { name: title, value: "Meyveler" }
+              - column: { name: description, value: "İçerik yakında eklenecek." }
+              - column: { name: created_at, valueDate: "2026-01-02T00:00:04" }
+              - column: { name: updated_at, valueDate: "2026-01-02T00:00:04" }
+        - insert:
+            tableName: experience_item
+            columns:
+              - column: { name: id, value: "55555555-5555-4555-8555-555555555506" }
+              - column: { name: category_id, value: "44444444-4444-4444-8444-444444444402" }
+              - column: { name: title, value: "Supplementler" }
+              - column: { name: description, value: "İçerik yakında eklenecek." }
+              - column: { name: created_at, valueDate: "2026-01-02T00:00:05" }
+              - column: { name: updated_at, valueDate: "2026-01-02T00:00:05" }
+        - insert:
+            tableName: experience_item
+            columns:
+              - column: { name: id, value: "55555555-5555-4555-8555-555555555507" }
+              - column: { name: category_id, value: "44444444-4444-4444-8444-444444444402" }
+              - column: { name: title, value: "Diğer" }
+              - column: { name: description, value: "İçerik yakında eklenecek." }
+              - column: { name: created_at, valueDate: "2026-01-02T00:00:06" }
+              - column: { name: updated_at, valueDate: "2026-01-02T00:00:06" }
