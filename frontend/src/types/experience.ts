@@ -1,12 +1,16 @@
-export interface ExperienceItem {
+export interface ExperienceNote {
   id: string
-  title: string
-  description: string
-  updatedAt: string
+  content: string
+}
+
+export interface ExperienceTopic {
+  id: string
+  name: string
+  notes: ExperienceNote[]
 }
 
 export interface ExperienceCategory {
   id: string
   name: string
-  items: ExperienceItem[]
+  topics: ExperienceTopic[]
 }

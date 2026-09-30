@@ -1,0 +1,84 @@
+databaseChangeLog:
+  # Moves "Tecrübelerim" from a flat Category -> Item model to a three-level
+  # Category -> Topic -> Note model, so each category (Beslenme) shows a left-hand
+  # list of topics (Protein, Karbonhidrat ...) and each topic holds multiple plain
+  # text notes. The old `experience_item` table (006/007) is left orphaned and
+  # unused, like `experience_note` before it — dropping tables needs explicit
+  # confirmation, so superseded tables are abandoned in place rather than dropped.
+  - changeSet:
+      id: 014-create-experience-topic-table
+      author: s2000coaching
+      changes:
+        - createTable:
+            tableName: experience_topic
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: category_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_experience_topic_category
+                    references: experience_category(id)
+              - column:
+                  name: name
+                  type: varchar(80)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: 015-create-experience-topic-note-table
+      author: s2000coaching
+      changes:
+        - createTable:
+            tableName: experience_topic_note
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: topic_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_experience_topic_note_topic
+                    references: experience_topic(id)
+              - column:
+                  name: content
+                  type: text
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: 016-seed-nutrition-topics-and-protein-notes
+      author: s2000coaching
+      changes:
+        # Topics under the Beslenme category (id ...402), in display order.
+        - insert: { tableName: experience_topic, columns: [ { column: { name: id, value: "66666666-6666-4666-8666-666666666601" } }, { column: { name: category_id, value: "44444444-4444-4444-8444-444444444402" } }, { column: { name: name, value: "Protein" } }, { column: { name: created_at, valueDate: "2026-01-03T00:00:00" } } ] }
+        - insert: { tableName: experience_topic, columns: [ { column: { name: id, value: "66666666-6666-4666-8666-666666666602" } }, { column: { name: category_id, value: "44444444-4444-4444-8444-444444444402" } }, { column: { name: name, value: "Karbonhidrat" } }, { column: { name: created_at, valueDate: "2026-01-03T00:00:01" } } ] }
+        - insert: { tableName: experience_topic, columns: [ { column: { name: id, value: "66666666-6666-4666-8666-666666666603" } }, { column: { name: category_id, value: "44444444-4444-4444-8444-444444444402" } }, { column: { name: name, value: "Yağ" } }, { column: { name: created_at, valueDate: "2026-01-03T00:00:02" } } ] }
+        - insert: { tableName: experience_topic, columns: [ { column: { name: id, value: "66666666-6666-4666-8666-666666666604" } }, { column: { name: category_id, value: "44444444-4444-4444-8444-444444444402" } }, { column: { name: name, value: "Sebzeler" } }, { column: { name: created_at, valueDate: "2026-01-03T00:00:03" } } ] }
+        - insert: { tableName: experience_topic, columns: [ { column: { name: id, value: "66666666-6666-4666-8666-666666666605" } }, { column: { name: category_id, value: "44444444-4444-4444-8444-444444444402" } }, { column: { name: name, value: "Meyveler" } }, { column: { name: created_at, valueDate: "2026-01-03T00:00:04" } } ] }
+        - insert: { tableName: experience_topic, columns: [ { column: { name: id, value: "66666666-6666-4666-8666-666666666606" } }, { column: { name: category_id, value: "44444444-4444-4444-8444-444444444402" } }, { column: { name: name, value: "Supplementler" } }, { column: { name: created_at, valueDate: "2026-01-03T00:00:05" } } ] }
+        - insert: { tableName: experience_topic, columns: [ { column: { name: id, value: "66666666-6666-4666-8666-666666666607" } }, { column: { name: category_id, value: "44444444-4444-4444-8444-444444444402" } }, { column: { name: name, value: "Diğer" } }, { column: { name: created_at, valueDate: "2026-01-03T00:00:06" } } ] }
+        # Two separate notes under the Protein topic.
+        - insert: { tableName: experience_topic_note, columns: [ { column: { name: id, value: "77777777-7777-4777-8777-777777777701" } }, { column: { name: topic_id, value: "66666666-6666-4666-8666-666666666601" } }, { column: { name: content, value: "Günlük protein alımını vücut ağırlığının her kilogramı başına 1,2-2 gram aralığında tutmak çoğu sporcu için fazlasıyla yeterlidir." } }, { column: { name: created_at, valueDate: "2026-01-03T01:00:00" } } ] }
+        - insert: { tableName: experience_topic_note, columns: [ { column: { name: id, value: "77777777-7777-4777-8777-777777777702" } }, { column: { name: topic_id, value: "66666666-6666-4666-8666-666666666601" } }, { column: { name: content, value: "Kişi ne kadar çok kas inşa edebiliyorsa protein alımını da bununla doğru orantılı olarak artırmalıdır; örneğin aynı kişinin sporun 2. yılında ihtiyaç duyduğu protein, 2. ayında ihtiyaç duyduğundan daha fazladır, çünkü kas kütlesi arttıkça protein ihtiyacı da artar." } }, { column: { name: created_at, valueDate: "2026-01-03T01:00:01" } } ] }
