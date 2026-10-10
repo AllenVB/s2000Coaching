@@ -18,6 +18,24 @@ public class GlobalExceptionHandler {
 				.body(new ApiError(Instant.now(), 404, "Not Found", List.of(ex.getMessage())));
 	}
 
+	@ExceptionHandler(ConflictException.class)
+	public ResponseEntity<ApiError> handleConflict(ConflictException ex) {
+		return ResponseEntity.status(HttpStatus.CONFLICT)
+				.body(new ApiError(Instant.now(), 409, "Conflict", List.of(ex.getMessage())));
+	}
+
+	@ExceptionHandler(BadRequestException.class)
+	public ResponseEntity<ApiError> handleBadRequest(BadRequestException ex) {
+		return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+				.body(new ApiError(Instant.now(), 400, "Bad Request", List.of(ex.getMessage())));
+	}
+
+	@ExceptionHandler(UnauthorizedException.class)
+	public ResponseEntity<ApiError> handleUnauthorized(UnauthorizedException ex) {
+		return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+				.body(new ApiError(Instant.now(), 401, "Unauthorized", List.of(ex.getMessage())));
+	}
+
 	@ExceptionHandler(MethodArgumentNotValidException.class)
 	public ResponseEntity<ApiError> handleValidation(MethodArgumentNotValidException ex) {
 		List<String> messages = ex.getBindingResult().getFieldErrors().stream()

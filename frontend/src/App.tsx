@@ -1,41 +1,17 @@
-import { CartDrawer } from '@/components/cart/CartDrawer'
-import { CheckoutModal } from '@/components/cart/CheckoutModal'
-import { Footer } from '@/components/layout/Footer'
-import { Header } from '@/components/layout/Header'
-import { AppEcosystem } from '@/components/sections/AppEcosystem'
-import { Experience } from '@/components/sections/Experience'
-import { Faq } from '@/components/sections/Faq'
-import { FinalCta } from '@/components/sections/FinalCta'
-import { Hero } from '@/components/sections/Hero'
-import { HowItWorks } from '@/components/sections/HowItWorks'
-import { Pricing } from '@/components/sections/Pricing'
-import { Testimonials } from '@/components/sections/Testimonials'
-import { Transformations } from '@/components/sections/Transformations'
-import { TrustStats } from '@/components/sections/TrustStats'
-import { CartProvider } from '@/context/CartContext'
-import { PricingCategoryProvider } from '@/context/PricingCategoryContext'
+import { Route, Routes } from 'react-router-dom'
+
+import { AdminPage } from '@/pages/AdminPage'
+import { LandingPage } from '@/pages/LandingPage'
+import { MemberPage } from '@/pages/MemberPage'
+import { NotFoundPage } from '@/pages/NotFoundPage'
 
 export default function App() {
   return (
-    <CartProvider>
-      <PricingCategoryProvider>
-        <Header />
-        <main>
-          <Hero />
-          <TrustStats />
-          <HowItWorks />
-          <AppEcosystem />
-          <Pricing />
-          <Transformations />
-          <Experience />
-          <Testimonials />
-          <Faq />
-          <FinalCta />
-        </main>
-        <Footer />
-        <CartDrawer />
-        <CheckoutModal />
-      </PricingCategoryProvider>
-    </CartProvider>
+    <Routes>
+      <Route path="/" element={<LandingPage />} />
+      <Route path="/uye" element={<MemberPage />} />
+      <Route path="/yonetim" element={<AdminPage />} />
+      <Route path="*" element={<NotFoundPage />} />
+    </Routes>
   )
 }

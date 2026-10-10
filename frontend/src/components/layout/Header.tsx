@@ -1,4 +1,5 @@
 import { useState, type MouseEvent } from 'react'
+import { Link } from 'react-router-dom'
 
 import { useCart } from '@/context/CartContext'
 import { usePricingCategory } from '@/context/PricingCategoryContext'
@@ -6,6 +7,12 @@ import { navLinks, type NavLink } from '@/data/content'
 import { Button } from '@/components/ui/Button'
 import { CartIcon, CloseIcon, MenuIcon } from '@/components/ui/icons'
 import { isPlainLeftClick, navigateToSection } from '@/lib/scroll'
+
+/** Cross-page links out of the landing site; handled by the router, not by hash scrolling. */
+const portalLinks = [
+  { label: 'Üye Girişi', to: '/uye' },
+  { label: 'Yönetim', to: '/yonetim' },
+]
 
 export function Header() {
   const [isMobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -68,6 +75,15 @@ export function Header() {
               {link.label}
             </a>
           ))}
+          {portalLinks.map((link) => (
+            <Link
+              key={link.to}
+              to={link.to}
+              className="text-sm font-medium text-primary transition-colors hover:text-primary-hover"
+            >
+              {link.label}
+            </Link>
+          ))}
         </nav>
 
         <div className="flex items-center gap-3">
@@ -117,6 +133,16 @@ export function Header() {
               >
                 {link.label}
               </a>
+            ))}
+            {portalLinks.map((link) => (
+              <Link
+                key={link.to}
+                to={link.to}
+                onClick={() => setMobileMenuOpen(false)}
+                className="py-1 text-sm font-medium text-primary hover:text-primary-hover"
+              >
+                {link.label}
+              </Link>
             ))}
           </div>
           <a

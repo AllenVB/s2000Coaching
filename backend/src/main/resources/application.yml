@@ -18,3 +18,13 @@ server:
 app:
   cors:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173}
+  # Shared secret the management page (/yonetim) sends as the X-Admin-Token header.
+  # MUST be overridden in any deployed environment.
+  admin:
+    token: ${ADMIN_TOKEN:s2000-dev-admin}
+  verification:
+    code-ttl: ${VERIFICATION_CODE_TTL:15m}
+  member-session:
+    ttl: ${MEMBER_SESSION_TTL:14d}
+  mail:
+    from: ${MAIL_FROM:no-reply@s2000coaching.com}
