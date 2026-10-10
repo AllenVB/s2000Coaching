@@ -24,18 +24,6 @@ export function MemberNutritionPage() {
   )
 }
 
-export function MemberMeasurementsPage() {
-  return (
-    <>
-      <PageHeading title="Ölçümler" description="Haftalık ölçümleriniz ve gelişiminiz." />
-      <ComingSoonCard
-        title="Ölçüm Takibi"
-        description="Haftalık ölçüm formunuz ve gelişim grafiğiniz bu alanda yer alacak."
-      />
-    </>
-  )
-}
-
 export function MemberMessagesPage() {
   return (
     <>

@@ -6,6 +6,7 @@ import { PageHeading } from '@/components/ui/PageHeading'
 import { useSignOutOn401 } from '@/hooks/useAdminSession'
 import { formatDate } from '@/lib/date'
 import { formatMinor } from '@/lib/money'
+import type { Member } from '@/types/member'
 
 /** Opens on the only question that matters first thing: who needs attention today. */
 export function AdminDashboardPage() {
@@ -41,31 +42,18 @@ export function AdminDashboardPage() {
             />
           </div>
 
-          <section className="rounded-2xl border border-border bg-surface p-6">
-            <h2 className="mb-4 border-b border-border pb-3 text-sm font-bold uppercase tracking-wider text-text-primary">
-              Onay Bekleyen Üyeler
-            </h2>
-            {data.pendingMembers.length === 0 ? (
-              <p className="text-sm italic text-text-muted">Onay bekleyen üye yok.</p>
-            ) : (
-              <ul className="space-y-2">
-                {data.pendingMembers.map((member) => (
-                  <li key={member.id}>
-                    <Link
-                      to={`/yonetim/uyeler/${member.id}`}
-                      className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-surface-elevated px-4 py-3 transition-colors hover:border-white/20"
-                    >
-                      <span className="min-w-0">
-                        <span className="block font-semibold text-text-primary">{member.fullName}</span>
-                        <span className="block break-all text-xs text-text-secondary">{member.email}</span>
-                      </span>
-                      <MemberStatusBadge status={member.status} />
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </section>
+          <MemberCallout
+            title="Onay Bekleyen Üyeler"
+            emptyLabel="Onay bekleyen üye yok."
+            members={data.pendingMembers}
+            showStatus
+          />
+
+          <MemberCallout
+            title={`${data.staleAfterDays} Gündür Ölçüm Girmeyenler`}
+            emptyLabel="Takipte gecikme yok."
+            members={data.staleMembers}
+          />
 
           <section className="rounded-2xl border border-border bg-surface p-6">
             <h2 className="mb-4 border-b border-border pb-3 text-sm font-bold uppercase tracking-wider text-text-primary">
@@ -95,6 +83,47 @@ export function AdminDashboardPage() {
         </div>
       ) : null}
     </>
+  )
+}
+
+/** A short "these people need you" list; the whole row links into the member's page. */
+function MemberCallout({
+  title,
+  emptyLabel,
+  members,
+  showStatus = false,
+}: {
+  title: string
+  emptyLabel: string
+  members: Member[]
+  showStatus?: boolean
+}) {
+  return (
+    <section className="rounded-2xl border border-border bg-surface p-6">
+      <h2 className="mb-4 border-b border-border pb-3 text-sm font-bold uppercase tracking-wider text-text-primary">
+        {title}
+      </h2>
+      {members.length === 0 ? (
+        <p className="text-sm italic text-text-muted">{emptyLabel}</p>
+      ) : (
+        <ul className="space-y-2">
+          {members.map((member) => (
+            <li key={member.id}>
+              <Link
+                to={`/yonetim/uyeler/${member.id}`}
+                className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-surface-elevated px-4 py-3 transition-colors hover:border-white/20"
+              >
+                <span className="min-w-0">
+                  <span className="block font-semibold text-text-primary">{member.fullName}</span>
+                  <span className="block break-all text-xs text-text-secondary">{member.email}</span>
+                </span>
+                {showStatus ? <MemberStatusBadge status={member.status} /> : null}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
   )
 }
 

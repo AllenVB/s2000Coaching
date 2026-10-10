@@ -9,15 +9,12 @@ import { MemberDetailPage } from '@/pages/admin/MemberDetailPage'
 import { MemberListPage } from '@/pages/admin/MemberListPage'
 import { NewMemberPage } from '@/pages/admin/NewMemberPage'
 import { MemberNotesTab } from '@/pages/admin/tabs/MemberNotesTab'
-import {
-  MemberMeasurementsTab,
-  MemberNutritionTab,
-  MemberTrainingTab,
-} from '@/pages/admin/tabs/MemberPlaceholderTabs'
+import { MemberMeasurementsTab } from '@/pages/admin/tabs/MemberMeasurementsTab'
+import { MemberNutritionTab, MemberTrainingTab } from '@/pages/admin/tabs/MemberPlaceholderTabs'
 import { MemberProfileTab } from '@/pages/admin/tabs/MemberProfileTab'
 import { LandingPage } from '@/pages/LandingPage'
+import { MemberMeasurementsPage } from '@/pages/member/MemberMeasurementsPage'
 import {
-  MemberMeasurementsPage,
   MemberMessagesPage,
   MemberNutritionPage,
   MemberTrainingPage,

@@ -72,6 +72,30 @@ Yerel yönetim anahtarı varsayılan olarak `s2000-dev-admin`'dir (`/yonetim` sa
 Üyelerin antrenman/beslenme planları sonraki aşamada eklenecek; üye panelinde bu alanlar şimdilik
 "Yakında" kartları olarak duruyor.
 
+## Ölçüm takibi
+
+Üye `/uye/olcumler` sayfasından haftalık check-in girer: tarih ve kilo zorunlu, bel/göğüs/kalça/kol/bacak
+ve not isteğe bağlı. **Gün başına tek kayıt** tutulur — aynı tarihe tekrar girilirse o günün satırı
+güncellenir, ikinci satır oluşmaz. Üye kendi kayıtlarını silebilir; koç üye detayındaki **Ölçümler**
+sekmesinden grafiği ve tabloyu görür (koç ölçüm giremez, yalnızca okur ve siler). Grafik tek seferde tek
+ölçüyü çizer; üstteki düğmelerden hangi ölçünün gösterileceği seçilir.
+
+Yönetim paneli, **10 gündür ölçüm girmemiş aktif üyeleri** ayrı bir blokta listeler — "bugün kimi
+aramalıyım" sorusunun cevabı.
+
+### KVKK — sağlık verisi
+
+Ölçümler KVKK'da **özel nitelikli kişisel veri** sayılır, bu yüzden checkout'taki KVKK onayı bunları
+kapsamaz. Üye, ölçüm girmeden önce `/uye/olcumler` sayfasındaki ayrı onayı vermek zorundadır; onay
+verilene kadar sunucu hiçbir ölçüm yazmaz (`member.health_data_consent_at`). Onay verilmemesi üyeliği
+etkilemez, yalnızca ölçüm takibi kapalı kalır.
+
+> **Yapılacak:** `frontend/src/components/member/HealthDataConsent.tsx` içindeki aydınlatma metni
+> **taslaktır**. Yayına çıkmadan önce kendi hukuk danışmanınızın onayladığı metinle değiştirin.
+
+Fotoğraflı takip (önce/sonra karşılaştırması) henüz yok: nesne depolama (S3 vb.) kararı gerektirdiği için
+kapsam dışı bırakıldı.
+
 ## Yapılandırma
 
 | Ortam değişkeni | Varsayılan | Açıklama |

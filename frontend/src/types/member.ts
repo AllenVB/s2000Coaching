@@ -11,6 +11,8 @@ export interface Member {
   status: MemberStatus
   createdAt: string
   verifiedAt: string | null
+  /** When the member accepted health-data processing; null until they do. */
+  healthDataConsentAt: string | null
 }
 
 export interface CreateMemberInput {

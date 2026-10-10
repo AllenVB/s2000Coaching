@@ -23,7 +23,11 @@ export interface OrderSummary {
 export interface AdminDashboard {
   totalMembers: number
   activeMembers: number
+  /** Window the server used for `staleMembers`, so the UI does not hardcode it. */
+  staleAfterDays: number
   pendingMembers: Member[]
+  /** Active members with no check-in inside that window. */
+  staleMembers: Member[]
   recentOrders: OrderSummary[]
 }
 

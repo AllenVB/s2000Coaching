@@ -17,12 +17,3 @@ export function MemberNutritionTab() {
     />
   )
 }
-
-export function MemberMeasurementsTab() {
-  return (
-    <ComingSoonCard
-      title="Ölçümler"
-      description="Üyenin haftalık ölçümleri ve gelişim grafiği bu sekmede görünecek."
-    />
-  )
-}
