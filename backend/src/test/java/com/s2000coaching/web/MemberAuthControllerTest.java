@@ -12,6 +12,7 @@ import com.s2000coaching.domain.MemberStatus;
 import com.s2000coaching.exception.BadRequestException;
 import com.s2000coaching.exception.UnauthorizedException;
 import com.s2000coaching.service.MemberAuthService;
+import com.s2000coaching.service.MemberService;
 import com.s2000coaching.web.dto.MemberCodeVerificationRequest;
 import com.s2000coaching.web.dto.MemberEmailRequest;
 import com.s2000coaching.web.dto.MemberResponse;
@@ -40,6 +41,10 @@ class MemberAuthControllerTest {
 
 	@MockitoBean
 	private MemberAuthService memberAuthService;
+
+	/** MemberController records health-data consent through this; unused by these cases. */
+	@MockitoBean
+	private MemberService memberService;
 
 	private static Member activeMember() {
 		Member member = new Member(UUID.randomUUID(), "sporcu@example.com", "Ahmet Yılmaz", "+905551112233",

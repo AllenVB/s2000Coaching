@@ -1,0 +1,81 @@
+databaseChangeLog:
+  - changeSet:
+      id: 017-add-member-health-data-consent
+      author: s2000coaching
+      comment: >
+        Measurements are health data, which KVKK treats as special-category: it needs its own
+        explicit consent, separate from the checkout KVKK box. Null means not yet given, and
+        the measurement endpoints refuse to write until it is set.
+      changes:
+        - addColumn:
+            tableName: member
+            columns:
+              - column:
+                  name: health_data_consent_at
+                  type: timestamp with time zone
+
+  - changeSet:
+      id: 018-create-measurement-table
+      author: s2000coaching
+      comment: >
+        One check-in per member per day; re-submitting the same date updates that row, which
+        the unique constraint enforces.
+      changes:
+        - createTable:
+            tableName: measurement
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: member_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_measurement_member
+                    references: member(id)
+              - column:
+                  name: measured_on
+                  type: date
+                  constraints:
+                    nullable: false
+              - column:
+                  name: weight_kg
+                  type: numeric(5, 2)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: waist_cm
+                  type: numeric(5, 1)
+              - column:
+                  name: chest_cm
+                  type: numeric(5, 1)
+              - column:
+                  name: hip_cm
+                  type: numeric(5, 1)
+              - column:
+                  name: arm_cm
+                  type: numeric(5, 1)
+              - column:
+                  name: thigh_cm
+                  type: numeric(5, 1)
+              - column:
+                  name: note
+                  type: text
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false
+        - addUniqueConstraint:
+            tableName: measurement
+            columnNames: member_id, measured_on
+            constraintName: uk_measurement_member_date

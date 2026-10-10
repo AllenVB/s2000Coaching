@@ -1,10 +1,12 @@
 package com.s2000coaching.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 import com.s2000coaching.domain.Member;
 import com.s2000coaching.domain.MemberStatus;
+import com.s2000coaching.repository.MeasurementRepository;
 import com.s2000coaching.repository.MemberRepository;
 import com.s2000coaching.repository.OrderRepository;
 import java.math.BigDecimal;
@@ -26,11 +28,15 @@ class AdminDashboardServiceTest {
 	@Mock
 	private OrderRepository orderRepository;
 
+	@Mock
+	private MeasurementRepository measurementRepository;
+
 	private AdminDashboardService adminDashboardService;
 
 	@BeforeEach
 	void setUp() {
-		adminDashboardService = new AdminDashboardService(memberRepository, orderRepository);
+		adminDashboardService = new AdminDashboardService(memberRepository, orderRepository,
+				measurementRepository);
 	}
 
 	@Test
@@ -42,6 +48,8 @@ class AdminDashboardServiceTest {
 		when(memberRepository.findAllByStatusOrderByCreatedAtDesc(MemberStatus.PENDING_VERIFICATION))
 				.thenReturn(List.of(pending));
 		when(orderRepository.findTop10ByOrderByCreatedAtDesc()).thenReturn(List.of());
+		when(measurementRepository.findActiveMemberIdsWithoutMeasurementSince(any())).thenReturn(List.of());
+		when(memberRepository.findAllById(List.of())).thenReturn(List.of());
 
 		var dashboard = adminDashboardService.load();
 
@@ -50,5 +58,7 @@ class AdminDashboardServiceTest {
 		assertThat(dashboard.pendingMembers()).singleElement()
 				.satisfies(member -> assertThat(member.email()).isEqualTo("bekleyen@example.com"));
 		assertThat(dashboard.recentOrders()).isEmpty();
+		assertThat(dashboard.staleMembers()).isEmpty();
+		assertThat(dashboard.staleAfterDays()).isPositive();
 	}
 }

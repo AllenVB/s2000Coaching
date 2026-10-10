@@ -16,7 +16,8 @@ public record MemberResponse(
 		String sportsBackground,
 		MemberStatus status,
 		Instant createdAt,
-		Instant verifiedAt) {
+		Instant verifiedAt,
+		Instant healthDataConsentAt) {
 
 	public static MemberResponse from(Member member) {
 		return new MemberResponse(
@@ -29,6 +30,7 @@ public record MemberResponse(
 				member.getSportsBackground(),
 				member.getStatus(),
 				member.getCreatedAt(),
-				member.getVerifiedAt());
+				member.getVerifiedAt(),
+				member.getHealthDataConsentAt());
 	}
 }

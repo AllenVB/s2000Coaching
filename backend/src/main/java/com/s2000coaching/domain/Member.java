@@ -46,6 +46,14 @@ public class Member {
 	@Column(name = "verified_at")
 	private Instant verifiedAt;
 
+	/**
+	 * When the member accepted that their health data (measurements and the notes attached to
+	 * them) may be processed. KVKK treats this as special-category data, so nothing is written
+	 * until this is set.
+	 */
+	@Column(name = "health_data_consent_at")
+	private Instant healthDataConsentAt;
+
 	protected Member() {
 	}
 
@@ -129,5 +137,20 @@ public class Member {
 	public void activate(Instant verifiedAt) {
 		this.status = MemberStatus.ACTIVE;
 		this.verifiedAt = verifiedAt;
+	}
+
+	public Instant getHealthDataConsentAt() {
+		return healthDataConsentAt;
+	}
+
+	public boolean hasHealthDataConsent() {
+		return healthDataConsentAt != null;
+	}
+
+	/** Idempotent: re-accepting keeps the original timestamp, which is the one that counts. */
+	public void grantHealthDataConsent(Instant grantedAt) {
+		if (this.healthDataConsentAt == null) {
+			this.healthDataConsentAt = grantedAt;
+		}
 	}
 }

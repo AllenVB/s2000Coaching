@@ -15,6 +15,7 @@ import com.s2000coaching.exception.BadRequestException;
 import com.s2000coaching.exception.ConflictException;
 import com.s2000coaching.exception.NotFoundException;
 import com.s2000coaching.repository.CoachNoteRepository;
+import com.s2000coaching.repository.MeasurementRepository;
 import com.s2000coaching.repository.MemberRepository;
 import com.s2000coaching.repository.MemberSessionRepository;
 import com.s2000coaching.repository.MemberVerificationCodeRepository;
@@ -49,6 +50,9 @@ class MemberServiceTest {
 	private CoachNoteRepository coachNoteRepository;
 
 	@Mock
+	private MeasurementRepository measurementRepository;
+
+	@Mock
 	private VerificationCodeService verificationCodeService;
 
 	private MemberService memberService;
@@ -56,7 +60,7 @@ class MemberServiceTest {
 	@BeforeEach
 	void setUp() {
 		memberService = new MemberService(memberRepository, codeRepository, sessionRepository,
-				coachNoteRepository, verificationCodeService);
+				coachNoteRepository, measurementRepository, verificationCodeService);
 	}
 
 	private static CreateMemberRequest request(String email) {
@@ -207,10 +211,11 @@ class MemberServiceTest {
 			memberService.deleteMember(member.getId());
 
 			InOrder inOrder = Mockito.inOrder(sessionRepository, codeRepository, coachNoteRepository,
-					memberRepository);
+					measurementRepository, memberRepository);
 			inOrder.verify(sessionRepository).deleteAllByMemberId(member.getId());
 			inOrder.verify(codeRepository).deleteAllByMemberId(member.getId());
 			inOrder.verify(coachNoteRepository).deleteAllByMemberId(member.getId());
+			inOrder.verify(measurementRepository).deleteAllByMemberId(member.getId());
 			inOrder.verify(memberRepository).delete(member);
 		}
 

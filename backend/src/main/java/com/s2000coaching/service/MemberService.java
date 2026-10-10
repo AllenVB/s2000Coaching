@@ -6,6 +6,7 @@ import com.s2000coaching.domain.VerificationPurpose;
 import com.s2000coaching.exception.ConflictException;
 import com.s2000coaching.exception.NotFoundException;
 import com.s2000coaching.repository.CoachNoteRepository;
+import com.s2000coaching.repository.MeasurementRepository;
 import com.s2000coaching.repository.MemberRepository;
 import com.s2000coaching.repository.MemberSessionRepository;
 import com.s2000coaching.repository.MemberVerificationCodeRepository;
@@ -27,17 +28,20 @@ public class MemberService {
 	private final MemberVerificationCodeRepository codeRepository;
 	private final MemberSessionRepository sessionRepository;
 	private final CoachNoteRepository coachNoteRepository;
+	private final MeasurementRepository measurementRepository;
 	private final VerificationCodeService verificationCodeService;
 
 	public MemberService(MemberRepository memberRepository,
 			MemberVerificationCodeRepository codeRepository,
 			MemberSessionRepository sessionRepository,
 			CoachNoteRepository coachNoteRepository,
+			MeasurementRepository measurementRepository,
 			VerificationCodeService verificationCodeService) {
 		this.memberRepository = memberRepository;
 		this.codeRepository = codeRepository;
 		this.sessionRepository = sessionRepository;
 		this.coachNoteRepository = coachNoteRepository;
+		this.measurementRepository = measurementRepository;
 		this.verificationCodeService = verificationCodeService;
 	}
 
@@ -124,7 +128,19 @@ public class MemberService {
 		sessionRepository.deleteAllByMemberId(memberId);
 		codeRepository.deleteAllByMemberId(memberId);
 		coachNoteRepository.deleteAllByMemberId(memberId);
+		measurementRepository.deleteAllByMemberId(memberId);
 		memberRepository.delete(member);
+	}
+
+	/**
+	 * Records the member's explicit consent to health-data processing (KVKK special-category
+	 * data). Nothing in the measurement flow writes a row before this is set.
+	 */
+	@Transactional
+	public MemberResponse grantHealthDataConsent(UUID memberId) {
+		Member member = getOrThrow(memberId);
+		member.grantHealthDataConsent(Instant.now());
+		return MemberResponse.from(member);
 	}
 
 	/** Shared by the services that hang records off a member (notes, measurements, plans). */
