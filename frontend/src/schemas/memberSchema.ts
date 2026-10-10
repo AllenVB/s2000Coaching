@@ -38,3 +38,8 @@ export const memberCodeSchema = z.object({
 })
 
 export type MemberCodeFormValues = z.infer<typeof memberCodeSchema>
+
+/** Editable subset of a member; e-mail is intentionally not editable (see UpdateMemberRequest). */
+export const updateMemberSchema = createMemberSchema.omit({ email: true })
+
+export type UpdateMemberFormValues = z.infer<typeof updateMemberSchema>

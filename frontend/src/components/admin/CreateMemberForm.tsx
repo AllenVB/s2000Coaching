@@ -6,7 +6,6 @@ import { useCreateMember } from '@/api/adminMembersApi'
 import { Button } from '@/components/ui/Button'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { Field, inputClasses, textareaClasses } from '@/components/ui/FormField'
-import { CheckIcon } from '@/components/ui/icons'
 import { createMemberSchema, type CreateMemberFormValues } from '@/schemas/memberSchema'
 import type { Member } from '@/types/member'
 
@@ -14,10 +13,9 @@ import type { Member } from '@/types/member'
  * Member creation. Submitting only opens the confirmation prompt — nothing is sent until the
  * admin confirms, because creating a member also mails that person a code.
  */
-export function CreateMemberForm() {
+export function CreateMemberForm({ onCreated }: { onCreated: (member: Member) => void }) {
   const createMember = useCreateMember()
   const [confirming, setConfirming] = useState<CreateMemberFormValues | null>(null)
-  const [created, setCreated] = useState<Member | null>(null)
 
   const {
     register,
@@ -31,7 +29,6 @@ export function CreateMemberForm() {
 
   const onSubmit = (values: CreateMemberFormValues) => {
     createMember.reset()
-    setCreated(null)
     setConfirming(values)
   }
 
@@ -41,9 +38,9 @@ export function CreateMemberForm() {
     }
     createMember.mutate(confirming, {
       onSuccess: (member) => {
-        setCreated(member)
         setConfirming(null)
         reset()
+        onCreated(member)
       },
     })
   }
@@ -57,18 +54,6 @@ export function CreateMemberForm() {
           doğrulandığında tamamlanır.
         </p>
       </div>
-
-      {created ? (
-        <div className="mb-5 flex items-start gap-2 rounded-xl border border-success/40 bg-success/10 p-3.5 text-xs leading-relaxed text-text-secondary">
-          <CheckIcon className="mt-0.5 h-4 w-4 shrink-0 text-success" />
-          <span>
-            <strong className="text-text-primary">{created.fullName}</strong> oluşturuldu ve onay kodu{' '}
-            <strong className="text-text-primary">{created.email}</strong> adresine gönderildi. Üye, kodu üye
-            sayfasında girerek üyeliğini tamamlayabilir; alternatif olarak aşağıdaki listeden kodu siz de
-            girebilirsiniz.
-          </span>
-        </div>
-      ) : null}
 
       <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">

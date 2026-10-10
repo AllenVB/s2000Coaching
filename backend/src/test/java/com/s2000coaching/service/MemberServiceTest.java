@@ -14,10 +14,12 @@ import com.s2000coaching.domain.VerificationPurpose;
 import com.s2000coaching.exception.BadRequestException;
 import com.s2000coaching.exception.ConflictException;
 import com.s2000coaching.exception.NotFoundException;
+import com.s2000coaching.repository.CoachNoteRepository;
 import com.s2000coaching.repository.MemberRepository;
 import com.s2000coaching.repository.MemberSessionRepository;
 import com.s2000coaching.repository.MemberVerificationCodeRepository;
 import com.s2000coaching.web.dto.CreateMemberRequest;
+import com.s2000coaching.web.dto.UpdateMemberRequest;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Optional;
@@ -44,6 +46,9 @@ class MemberServiceTest {
 	private MemberSessionRepository sessionRepository;
 
 	@Mock
+	private CoachNoteRepository coachNoteRepository;
+
+	@Mock
 	private VerificationCodeService verificationCodeService;
 
 	private MemberService memberService;
@@ -51,7 +56,7 @@ class MemberServiceTest {
 	@BeforeEach
 	void setUp() {
 		memberService = new MemberService(memberRepository, codeRepository, sessionRepository,
-				verificationCodeService);
+				coachNoteRepository, verificationCodeService);
 	}
 
 	private static CreateMemberRequest request(String email) {
@@ -163,6 +168,35 @@ class MemberServiceTest {
 	}
 
 	@Nested
+	class Updating {
+
+		@Test
+		void shouldTrimEditableFieldsAndLeaveEmailAlone() {
+			Member member = pendingMember();
+			when(memberRepository.findById(member.getId())).thenReturn(Optional.of(member));
+
+			var response = memberService.updateMember(member.getId(), new UpdateMemberRequest(
+					"  Mehmet Demir ", " +905559998877 ", 175, new BigDecimal("79.00"), "  Yüzme  "));
+
+			assertThat(response.fullName()).isEqualTo("Mehmet Demir");
+			assertThat(response.phone()).isEqualTo("+905559998877");
+			assertThat(response.heightCm()).isEqualTo(175);
+			assertThat(response.sportsBackground()).isEqualTo("Yüzme");
+			assertThat(response.email()).isEqualTo("sporcu@example.com");
+		}
+
+		@Test
+		void shouldFailForAnUnknownMember() {
+			UUID unknown = UUID.randomUUID();
+			when(memberRepository.findById(unknown)).thenReturn(Optional.empty());
+
+			assertThatThrownBy(() -> memberService.updateMember(unknown, new UpdateMemberRequest(
+					"Ad Soyad", "+905551112233", 180, new BigDecimal("80.00"), "Fitness")))
+					.isInstanceOf(NotFoundException.class);
+		}
+	}
+
+	@Nested
 	class Deleting {
 
 		@Test
@@ -172,9 +206,11 @@ class MemberServiceTest {
 
 			memberService.deleteMember(member.getId());
 
-			InOrder inOrder = Mockito.inOrder(sessionRepository, codeRepository, memberRepository);
+			InOrder inOrder = Mockito.inOrder(sessionRepository, codeRepository, coachNoteRepository,
+					memberRepository);
 			inOrder.verify(sessionRepository).deleteAllByMemberId(member.getId());
 			inOrder.verify(codeRepository).deleteAllByMemberId(member.getId());
+			inOrder.verify(coachNoteRepository).deleteAllByMemberId(member.getId());
 			inOrder.verify(memberRepository).delete(member);
 		}
 

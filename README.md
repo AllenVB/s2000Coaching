@@ -16,8 +16,19 @@ klasörlerdeki `DESIGN.md`).
 | Yol | Sayfa | Erişim |
 | --- | --- | --- |
 | `/` | Tanıtım sitesi, paketler ve checkout | Herkese açık |
-| `/uye` | Üye alanı: profil ve (yakında) planlar | E-posta koduyla giriş yapan üyeler |
-| `/yonetim` | Yönetim: üye ekleme/çıkarma ayarları | Yönetim anahtarı (`ADMIN_TOKEN`) |
+| `/uye` | Üye alanı | E-posta koduyla giriş yapan üyeler |
+| `/yonetim` | Yönetim paneli | Yönetim anahtarı (`ADMIN_TOKEN`) |
+
+**Üye alanı** (masaüstünde sol menü, telefonda alt sekme çubuğu): `/uye` bugün · `/uye/antrenman` ·
+`/uye/beslenme` · `/uye/olcumler` · `/uye/mesajlar` · `/uye/profil`.
+
+**Yönetim**: `/yonetim` panel (onay bekleyenler, son siparişler) · `/yonetim/uyeler` liste (arama + durum
+filtresi) · `/yonetim/uyeler/yeni` · `/yonetim/uyeler/:id` üye detayı · `/yonetim/siparisler` ·
+`/yonetim/ayarlar`.
+
+Üye detayı sekmelidir ve her sekme ayrı bir adrestir (`…/:id`, `…/:id/antrenman`, `…/:id/beslenme`,
+`…/:id/olcumler`, `…/:id/notlar`); koçun bir üye için yaptığı her iş bu sayfada toplanır. **Notlar**
+yalnızca koça görünür — bu veriyi okuyan hiçbir üye endpoint'i yoktur.
 
 Yönlendirme `BrowserRouter` ile yapılır; prodüksiyonda statik sunucunun bilinmeyen yolları
 `index.html`'e düşürmesi (SPA fallback) gerekir, aksi halde `/uye` ve `/yonetim` doğrudan açıldığında

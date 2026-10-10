@@ -11,6 +11,7 @@ import com.s2000coaching.service.MemberService;
 import com.s2000coaching.domain.MemberStatus;
 import com.s2000coaching.web.dto.CreateMemberRequest;
 import com.s2000coaching.web.dto.MemberResponse;
+import com.s2000coaching.web.dto.UpdateMemberRequest;
 import com.s2000coaching.web.dto.VerificationCodeRequest;
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -108,6 +109,45 @@ class AdminMemberControllerTest {
 				.hasStatus(HttpStatus.OK)
 				.bodyJson()
 				.extractingPath("$.status").isEqualTo("ACTIVE");
+	}
+
+	@Test
+	void shouldReturnASingleMember() {
+		UUID memberId = UUID.randomUUID();
+		when(memberService.getMember(memberId)).thenReturn(response(memberId, MemberStatus.ACTIVE));
+
+		assertThat(mvc.get().uri("/api/admin/members/" + memberId).header(ADMIN_HEADER, ADMIN_TOKEN))
+				.hasStatus(HttpStatus.OK)
+				.bodyJson()
+				.extractingPath("$.email").isEqualTo("sporcu@example.com");
+	}
+
+	@Test
+	void shouldUpdateAMember() {
+		UUID memberId = UUID.randomUUID();
+		var request = new UpdateMemberRequest("Mehmet Demir", "+905559998877", 175, new BigDecimal("79.00"),
+				"Yüzme");
+		when(memberService.updateMember(eq(memberId), any())).thenReturn(response(memberId, MemberStatus.ACTIVE));
+
+		assertThat(mvc.put().uri("/api/admin/members/" + memberId)
+				.header(ADMIN_HEADER, ADMIN_TOKEN)
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(jsonMapper.writeValueAsString(request)))
+				.hasStatus(HttpStatus.OK);
+		verify(memberService).updateMember(eq(memberId), any());
+	}
+
+	@Test
+	void shouldRejectAnUpdateWithoutTheAdminToken() {
+		UUID memberId = UUID.randomUUID();
+		var request = new UpdateMemberRequest("Mehmet Demir", "+905559998877", 175, new BigDecimal("79.00"),
+				"Yüzme");
+
+		assertThat(mvc.put().uri("/api/admin/members/" + memberId)
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(jsonMapper.writeValueAsString(request)))
+				.hasStatus(HttpStatus.UNAUTHORIZED);
+		verify(memberService, never()).updateMember(any(), any());
 	}
 
 	@Test

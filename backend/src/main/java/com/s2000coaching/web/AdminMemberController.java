@@ -3,6 +3,7 @@ package com.s2000coaching.web;
 import com.s2000coaching.service.MemberService;
 import com.s2000coaching.web.dto.CreateMemberRequest;
 import com.s2000coaching.web.dto.MemberResponse;
+import com.s2000coaching.web.dto.UpdateMemberRequest;
 import com.s2000coaching.web.dto.VerificationCodeRequest;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -32,6 +34,18 @@ public class AdminMemberController {
 	@GetMapping("/api/admin/members")
 	public List<MemberResponse> listMembers() {
 		return memberService.listMembers();
+	}
+
+	@GetMapping("/api/admin/members/{memberId}")
+	public MemberResponse getMember(@PathVariable UUID memberId) {
+		return memberService.getMember(memberId);
+	}
+
+	@PutMapping("/api/admin/members/{memberId}")
+	public MemberResponse updateMember(
+			@PathVariable UUID memberId,
+			@Valid @RequestBody UpdateMemberRequest request) {
+		return memberService.updateMember(memberId, request);
 	}
 
 	@PostMapping("/api/admin/members")

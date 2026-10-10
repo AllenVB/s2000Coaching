@@ -5,11 +5,13 @@ import com.s2000coaching.domain.MemberStatus;
 import com.s2000coaching.domain.VerificationPurpose;
 import com.s2000coaching.exception.ConflictException;
 import com.s2000coaching.exception.NotFoundException;
+import com.s2000coaching.repository.CoachNoteRepository;
 import com.s2000coaching.repository.MemberRepository;
 import com.s2000coaching.repository.MemberSessionRepository;
 import com.s2000coaching.repository.MemberVerificationCodeRepository;
 import com.s2000coaching.web.dto.CreateMemberRequest;
 import com.s2000coaching.web.dto.MemberResponse;
+import com.s2000coaching.web.dto.UpdateMemberRequest;
 import java.time.Instant;
 import java.util.List;
 import java.util.Locale;
@@ -24,15 +26,18 @@ public class MemberService {
 	private final MemberRepository memberRepository;
 	private final MemberVerificationCodeRepository codeRepository;
 	private final MemberSessionRepository sessionRepository;
+	private final CoachNoteRepository coachNoteRepository;
 	private final VerificationCodeService verificationCodeService;
 
 	public MemberService(MemberRepository memberRepository,
 			MemberVerificationCodeRepository codeRepository,
 			MemberSessionRepository sessionRepository,
+			CoachNoteRepository coachNoteRepository,
 			VerificationCodeService verificationCodeService) {
 		this.memberRepository = memberRepository;
 		this.codeRepository = codeRepository;
 		this.sessionRepository = sessionRepository;
+		this.coachNoteRepository = coachNoteRepository;
 		this.verificationCodeService = verificationCodeService;
 	}
 
@@ -45,6 +50,22 @@ public class MemberService {
 		return memberRepository.findAllByOrderByCreatedAtDesc().stream()
 				.map(MemberResponse::from)
 				.toList();
+	}
+
+	@Transactional(readOnly = true)
+	public MemberResponse getMember(UUID memberId) {
+		return MemberResponse.from(getOrThrow(memberId));
+	}
+
+	@Transactional
+	public MemberResponse updateMember(UUID memberId, UpdateMemberRequest request) {
+		Member member = getOrThrow(memberId);
+		member.setFullName(request.fullName().trim());
+		member.setPhone(request.phone().trim());
+		member.setHeightCm(request.heightCm());
+		member.setWeightKg(request.weightKg());
+		member.setSportsBackground(request.sportsBackground().trim());
+		return MemberResponse.from(member);
 	}
 
 	/**
@@ -102,7 +123,14 @@ public class MemberService {
 		Member member = getOrThrow(memberId);
 		sessionRepository.deleteAllByMemberId(memberId);
 		codeRepository.deleteAllByMemberId(memberId);
+		coachNoteRepository.deleteAllByMemberId(memberId);
 		memberRepository.delete(member);
+	}
+
+	/** Shared by the services that hang records off a member (notes, measurements, plans). */
+	@Transactional(readOnly = true)
+	public Member requireMember(UUID memberId) {
+		return getOrThrow(memberId);
 	}
 
 	private Member getOrThrow(UUID memberId) {
