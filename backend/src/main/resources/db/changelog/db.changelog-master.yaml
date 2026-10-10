@@ -1,5 +1,5 @@
 # Changelog file names are numbered by creation order only. ChangeSet `id`s inside
-# them are a separate, repo-wide monotonic counter (currently at 016) — always
+# them are a separate, repo-wide monotonic counter (currently at 018) — always
 # continue that counter for a new changeSet id, never reuse a file's own ordinal.
 #
 # Superseded experience tables are left orphaned in place (dropping needs explicit
@@ -22,3 +22,5 @@ databaseChangeLog:
       file: db/changelog/007-seed-nutrition-topics.yaml
   - include:
       file: db/changelog/008-restructure-experience-to-topics.yaml
+  - include:
+      file: db/changelog/009-seed-karbonhidrat-note.yaml
