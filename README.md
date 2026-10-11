@@ -70,8 +70,7 @@ Yerel yönetim anahtarı varsayılan olarak `s2000-dev-admin`'dir (`/yonetim` sa
 4. **Giriş.** Şifre yoktur: üye `/uye` sayfasında e-postasını girer, gelen kodla oturum açar. Oturum
    jetonu opak bir değerdir, yalnızca özeti saklanır ve varsayılan 14 gün geçerlidir.
 
-Beslenme planı ve mesajlaşma sonraki aşamalarda eklenecek; üye panelinde bu alanlar şimdilik "Yakında"
-kartları olarak duruyor.
+Mesajlaşma sonraki aşamada eklenecek; üye panelinde bu alan şimdilik "Yakında" kartı olarak duruyor.
 
 ## Antrenman planları
 
@@ -91,6 +90,18 @@ kez yapılıyorsa hedef kilo yazar. Aynı gün ve tarihe tekrar kaydetmek o sean
 açmaz. Üyenin "Bugün" sayfası en uzun süredir yapılmamış günü **Sıradaki Antrenman** olarak önerir.
 
 Koç, üye detayındaki Antrenman sekmesinin altında üyenin son seanslarını görür.
+
+## Beslenme planları
+
+Antrenmanla aynı kalıp: `/yonetim/sablonlar` sayfasının **Beslenme** sekmesinde şablon yazılır (öğünler ve
+her öğünde besin + miktar + kalori/makro), üye detayındaki **Beslenme** sekmesinden üyeye kopyalanır. Kopya
+yine bağımsızdır ve üyenin yalnızca bir planı aktiftir.
+
+Plan düzeyinde **makro hedefi** (kalori/protein/karbonhidrat/yağ) tutulur; arayüz bunun yanında öğünlerin
+fiili toplamını da gösterir — aradaki fark planın henüz tamamlanmadığını söyleyen şeydir. Makro girmek
+zorunlu değil: besinleri makro yazmadan da reçete edebilirsiniz.
+
+Üye `/uye/beslenme` sayfasında günlük hedeflerini ve öğünlerini görür.
 
 ## Ölçüm takibi
 

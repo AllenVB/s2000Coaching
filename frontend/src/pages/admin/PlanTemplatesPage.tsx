@@ -1,6 +1,7 @@
 import { useState } from 'react'
 
 import { useCreateTemplate, useDeletePlan, usePlanTemplates } from '@/api/trainingApi'
+import { NutritionTemplatesSection } from '@/pages/admin/NutritionTemplatesSection'
 import { PlanEditor } from '@/components/training/PlanEditor'
 import { Button } from '@/components/ui/Button'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
@@ -20,6 +21,7 @@ export function PlanTemplatesPage() {
   const [name, setName] = useState('')
   const [openId, setOpenId] = useState<string | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [tab, setTab] = useState<'training' | 'nutrition'>('training')
 
   const submit = (event: React.FormEvent) => {
     event.preventDefault()
@@ -47,7 +49,28 @@ export function PlanTemplatesPage() {
         description="Şablonu bir kez yazın, üyeye atarken kopyalansın. Kopya bağımsızdır: üyenin planında yaptığınız değişiklik şablonu etkilemez."
       />
 
-      <div className="space-y-6">
+      <div className="mb-6 flex flex-wrap gap-1.5 border-b border-border pb-3">
+        {([['training', 'Antrenman'], ['nutrition', 'Beslenme']] as const).map(([value, label]) => (
+          <button
+            key={value}
+            type="button"
+            onClick={() => setTab(value)}
+            aria-pressed={tab === value}
+            className={`rounded-lg px-3.5 py-2 text-xs font-semibold uppercase tracking-wide transition-colors ${
+              tab === value
+                ? 'bg-primary text-canvas'
+                : 'text-text-secondary hover:bg-white/5 hover:text-text-primary'
+            }`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
+      {/* One tab at a time, so the two sections' identically-named fields never collide. */}
+      {tab === 'nutrition' ? <NutritionTemplatesSection /> : null}
+
+      <div className="space-y-6" hidden={tab !== 'training'}>
         <form className="flex flex-wrap items-center gap-2" onSubmit={submit}>
           <input
             value={name}

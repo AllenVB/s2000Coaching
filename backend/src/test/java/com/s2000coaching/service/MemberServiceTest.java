@@ -19,6 +19,7 @@ import com.s2000coaching.repository.MeasurementRepository;
 import com.s2000coaching.repository.MemberRepository;
 import com.s2000coaching.repository.MemberSessionRepository;
 import com.s2000coaching.repository.MemberVerificationCodeRepository;
+import com.s2000coaching.repository.NutritionPlanRepository;
 import com.s2000coaching.repository.TrainingPlanRepository;
 import com.s2000coaching.repository.WorkoutLogRepository;
 import com.s2000coaching.web.dto.CreateMemberRequest;
@@ -61,6 +62,9 @@ class MemberServiceTest {
 	private TrainingPlanRepository trainingPlanRepository;
 
 	@Mock
+	private NutritionPlanRepository nutritionPlanRepository;
+
+	@Mock
 	private VerificationCodeService verificationCodeService;
 
 	private MemberService memberService;
@@ -69,7 +73,7 @@ class MemberServiceTest {
 	void setUp() {
 		memberService = new MemberService(memberRepository, codeRepository, sessionRepository,
 				coachNoteRepository, measurementRepository, workoutLogRepository, trainingPlanRepository,
-				verificationCodeService);
+				nutritionPlanRepository, verificationCodeService);
 	}
 
 	private static CreateMemberRequest request(String email) {
@@ -220,7 +224,8 @@ class MemberServiceTest {
 			memberService.deleteMember(member.getId());
 
 			InOrder inOrder = Mockito.inOrder(sessionRepository, codeRepository, coachNoteRepository,
-					measurementRepository, workoutLogRepository, trainingPlanRepository, memberRepository);
+					measurementRepository, workoutLogRepository, trainingPlanRepository,
+					nutritionPlanRepository, memberRepository);
 			inOrder.verify(sessionRepository).deleteAllByMemberId(member.getId());
 			inOrder.verify(codeRepository).deleteAllByMemberId(member.getId());
 			inOrder.verify(coachNoteRepository).deleteAllByMemberId(member.getId());
@@ -228,6 +233,7 @@ class MemberServiceTest {
 			// Logs reference plan days, so they must be removed before the plans.
 			inOrder.verify(workoutLogRepository).deleteAllByMemberId(member.getId());
 			inOrder.verify(trainingPlanRepository).deleteAllByMemberId(member.getId());
+			inOrder.verify(nutritionPlanRepository).deleteAllByMemberId(member.getId());
 			inOrder.verify(memberRepository).delete(member);
 		}
 

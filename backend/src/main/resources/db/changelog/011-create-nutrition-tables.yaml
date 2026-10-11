@@ -1,0 +1,82 @@
+databaseChangeLog:
+  - changeSet:
+      id: 023-create-nutrition-plan-tables
+      author: s2000coaching
+      comment: >
+        Mirrors the training plan shape: `nutrition_plan.member_id` is null for a template,
+        and assigning one deep-copies it so the member's plan is independent.
+      changes:
+        - createTable:
+            tableName: nutrition_plan
+            columns:
+              - column: { name: id, type: uuid, constraints: { primaryKey: true, nullable: false } }
+              - column:
+                  name: member_id
+                  type: uuid
+                  constraints:
+                    foreignKeyName: fk_nutrition_plan_member
+                    references: member(id)
+              - column: { name: name, type: varchar(120), constraints: { nullable: false } }
+              - column: { name: note, type: text }
+              - column:
+                  name: active
+                  type: boolean
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+              - column: { name: target_calories, type: int }
+              - column: { name: target_protein_g, type: int }
+              - column: { name: target_carbs_g, type: int }
+              - column: { name: target_fat_g, type: int }
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false
+
+        - createTable:
+            tableName: meal
+            columns:
+              - column: { name: id, type: uuid, constraints: { primaryKey: true, nullable: false } }
+              - column:
+                  name: plan_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_meal_plan
+                    references: nutrition_plan(id)
+              - column: { name: display_order, type: int, constraints: { nullable: false } }
+              - column: { name: name, type: varchar(120), constraints: { nullable: false } }
+              - column: { name: time_hint, type: varchar(60) }
+              - column: { name: note, type: text }
+
+        - createTable:
+            tableName: meal_item
+            columns:
+              - column: { name: id, type: uuid, constraints: { primaryKey: true, nullable: false } }
+              - column:
+                  name: meal_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_meal_item_meal
+                    references: meal(id)
+              - column: { name: display_order, type: int, constraints: { nullable: false } }
+              - column: { name: name, type: varchar(160), constraints: { nullable: false } }
+              - column: { name: amount, type: varchar(60) }
+              - column: { name: calories, type: int }
+              - column: { name: protein_g, type: int }
+              - column: { name: carbs_g, type: int }
+              - column: { name: fat_g, type: int }
+              - column: { name: note, type: text }
+
+        - createIndex:
+            indexName: idx_nutrition_plan_member
+            tableName: nutrition_plan
+            columns:
+              - column: { name: member_id }

@@ -10,6 +10,7 @@ import com.s2000coaching.repository.MeasurementRepository;
 import com.s2000coaching.repository.MemberRepository;
 import com.s2000coaching.repository.MemberSessionRepository;
 import com.s2000coaching.repository.MemberVerificationCodeRepository;
+import com.s2000coaching.repository.NutritionPlanRepository;
 import com.s2000coaching.repository.TrainingPlanRepository;
 import com.s2000coaching.repository.WorkoutLogRepository;
 import com.s2000coaching.web.dto.CreateMemberRequest;
@@ -33,6 +34,7 @@ public class MemberService {
 	private final MeasurementRepository measurementRepository;
 	private final WorkoutLogRepository workoutLogRepository;
 	private final TrainingPlanRepository trainingPlanRepository;
+	private final NutritionPlanRepository nutritionPlanRepository;
 	private final VerificationCodeService verificationCodeService;
 
 	public MemberService(MemberRepository memberRepository,
@@ -42,6 +44,7 @@ public class MemberService {
 			MeasurementRepository measurementRepository,
 			WorkoutLogRepository workoutLogRepository,
 			TrainingPlanRepository trainingPlanRepository,
+			NutritionPlanRepository nutritionPlanRepository,
 			VerificationCodeService verificationCodeService) {
 		this.memberRepository = memberRepository;
 		this.codeRepository = codeRepository;
@@ -50,6 +53,7 @@ public class MemberService {
 		this.measurementRepository = measurementRepository;
 		this.workoutLogRepository = workoutLogRepository;
 		this.trainingPlanRepository = trainingPlanRepository;
+		this.nutritionPlanRepository = nutritionPlanRepository;
 		this.verificationCodeService = verificationCodeService;
 	}
 
@@ -140,6 +144,7 @@ public class MemberService {
 		// Logs reference plan days, so they go before the plans that own those days.
 		workoutLogRepository.deleteAllByMemberId(memberId);
 		trainingPlanRepository.deleteAllByMemberId(memberId);
+		nutritionPlanRepository.deleteAllByMemberId(memberId);
 		memberRepository.delete(member);
 	}
 

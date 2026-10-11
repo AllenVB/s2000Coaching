@@ -262,12 +262,13 @@ export function useMyTrainingPlan() {
   const { session } = useMemberAuth()
 
   return useQuery({
-    // 204 (no plan assigned yet) comes back as undefined, which is not an error.
     queryKey: ['member-training-plan'],
+    // 204 means "no plan assigned yet", which is not an error — but react-query rejects
+    // `undefined` as data, so it is normalised to null.
     queryFn: () =>
-      apiFetch<TrainingPlan | undefined>('/api/member/training-plan', {
+      apiFetch<TrainingPlan | null>('/api/member/training-plan', {
         headers: memberHeaders(session!.token),
-      }),
+      }).then((plan) => plan ?? null),
     enabled: Boolean(session),
   })
 }

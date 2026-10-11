@@ -11,7 +11,9 @@ import com.s2000coaching.domain.Member;
 import com.s2000coaching.domain.MemberStatus;
 import com.s2000coaching.exception.UnauthorizedException;
 import com.s2000coaching.service.MemberAuthService;
+import com.s2000coaching.service.NutritionPlanService;
 import com.s2000coaching.service.WorkoutLogService;
+import com.s2000coaching.web.dto.NutritionPlanResponse;
 import com.s2000coaching.web.dto.SaveWorkoutLogRequest;
 import com.s2000coaching.web.dto.TrainingPlanResponse;
 import com.s2000coaching.web.dto.WorkoutLogResponse;
@@ -46,6 +48,9 @@ class MemberTrainingControllerTest {
 	private WorkoutLogService workoutLogService;
 
 	@MockitoBean
+	private NutritionPlanService nutritionPlanService;
+
+	@MockitoBean
 	private MemberAuthService memberAuthService;
 
 	private static Member member() {
@@ -77,6 +82,30 @@ class MemberTrainingControllerTest {
 				.hasStatus(HttpStatus.OK)
 				.bodyJson()
 				.extractingPath("$.name").isEqualTo("Ekim Bloğu");
+	}
+
+	@Test
+	void shouldAnswer204WhenNoNutritionPlanIsAssignedYet() {
+		Member member = member();
+		when(memberAuthService.requireMember(BEARER)).thenReturn(member);
+		when(nutritionPlanService.findActivePlan(member.getId())).thenReturn(Optional.empty());
+
+		assertThat(mvc.get().uri("/api/member/nutrition-plan").header(HttpHeaders.AUTHORIZATION, BEARER))
+				.hasStatus(HttpStatus.NO_CONTENT);
+	}
+
+	@Test
+	void shouldReturnTheActiveNutritionPlan() {
+		Member member = member();
+		when(memberAuthService.requireMember(BEARER)).thenReturn(member);
+		when(nutritionPlanService.findActivePlan(member.getId())).thenReturn(Optional.of(
+				new NutritionPlanResponse(UUID.randomUUID(), "Ekim Beslenmesi", null, false, true, 2400, 180,
+						250, 70, Instant.now(), List.of())));
+
+		assertThat(mvc.get().uri("/api/member/nutrition-plan").header(HttpHeaders.AUTHORIZATION, BEARER))
+				.hasStatus(HttpStatus.OK)
+				.bodyJson()
+				.extractingPath("$.targetCalories").isEqualTo(2400);
 	}
 
 	@Test

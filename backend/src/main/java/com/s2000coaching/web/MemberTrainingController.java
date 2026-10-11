@@ -2,7 +2,9 @@ package com.s2000coaching.web;
 
 import com.s2000coaching.domain.Member;
 import com.s2000coaching.service.MemberAuthService;
+import com.s2000coaching.service.NutritionPlanService;
 import com.s2000coaching.service.WorkoutLogService;
+import com.s2000coaching.web.dto.NutritionPlanResponse;
 import com.s2000coaching.web.dto.SaveWorkoutLogRequest;
 import com.s2000coaching.web.dto.TrainingPlanResponse;
 import com.s2000coaching.web.dto.WorkoutLogResponse;
@@ -19,17 +21,30 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RestController;
 
-/** The member's own training: read the active plan, record sessions. */
+/** The member's own programme: read the active plans, record sessions. */
 @RestController
 public class MemberTrainingController {
 
 	private final WorkoutLogService workoutLogService;
+	private final NutritionPlanService nutritionPlanService;
 	private final MemberAuthService memberAuthService;
 
 	public MemberTrainingController(WorkoutLogService workoutLogService,
+			NutritionPlanService nutritionPlanService,
 			MemberAuthService memberAuthService) {
 		this.workoutLogService = workoutLogService;
+		this.nutritionPlanService = nutritionPlanService;
 		this.memberAuthService = memberAuthService;
+	}
+
+	/** 204 when the coach has not assigned a nutrition plan yet. */
+	@GetMapping("/api/member/nutrition-plan")
+	public ResponseEntity<NutritionPlanResponse> activeNutritionPlan(
+			@RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
+		Member member = memberAuthService.requireMember(authorization);
+		return nutritionPlanService.findActivePlan(member.getId())
+				.map(ResponseEntity::ok)
+				.orElseGet(() -> ResponseEntity.noContent().build());
 	}
 
 	/** 204 when the coach has not assigned a plan yet — an empty plan is not an error. */
