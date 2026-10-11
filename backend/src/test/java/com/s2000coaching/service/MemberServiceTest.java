@@ -19,6 +19,7 @@ import com.s2000coaching.repository.MeasurementRepository;
 import com.s2000coaching.repository.MemberRepository;
 import com.s2000coaching.repository.MemberSessionRepository;
 import com.s2000coaching.repository.MemberVerificationCodeRepository;
+import com.s2000coaching.repository.MessageRepository;
 import com.s2000coaching.repository.NutritionPlanRepository;
 import com.s2000coaching.repository.TrainingPlanRepository;
 import com.s2000coaching.repository.WorkoutLogRepository;
@@ -65,6 +66,9 @@ class MemberServiceTest {
 	private NutritionPlanRepository nutritionPlanRepository;
 
 	@Mock
+	private MessageRepository messageRepository;
+
+	@Mock
 	private VerificationCodeService verificationCodeService;
 
 	private MemberService memberService;
@@ -73,7 +77,7 @@ class MemberServiceTest {
 	void setUp() {
 		memberService = new MemberService(memberRepository, codeRepository, sessionRepository,
 				coachNoteRepository, measurementRepository, workoutLogRepository, trainingPlanRepository,
-				nutritionPlanRepository, verificationCodeService);
+				nutritionPlanRepository, messageRepository, verificationCodeService);
 	}
 
 	private static CreateMemberRequest request(String email) {
@@ -225,7 +229,7 @@ class MemberServiceTest {
 
 			InOrder inOrder = Mockito.inOrder(sessionRepository, codeRepository, coachNoteRepository,
 					measurementRepository, workoutLogRepository, trainingPlanRepository,
-					nutritionPlanRepository, memberRepository);
+					nutritionPlanRepository, messageRepository, memberRepository);
 			inOrder.verify(sessionRepository).deleteAllByMemberId(member.getId());
 			inOrder.verify(codeRepository).deleteAllByMemberId(member.getId());
 			inOrder.verify(coachNoteRepository).deleteAllByMemberId(member.getId());
@@ -234,6 +238,7 @@ class MemberServiceTest {
 			inOrder.verify(workoutLogRepository).deleteAllByMemberId(member.getId());
 			inOrder.verify(trainingPlanRepository).deleteAllByMemberId(member.getId());
 			inOrder.verify(nutritionPlanRepository).deleteAllByMemberId(member.getId());
+			inOrder.verify(messageRepository).deleteAllByMemberId(member.getId());
 			inOrder.verify(memberRepository).delete(member);
 		}
 

@@ -7,6 +7,7 @@ import java.util.List;
  *
  * @param pendingMembers members whose registration code is still unconfirmed
  * @param staleMembers   active members with no check-in in the last {@code staleAfterDays} days
+ * @param awaitingReply  members whose last message to the coach is still unread
  */
 public record AdminDashboardResponse(
 		long totalMembers,
@@ -14,5 +15,6 @@ public record AdminDashboardResponse(
 		int staleAfterDays,
 		List<MemberResponse> pendingMembers,
 		List<MemberResponse> staleMembers,
+		List<MemberResponse> awaitingReply,
 		List<OrderSummaryResponse> recentOrders) {
 }

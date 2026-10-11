@@ -12,13 +12,14 @@ import { NewMemberPage } from '@/pages/admin/NewMemberPage'
 import { PlanTemplatesPage } from '@/pages/admin/PlanTemplatesPage'
 import { MemberNotesTab } from '@/pages/admin/tabs/MemberNotesTab'
 import { MemberMeasurementsTab } from '@/pages/admin/tabs/MemberMeasurementsTab'
+import { MemberMessagesTab } from '@/pages/admin/tabs/MemberMessagesTab'
 import { MemberNutritionTab } from '@/pages/admin/tabs/MemberNutritionTab'
 import { MemberTrainingTab } from '@/pages/admin/tabs/MemberTrainingTab'
 import { MemberProfileTab } from '@/pages/admin/tabs/MemberProfileTab'
 import { LandingPage } from '@/pages/LandingPage'
 import { MemberMeasurementsPage } from '@/pages/member/MemberMeasurementsPage'
+import { MemberMessagesPage } from '@/pages/member/MemberMessagesPage'
 import { MemberNutritionPage } from '@/pages/member/MemberNutritionPage'
-import { MemberMessagesPage } from '@/pages/member/MemberPlaceholderPages'
 import { MemberTrainingPage } from '@/pages/member/MemberTrainingPage'
 import { MemberWorkoutDayPage } from '@/pages/member/MemberWorkoutDayPage'
 import { MemberProfilePage } from '@/pages/member/MemberProfilePage'
@@ -49,6 +50,7 @@ export default function App() {
           <Route path="antrenman" element={<MemberTrainingTab />} />
           <Route path="beslenme" element={<MemberNutritionTab />} />
           <Route path="olcumler" element={<MemberMeasurementsTab />} />
+          <Route path="mesajlar" element={<MemberMessagesTab />} />
           <Route path="notlar" element={<MemberNotesTab />} />
         </Route>
         <Route path="hareketler" element={<ExerciseCatalogPage />} />

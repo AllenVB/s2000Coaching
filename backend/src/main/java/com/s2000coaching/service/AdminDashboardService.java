@@ -21,12 +21,14 @@ public class AdminDashboardService {
 	private final MemberRepository memberRepository;
 	private final OrderRepository orderRepository;
 	private final MeasurementRepository measurementRepository;
+	private final MessageService messageService;
 
 	public AdminDashboardService(MemberRepository memberRepository, OrderRepository orderRepository,
-			MeasurementRepository measurementRepository) {
+			MeasurementRepository measurementRepository, MessageService messageService) {
 		this.memberRepository = memberRepository;
 		this.orderRepository = orderRepository;
 		this.measurementRepository = measurementRepository;
+		this.messageService = messageService;
 	}
 
 	@Transactional(readOnly = true)
@@ -45,12 +47,17 @@ public class AdminDashboardService {
 				.map(MemberResponse::from)
 				.toList();
 
+		var awaitingReply = memberRepository.findAllById(messageService.memberIdsAwaitingReply()).stream()
+				.map(MemberResponse::from)
+				.toList();
+
 		return new AdminDashboardResponse(
 				memberRepository.count(),
 				memberRepository.countByStatus(MemberStatus.ACTIVE),
 				STALE_AFTER_DAYS,
 				pending,
 				stale,
+				awaitingReply,
 				recentOrders);
 	}
 }

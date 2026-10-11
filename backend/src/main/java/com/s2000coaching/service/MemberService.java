@@ -10,6 +10,7 @@ import com.s2000coaching.repository.MeasurementRepository;
 import com.s2000coaching.repository.MemberRepository;
 import com.s2000coaching.repository.MemberSessionRepository;
 import com.s2000coaching.repository.MemberVerificationCodeRepository;
+import com.s2000coaching.repository.MessageRepository;
 import com.s2000coaching.repository.NutritionPlanRepository;
 import com.s2000coaching.repository.TrainingPlanRepository;
 import com.s2000coaching.repository.WorkoutLogRepository;
@@ -35,6 +36,7 @@ public class MemberService {
 	private final WorkoutLogRepository workoutLogRepository;
 	private final TrainingPlanRepository trainingPlanRepository;
 	private final NutritionPlanRepository nutritionPlanRepository;
+	private final MessageRepository messageRepository;
 	private final VerificationCodeService verificationCodeService;
 
 	public MemberService(MemberRepository memberRepository,
@@ -45,6 +47,7 @@ public class MemberService {
 			WorkoutLogRepository workoutLogRepository,
 			TrainingPlanRepository trainingPlanRepository,
 			NutritionPlanRepository nutritionPlanRepository,
+			MessageRepository messageRepository,
 			VerificationCodeService verificationCodeService) {
 		this.memberRepository = memberRepository;
 		this.codeRepository = codeRepository;
@@ -54,6 +57,7 @@ public class MemberService {
 		this.workoutLogRepository = workoutLogRepository;
 		this.trainingPlanRepository = trainingPlanRepository;
 		this.nutritionPlanRepository = nutritionPlanRepository;
+		this.messageRepository = messageRepository;
 		this.verificationCodeService = verificationCodeService;
 	}
 
@@ -145,6 +149,7 @@ public class MemberService {
 		workoutLogRepository.deleteAllByMemberId(memberId);
 		trainingPlanRepository.deleteAllByMemberId(memberId);
 		nutritionPlanRepository.deleteAllByMemberId(memberId);
+		messageRepository.deleteAllByMemberId(memberId);
 		memberRepository.delete(member);
 	}
 

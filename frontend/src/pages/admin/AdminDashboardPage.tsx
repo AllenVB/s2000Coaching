@@ -50,6 +50,12 @@ export function AdminDashboardPage() {
           />
 
           <MemberCallout
+            title="Cevap Bekleyen Mesajlar"
+            emptyLabel="Cevap bekleyen mesaj yok."
+            members={data.awaitingReply}
+          />
+
+          <MemberCallout
             title={`${data.staleAfterDays} Gündür Ölçüm Girmeyenler`}
             emptyLabel="Takipte gecikme yok."
             members={data.staleMembers}

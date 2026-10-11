@@ -21,6 +21,7 @@ const tabs = [
   { to: 'antrenman', label: 'Antrenman' },
   { to: 'beslenme', label: 'Beslenme' },
   { to: 'olcumler', label: 'Ölçümler' },
+  { to: 'mesajlar', label: 'Mesajlar' },
   { to: 'notlar', label: 'Notlar' },
 ]
 

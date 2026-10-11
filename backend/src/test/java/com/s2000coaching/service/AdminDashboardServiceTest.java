@@ -31,12 +31,15 @@ class AdminDashboardServiceTest {
 	@Mock
 	private MeasurementRepository measurementRepository;
 
+	@Mock
+	private MessageService messageService;
+
 	private AdminDashboardService adminDashboardService;
 
 	@BeforeEach
 	void setUp() {
 		adminDashboardService = new AdminDashboardService(memberRepository, orderRepository,
-				measurementRepository);
+				measurementRepository, messageService);
 	}
 
 	@Test
@@ -50,6 +53,7 @@ class AdminDashboardServiceTest {
 		when(orderRepository.findTop10ByOrderByCreatedAtDesc()).thenReturn(List.of());
 		when(measurementRepository.findActiveMemberIdsWithoutMeasurementSince(any())).thenReturn(List.of());
 		when(memberRepository.findAllById(List.of())).thenReturn(List.of());
+		when(messageService.memberIdsAwaitingReply()).thenReturn(List.of());
 
 		var dashboard = adminDashboardService.load();
 
@@ -59,6 +63,7 @@ class AdminDashboardServiceTest {
 				.satisfies(member -> assertThat(member.email()).isEqualTo("bekleyen@example.com"));
 		assertThat(dashboard.recentOrders()).isEmpty();
 		assertThat(dashboard.staleMembers()).isEmpty();
+		assertThat(dashboard.awaitingReply()).isEmpty();
 		assertThat(dashboard.staleAfterDays()).isPositive();
 	}
 }

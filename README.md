@@ -70,7 +70,6 @@ Yerel yönetim anahtarı varsayılan olarak `s2000-dev-admin`'dir (`/yonetim` sa
 4. **Giriş.** Şifre yoktur: üye `/uye` sayfasında e-postasını girer, gelen kodla oturum açar. Oturum
    jetonu opak bir değerdir, yalnızca özeti saklanır ve varsayılan 14 gün geçerlidir.
 
-Mesajlaşma sonraki aşamada eklenecek; üye panelinde bu alan şimdilik "Yakında" kartı olarak duruyor.
 
 ## Antrenman planları
 
@@ -102,6 +101,16 @@ fiili toplamını da gösterir — aradaki fark planın henüz tamamlanmadığı
 zorunlu değil: besinleri makro yazmadan da reçete edebilirsiniz.
 
 Üye `/uye/beslenme` sayfasında günlük hedeflerini ve öğünlerini görür.
+
+## Mesajlaşma
+
+Üye başına tek bir yazışma dizisi, iki taraflı: üye `/uye/mesajlar`, koç üye detayındaki **Mesajlar**
+sekmesi. Diziyi açmak **karşı tarafın** mesajlarını okundu işaretler — okunmamış rozetlerini ve koçun
+cevap kuyruğunu sürükleyen şey budur. Gönderenin kendi balonunda mesaj henüz okunmadıysa "okunmadı"
+yazar.
+
+Yönetim paneli, **son mesajı okunmamış** (yani cevap bekleyen) üyeleri ayrı bir blokta listeler; koç
+diziyi açtığı anda üye bu kuyruktan düşer.
 
 ## Ölçüm takibi
 

@@ -28,6 +28,8 @@ export interface AdminDashboard {
   pendingMembers: Member[]
   /** Active members with no check-in inside that window. */
   staleMembers: Member[]
+  /** Members whose last message to the coach is still unread. */
+  awaitingReply: Member[]
   recentOrders: OrderSummary[]
 }
 
