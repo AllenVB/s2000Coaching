@@ -10,6 +10,8 @@ import com.s2000coaching.repository.MeasurementRepository;
 import com.s2000coaching.repository.MemberRepository;
 import com.s2000coaching.repository.MemberSessionRepository;
 import com.s2000coaching.repository.MemberVerificationCodeRepository;
+import com.s2000coaching.repository.TrainingPlanRepository;
+import com.s2000coaching.repository.WorkoutLogRepository;
 import com.s2000coaching.web.dto.CreateMemberRequest;
 import com.s2000coaching.web.dto.MemberResponse;
 import com.s2000coaching.web.dto.UpdateMemberRequest;
@@ -29,6 +31,8 @@ public class MemberService {
 	private final MemberSessionRepository sessionRepository;
 	private final CoachNoteRepository coachNoteRepository;
 	private final MeasurementRepository measurementRepository;
+	private final WorkoutLogRepository workoutLogRepository;
+	private final TrainingPlanRepository trainingPlanRepository;
 	private final VerificationCodeService verificationCodeService;
 
 	public MemberService(MemberRepository memberRepository,
@@ -36,12 +40,16 @@ public class MemberService {
 			MemberSessionRepository sessionRepository,
 			CoachNoteRepository coachNoteRepository,
 			MeasurementRepository measurementRepository,
+			WorkoutLogRepository workoutLogRepository,
+			TrainingPlanRepository trainingPlanRepository,
 			VerificationCodeService verificationCodeService) {
 		this.memberRepository = memberRepository;
 		this.codeRepository = codeRepository;
 		this.sessionRepository = sessionRepository;
 		this.coachNoteRepository = coachNoteRepository;
 		this.measurementRepository = measurementRepository;
+		this.workoutLogRepository = workoutLogRepository;
+		this.trainingPlanRepository = trainingPlanRepository;
 		this.verificationCodeService = verificationCodeService;
 	}
 
@@ -129,6 +137,9 @@ public class MemberService {
 		codeRepository.deleteAllByMemberId(memberId);
 		coachNoteRepository.deleteAllByMemberId(memberId);
 		measurementRepository.deleteAllByMemberId(memberId);
+		// Logs reference plan days, so they go before the plans that own those days.
+		workoutLogRepository.deleteAllByMemberId(memberId);
+		trainingPlanRepository.deleteAllByMemberId(memberId);
 		memberRepository.delete(member);
 	}
 

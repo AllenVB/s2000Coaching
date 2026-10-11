@@ -1,12 +1,17 @@
 import { Link } from 'react-router-dom'
 
+import type { TrainingPlan } from '@/types/training'
+
+import { useMyTrainingPlan } from '@/api/trainingApi'
 import { ComingSoonCard, PageHeading } from '@/components/ui/PageHeading'
 import { useMemberProfileSync } from '@/hooks/useMemberProfileSync'
+import { formatDate } from '@/lib/date'
 import { AppleIcon, ChartIcon, DumbbellIcon } from '@/components/ui/icons'
 
 /** The member's landing screen: what to do today, then the shortcuts into each section. */
 export function MemberTodayPage() {
   const { member, error } = useMemberProfileSync()
+  const { data: plan } = useMyTrainingPlan()
 
   if (!member) {
     return null
@@ -26,10 +31,12 @@ export function MemberTodayPage() {
       ) : null}
 
       <div className="space-y-6">
-        <ComingSoonCard
-          title="Bugünün Antrenmanı"
-          description="Koçunuz antrenman planınızı yüklediğinde günün programı burada görünecek."
-        />
+        {plan ? <NextWorkoutCard plan={plan} /> : (
+          <ComingSoonCard
+            title="Antrenman Planınız Hazırlanıyor"
+            description="Koçunuz planınızı yüklediğinde günün programı burada görünecek."
+          />
+        )}
 
         <div className="grid gap-4 sm:grid-cols-3">
           <ShortcutCard to="/uye/antrenman" label="Antrenman" icon={DumbbellIcon} />
@@ -38,6 +45,49 @@ export function MemberTodayPage() {
         </div>
       </div>
     </>
+  )
+}
+
+/**
+ * The day to do next: the one least recently performed, which is what a rotating split
+ * actually means in practice.
+ */
+function NextWorkoutCard({ plan }: { plan: TrainingPlan }) {
+  const next = [...plan.days].sort((a, b) => {
+    if (a.lastPerformedOn === b.lastPerformedOn) return a.dayOrder - b.dayOrder
+    if (!a.lastPerformedOn) return -1
+    if (!b.lastPerformedOn) return 1
+    return a.lastPerformedOn.localeCompare(b.lastPerformedOn)
+  })[0]
+
+  if (!next) {
+    return (
+      <ComingSoonCard
+        title={plan.name}
+        description="Planınıza henüz gün eklenmedi; koçunuz eklediğinde burada görünecek."
+      />
+    )
+  }
+
+  return (
+    <section className="rounded-2xl border border-primary/30 bg-surface p-6">
+      <span className="text-[11px] font-semibold uppercase tracking-wider text-primary">
+        Sıradaki Antrenman
+      </span>
+      <h2 className="mt-1.5 font-display text-xl font-bold uppercase tracking-tight text-text-primary">
+        {next.name}
+      </h2>
+      <p className="mt-1.5 text-sm text-text-secondary">
+        {next.exercises.length} hareket ·{' '}
+        {next.lastPerformedOn ? `son yapılış ${formatDate(next.lastPerformedOn)}` : 'henüz yapılmadı'}
+      </p>
+      <Link
+        to={`/uye/antrenman/${next.id}`}
+        className="mt-4 inline-flex h-11 items-center justify-center rounded-xl bg-primary px-5 text-sm font-semibold uppercase tracking-wide text-canvas transition-colors hover:bg-primary-hover"
+      >
+        Antrenmana Başla
+      </Link>
+    </section>
   )
 }
 

@@ -19,11 +19,12 @@ klasörlerdeki `DESIGN.md`).
 | `/uye` | Üye alanı | E-posta koduyla giriş yapan üyeler |
 | `/yonetim` | Yönetim paneli | Yönetim anahtarı (`ADMIN_TOKEN`) |
 
-**Üye alanı** (masaüstünde sol menü, telefonda alt sekme çubuğu): `/uye` bugün · `/uye/antrenman` ·
-`/uye/beslenme` · `/uye/olcumler` · `/uye/mesajlar` · `/uye/profil`.
+**Üye alanı** (masaüstünde sol menü, telefonda alt sekme çubuğu): `/uye` bugün · `/uye/antrenman` (ve
+`/uye/antrenman/:gunId` gün detayı) · `/uye/beslenme` · `/uye/olcumler` · `/uye/mesajlar` · `/uye/profil`.
 
-**Yönetim**: `/yonetim` panel (onay bekleyenler, son siparişler) · `/yonetim/uyeler` liste (arama + durum
-filtresi) · `/yonetim/uyeler/yeni` · `/yonetim/uyeler/:id` üye detayı · `/yonetim/siparisler` ·
+**Yönetim**: `/yonetim` panel (onay bekleyenler, ölçüm girmeyenler, son siparişler) · `/yonetim/uyeler`
+liste (arama + durum filtresi) · `/yonetim/uyeler/yeni` · `/yonetim/uyeler/:id` üye detayı ·
+`/yonetim/sablonlar` plan şablonları · `/yonetim/hareketler` hareket katalogu · `/yonetim/siparisler` ·
 `/yonetim/ayarlar`.
 
 Üye detayı sekmelidir ve her sekme ayrı bir adrestir (`…/:id`, `…/:id/antrenman`, `…/:id/beslenme`,
@@ -69,8 +70,27 @@ Yerel yönetim anahtarı varsayılan olarak `s2000-dev-admin`'dir (`/yonetim` sa
 4. **Giriş.** Şifre yoktur: üye `/uye` sayfasında e-postasını girer, gelen kodla oturum açar. Oturum
    jetonu opak bir değerdir, yalnızca özeti saklanır ve varsayılan 14 gün geçerlidir.
 
-Üyelerin antrenman/beslenme planları sonraki aşamada eklenecek; üye panelinde bu alanlar şimdilik
-"Yakında" kartları olarak duruyor.
+Beslenme planı ve mesajlaşma sonraki aşamalarda eklenecek; üye panelinde bu alanlar şimdilik "Yakında"
+kartları olarak duruyor.
+
+## Antrenman planları
+
+Akış: **hareket katalogu → plan şablonu → üyeye kopyala → üye yapar ve kaydeder.**
+
+`/yonetim/hareketler` tüm planların çektiği ortak katalogdur. Bir planda kullanılan hareket silinemez
+(silinirse o planlar sessizce boşalır ve kayıtlı setler sahipsiz kalırdı).
+
+`/yonetim/sablonlar` sayfasında program bir kez yazılır (günler + her günde set/tekrar/hedef kilo/dinlenme).
+Üye detayındaki **Antrenman** sekmesinden şablon seçilip üyeye atanır; atama **derin kopyadır**, yani
+üyenin planında yapılan değişiklik şablonu ya da başka üyenin kopyasını etkilemez. Bir üyenin birden çok
+planı olabilir ama yalnızca biri **aktiftir**; üye alanında görünen odur.
+
+Üye `/uye/antrenman` sayfasında günleri görür, güne girip setlerini kaydeder. Gün detayı tek sayfadır
+(salonda hareket arası gezinmek istemezsiniz) ve alanlar **geçen seansın değerleriyle** ön-doludur; ilk
+kez yapılıyorsa hedef kilo yazar. Aynı gün ve tarihe tekrar kaydetmek o seansı düzeltir, ikinci kayıt
+açmaz. Üyenin "Bugün" sayfası en uzun süredir yapılmamış günü **Sıradaki Antrenman** olarak önerir.
+
+Koç, üye detayındaki Antrenman sekmesinin altında üyenin son seanslarını görür.
 
 ## Ölçüm takibi
 

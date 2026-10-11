@@ -1,0 +1,228 @@
+databaseChangeLog:
+  - changeSet:
+      id: 019-create-exercise-table
+      author: s2000coaching
+      comment: Shared exercise catalogue the coach builds plans from.
+      changes:
+        - createTable:
+            tableName: exercise
+            columns:
+              - column: { name: id, type: uuid, constraints: { primaryKey: true, nullable: false } }
+              - column: { name: name, type: varchar(120), constraints: { nullable: false } }
+              - column: { name: muscle_group, type: varchar(20), constraints: { nullable: false } }
+              - column: { name: video_url, type: varchar(500) }
+              - column: { name: note, type: text }
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: 020-create-training-plan-tables
+      author: s2000coaching
+      comment: >
+        `training_plan.member_id` is null for a template. Assigning a template to a member
+        deep-copies it, so editing one member's plan never touches the template or another
+        member's copy.
+      changes:
+        - createTable:
+            tableName: training_plan
+            columns:
+              - column: { name: id, type: uuid, constraints: { primaryKey: true, nullable: false } }
+              - column:
+                  name: member_id
+                  type: uuid
+                  constraints:
+                    foreignKeyName: fk_training_plan_member
+                    references: member(id)
+              - column: { name: name, type: varchar(120), constraints: { nullable: false } }
+              - column: { name: note, type: text }
+              - column:
+                  name: active
+                  type: boolean
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false
+
+        - createTable:
+            tableName: training_plan_day
+            columns:
+              - column: { name: id, type: uuid, constraints: { primaryKey: true, nullable: false } }
+              - column:
+                  name: plan_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_plan_day_plan
+                    references: training_plan(id)
+              - column: { name: day_order, type: int, constraints: { nullable: false } }
+              - column: { name: name, type: varchar(120), constraints: { nullable: false } }
+              - column: { name: note, type: text }
+
+        - createTable:
+            tableName: training_plan_exercise
+            columns:
+              - column: { name: id, type: uuid, constraints: { primaryKey: true, nullable: false } }
+              - column:
+                  name: day_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_plan_exercise_day
+                    references: training_plan_day(id)
+              - column:
+                  name: exercise_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_plan_exercise_exercise
+                    references: exercise(id)
+              - column: { name: display_order, type: int, constraints: { nullable: false } }
+              - column: { name: set_count, type: int, constraints: { nullable: false } }
+              - column: { name: reps, type: varchar(40), constraints: { nullable: false } }
+              - column: { name: target_weight_kg, type: "numeric(6, 2)" }
+              - column: { name: rest_seconds, type: int }
+              - column: { name: note, type: text }
+
+        - createIndex:
+            indexName: idx_training_plan_member
+            tableName: training_plan
+            columns:
+              - column: { name: member_id }
+
+  - changeSet:
+      id: 021-create-workout-log-tables
+      author: s2000coaching
+      comment: >
+        One log per member per plan day per date, so re-saving a session corrects it instead
+        of duplicating it.
+      changes:
+        - createTable:
+            tableName: workout_log
+            columns:
+              - column: { name: id, type: uuid, constraints: { primaryKey: true, nullable: false } }
+              - column:
+                  name: member_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_workout_log_member
+                    references: member(id)
+              - column:
+                  name: day_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_workout_log_day
+                    references: training_plan_day(id)
+              - column: { name: performed_on, type: date, constraints: { nullable: false } }
+              - column: { name: note, type: text }
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false
+        - addUniqueConstraint:
+            tableName: workout_log
+            columnNames: member_id, day_id, performed_on
+            constraintName: uk_workout_log_member_day_date
+
+        - createTable:
+            tableName: set_log
+            columns:
+              - column: { name: id, type: uuid, constraints: { primaryKey: true, nullable: false } }
+              - column:
+                  name: workout_log_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_set_log_workout
+                    references: workout_log(id)
+              - column:
+                  name: plan_exercise_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_set_log_plan_exercise
+                    references: training_plan_exercise(id)
+              - column: { name: set_number, type: int, constraints: { nullable: false } }
+              - column: { name: reps, type: int, constraints: { nullable: false } }
+              - column: { name: weight_kg, type: "numeric(6, 2)" }
+
+  - changeSet:
+      id: 022-seed-exercise-catalogue
+      author: s2000coaching
+      comment: A small starter catalogue so a new install can build a plan immediately.
+      changes:
+        - insert:
+            tableName: exercise
+            columns:
+              - column: { name: id, value: "55555555-5555-4555-8555-555555555501" }
+              - column: { name: name, value: "Bench Press" }
+              - column: { name: muscle_group, value: "GOGUS" }
+              - column: { name: created_at, valueDate: "2026-01-01T00:00:00" }
+        - insert:
+            tableName: exercise
+            columns:
+              - column: { name: id, value: "55555555-5555-4555-8555-555555555502" }
+              - column: { name: name, value: "Barbell Row" }
+              - column: { name: muscle_group, value: "SIRT" }
+              - column: { name: created_at, valueDate: "2026-01-01T00:00:01" }
+        - insert:
+            tableName: exercise
+            columns:
+              - column: { name: id, value: "55555555-5555-4555-8555-555555555503" }
+              - column: { name: name, value: "Squat" }
+              - column: { name: muscle_group, value: "BACAK" }
+              - column: { name: created_at, valueDate: "2026-01-01T00:00:02" }
+        - insert:
+            tableName: exercise
+            columns:
+              - column: { name: id, value: "55555555-5555-4555-8555-555555555504" }
+              - column: { name: name, value: "Deadlift" }
+              - column: { name: muscle_group, value: "SIRT" }
+              - column: { name: created_at, valueDate: "2026-01-01T00:00:03" }
+        - insert:
+            tableName: exercise
+            columns:
+              - column: { name: id, value: "55555555-5555-4555-8555-555555555505" }
+              - column: { name: name, value: "Omuz Press" }
+              - column: { name: muscle_group, value: "OMUZ" }
+              - column: { name: created_at, valueDate: "2026-01-01T00:00:04" }
+        - insert:
+            tableName: exercise
+            columns:
+              - column: { name: id, value: "55555555-5555-4555-8555-555555555506" }
+              - column: { name: name, value: "Lat Pulldown" }
+              - column: { name: muscle_group, value: "SIRT" }
+              - column: { name: created_at, valueDate: "2026-01-01T00:00:05" }
+        - insert:
+            tableName: exercise
+            columns:
+              - column: { name: id, value: "55555555-5555-4555-8555-555555555507" }
+              - column: { name: name, value: "Biceps Curl" }
+              - column: { name: muscle_group, value: "KOL" }
+              - column: { name: created_at, valueDate: "2026-01-01T00:00:06" }
+        - insert:
+            tableName: exercise
+            columns:
+              - column: { name: id, value: "55555555-5555-4555-8555-555555555508" }
+              - column: { name: name, value: "Plank" }
+              - column: { name: muscle_group, value: "KARIN" }
+              - column: { name: created_at, valueDate: "2026-01-01T00:00:07" }

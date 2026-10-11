@@ -5,11 +5,20 @@ import { PortalHeader } from '@/components/layout/PortalHeader'
 import { PortalSidebarNav, PortalTabBar, type PortalNavItem } from '@/components/layout/PortalNav'
 import { AdminAuthProvider, useAdminAuth } from '@/context/AdminAuthContext'
 import { useAdminSignOut } from '@/hooks/useAdminSession'
-import { HomeIcon, ReceiptIcon, SettingsIcon, UsersIcon } from '@/components/ui/icons'
+import {
+  ClipboardIcon,
+  DumbbellIcon,
+  HomeIcon,
+  ReceiptIcon,
+  SettingsIcon,
+  UsersIcon,
+} from '@/components/ui/icons'
 
 const navItems: PortalNavItem[] = [
   { to: '/yonetim', label: 'Panel', icon: HomeIcon, end: true },
   { to: '/yonetim/uyeler', label: 'Üyeler', icon: UsersIcon },
+  { to: '/yonetim/sablonlar', label: 'Şablonlar', icon: ClipboardIcon },
+  { to: '/yonetim/hareketler', label: 'Hareketler', icon: DumbbellIcon },
   { to: '/yonetim/siparisler', label: 'Siparişler', icon: ReceiptIcon },
   { to: '/yonetim/ayarlar', label: 'Ayarlar', icon: SettingsIcon },
 ]

@@ -19,6 +19,8 @@ import com.s2000coaching.repository.MeasurementRepository;
 import com.s2000coaching.repository.MemberRepository;
 import com.s2000coaching.repository.MemberSessionRepository;
 import com.s2000coaching.repository.MemberVerificationCodeRepository;
+import com.s2000coaching.repository.TrainingPlanRepository;
+import com.s2000coaching.repository.WorkoutLogRepository;
 import com.s2000coaching.web.dto.CreateMemberRequest;
 import com.s2000coaching.web.dto.UpdateMemberRequest;
 import java.math.BigDecimal;
@@ -53,6 +55,12 @@ class MemberServiceTest {
 	private MeasurementRepository measurementRepository;
 
 	@Mock
+	private WorkoutLogRepository workoutLogRepository;
+
+	@Mock
+	private TrainingPlanRepository trainingPlanRepository;
+
+	@Mock
 	private VerificationCodeService verificationCodeService;
 
 	private MemberService memberService;
@@ -60,7 +68,8 @@ class MemberServiceTest {
 	@BeforeEach
 	void setUp() {
 		memberService = new MemberService(memberRepository, codeRepository, sessionRepository,
-				coachNoteRepository, measurementRepository, verificationCodeService);
+				coachNoteRepository, measurementRepository, workoutLogRepository, trainingPlanRepository,
+				verificationCodeService);
 	}
 
 	private static CreateMemberRequest request(String email) {
@@ -211,11 +220,14 @@ class MemberServiceTest {
 			memberService.deleteMember(member.getId());
 
 			InOrder inOrder = Mockito.inOrder(sessionRepository, codeRepository, coachNoteRepository,
-					measurementRepository, memberRepository);
+					measurementRepository, workoutLogRepository, trainingPlanRepository, memberRepository);
 			inOrder.verify(sessionRepository).deleteAllByMemberId(member.getId());
 			inOrder.verify(codeRepository).deleteAllByMemberId(member.getId());
 			inOrder.verify(coachNoteRepository).deleteAllByMemberId(member.getId());
 			inOrder.verify(measurementRepository).deleteAllByMemberId(member.getId());
+			// Logs reference plan days, so they must be removed before the plans.
+			inOrder.verify(workoutLogRepository).deleteAllByMemberId(member.getId());
+			inOrder.verify(trainingPlanRepository).deleteAllByMemberId(member.getId());
 			inOrder.verify(memberRepository).delete(member);
 		}
 

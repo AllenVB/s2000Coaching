@@ -1,17 +1,5 @@
 import { ComingSoonCard, PageHeading } from '@/components/ui/PageHeading'
 
-export function MemberTrainingPage() {
-  return (
-    <>
-      <PageHeading title="Antrenman" description="Programınız ve gün detaylarınız." />
-      <ComingSoonCard
-        title="Antrenman Planım"
-        description="Koçunuz programınızı yüklediğinde günler ve hareketler burada listelenecek."
-      />
-    </>
-  )
-}
-
 export function MemberNutritionPage() {
   return (
     <>

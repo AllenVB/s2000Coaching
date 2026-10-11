@@ -5,20 +5,21 @@ import { MemberAreaLayout } from '@/components/layout/MemberAreaLayout'
 import { AdminDashboardPage } from '@/pages/admin/AdminDashboardPage'
 import { AdminOrdersPage } from '@/pages/admin/AdminOrdersPage'
 import { AdminSettingsPage } from '@/pages/admin/AdminSettingsPage'
+import { ExerciseCatalogPage } from '@/pages/admin/ExerciseCatalogPage'
 import { MemberDetailPage } from '@/pages/admin/MemberDetailPage'
 import { MemberListPage } from '@/pages/admin/MemberListPage'
 import { NewMemberPage } from '@/pages/admin/NewMemberPage'
+import { PlanTemplatesPage } from '@/pages/admin/PlanTemplatesPage'
 import { MemberNotesTab } from '@/pages/admin/tabs/MemberNotesTab'
 import { MemberMeasurementsTab } from '@/pages/admin/tabs/MemberMeasurementsTab'
-import { MemberNutritionTab, MemberTrainingTab } from '@/pages/admin/tabs/MemberPlaceholderTabs'
+import { MemberNutritionTab } from '@/pages/admin/tabs/MemberPlaceholderTabs'
+import { MemberTrainingTab } from '@/pages/admin/tabs/MemberTrainingTab'
 import { MemberProfileTab } from '@/pages/admin/tabs/MemberProfileTab'
 import { LandingPage } from '@/pages/LandingPage'
 import { MemberMeasurementsPage } from '@/pages/member/MemberMeasurementsPage'
-import {
-  MemberMessagesPage,
-  MemberNutritionPage,
-  MemberTrainingPage,
-} from '@/pages/member/MemberPlaceholderPages'
+import { MemberMessagesPage, MemberNutritionPage } from '@/pages/member/MemberPlaceholderPages'
+import { MemberTrainingPage } from '@/pages/member/MemberTrainingPage'
+import { MemberWorkoutDayPage } from '@/pages/member/MemberWorkoutDayPage'
 import { MemberProfilePage } from '@/pages/member/MemberProfilePage'
 import { MemberTodayPage } from '@/pages/member/MemberTodayPage'
 import { NotFoundPage } from '@/pages/NotFoundPage'
@@ -31,6 +32,7 @@ export default function App() {
       <Route path="/uye" element={<MemberAreaLayout />}>
         <Route index element={<MemberTodayPage />} />
         <Route path="antrenman" element={<MemberTrainingPage />} />
+        <Route path="antrenman/:dayId" element={<MemberWorkoutDayPage />} />
         <Route path="beslenme" element={<MemberNutritionPage />} />
         <Route path="olcumler" element={<MemberMeasurementsPage />} />
         <Route path="mesajlar" element={<MemberMessagesPage />} />
@@ -48,6 +50,8 @@ export default function App() {
           <Route path="olcumler" element={<MemberMeasurementsTab />} />
           <Route path="notlar" element={<MemberNotesTab />} />
         </Route>
+        <Route path="hareketler" element={<ExerciseCatalogPage />} />
+        <Route path="sablonlar" element={<PlanTemplatesPage />} />
         <Route path="siparisler" element={<AdminOrdersPage />} />
         <Route path="ayarlar" element={<AdminSettingsPage />} />
       </Route>
