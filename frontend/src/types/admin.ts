@@ -14,10 +14,13 @@ export interface OrderSummary {
   customerName: string
   email: string
   phone: string
+  cityAge: string | null
   packageName: string
   priceMinor: number
   status: OrderStatus
   createdAt: string
+  /** The member this order belongs to, or null if the buyer is not one yet. */
+  memberId: string | null
 }
 
 export interface AdminDashboard {

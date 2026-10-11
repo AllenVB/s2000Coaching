@@ -1,5 +1,5 @@
 # Changelog file names are numbered by creation order only. ChangeSet `id`s inside
-# them are a separate, repo-wide monotonic counter (currently at 024) — always
+# them are a separate, repo-wide monotonic counter (currently at 025) — always
 # continue that counter for a new changeSet id, never reuse a file's own ordinal.
 #
 # `experience_note` (005) is superseded by `experience_category` + `experience_item`
@@ -30,3 +30,5 @@ databaseChangeLog:
       file: db/changelog/011-create-nutrition-tables.yaml
   - include:
       file: db/changelog/012-create-message-table.yaml
+  - include:
+      file: db/changelog/013-link-orders-to-members.yaml

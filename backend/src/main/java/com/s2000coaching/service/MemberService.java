@@ -37,6 +37,7 @@ public class MemberService {
 	private final TrainingPlanRepository trainingPlanRepository;
 	private final NutritionPlanRepository nutritionPlanRepository;
 	private final MessageRepository messageRepository;
+	private final AdminOrderService adminOrderService;
 	private final VerificationCodeService verificationCodeService;
 
 	public MemberService(MemberRepository memberRepository,
@@ -48,6 +49,7 @@ public class MemberService {
 			TrainingPlanRepository trainingPlanRepository,
 			NutritionPlanRepository nutritionPlanRepository,
 			MessageRepository messageRepository,
+			AdminOrderService adminOrderService,
 			VerificationCodeService verificationCodeService) {
 		this.memberRepository = memberRepository;
 		this.codeRepository = codeRepository;
@@ -58,6 +60,7 @@ public class MemberService {
 		this.trainingPlanRepository = trainingPlanRepository;
 		this.nutritionPlanRepository = nutritionPlanRepository;
 		this.messageRepository = messageRepository;
+		this.adminOrderService = adminOrderService;
 		this.verificationCodeService = verificationCodeService;
 	}
 
@@ -112,6 +115,8 @@ public class MemberService {
 				Instant.now());
 
 		Member saved = memberRepository.save(member);
+		// Any order already placed with this address becomes part of the new member's history.
+		adminOrderService.linkOrdersTo(saved);
 		verificationCodeService.issueAndSend(saved, VerificationPurpose.REGISTRATION);
 		return MemberResponse.from(saved);
 	}
@@ -150,6 +155,8 @@ public class MemberService {
 		trainingPlanRepository.deleteAllByMemberId(memberId);
 		nutritionPlanRepository.deleteAllByMemberId(memberId);
 		messageRepository.deleteAllByMemberId(memberId);
+		// Orders are financial records: detach them rather than deleting them with the member.
+		adminOrderService.unlinkOrdersOf(memberId);
 		memberRepository.delete(member);
 	}
 

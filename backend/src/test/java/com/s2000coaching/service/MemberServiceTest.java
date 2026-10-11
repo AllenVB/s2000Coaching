@@ -69,6 +69,9 @@ class MemberServiceTest {
 	private MessageRepository messageRepository;
 
 	@Mock
+	private AdminOrderService adminOrderService;
+
+	@Mock
 	private VerificationCodeService verificationCodeService;
 
 	private MemberService memberService;
@@ -77,7 +80,7 @@ class MemberServiceTest {
 	void setUp() {
 		memberService = new MemberService(memberRepository, codeRepository, sessionRepository,
 				coachNoteRepository, measurementRepository, workoutLogRepository, trainingPlanRepository,
-				nutritionPlanRepository, messageRepository, verificationCodeService);
+				nutritionPlanRepository, messageRepository, adminOrderService, verificationCodeService);
 	}
 
 	private static CreateMemberRequest request(String email) {
@@ -107,6 +110,8 @@ class MemberServiceTest {
 			assertThat(response.status()).isEqualTo(MemberStatus.PENDING_VERIFICATION);
 			assertThat(response.verifiedAt()).isNull();
 			verify(verificationCodeService).issueAndSend(any(Member.class), eq(VerificationPurpose.REGISTRATION));
+			// Any order already placed with this address joins the new member's history.
+			verify(adminOrderService).linkOrdersTo(any(Member.class));
 		}
 
 		@Test
@@ -229,7 +234,7 @@ class MemberServiceTest {
 
 			InOrder inOrder = Mockito.inOrder(sessionRepository, codeRepository, coachNoteRepository,
 					measurementRepository, workoutLogRepository, trainingPlanRepository,
-					nutritionPlanRepository, messageRepository, memberRepository);
+					nutritionPlanRepository, messageRepository, adminOrderService, memberRepository);
 			inOrder.verify(sessionRepository).deleteAllByMemberId(member.getId());
 			inOrder.verify(codeRepository).deleteAllByMemberId(member.getId());
 			inOrder.verify(coachNoteRepository).deleteAllByMemberId(member.getId());
@@ -239,6 +244,8 @@ class MemberServiceTest {
 			inOrder.verify(trainingPlanRepository).deleteAllByMemberId(member.getId());
 			inOrder.verify(nutritionPlanRepository).deleteAllByMemberId(member.getId());
 			inOrder.verify(messageRepository).deleteAllByMemberId(member.getId());
+			// Orders are detached, never deleted: they outlive the membership.
+			inOrder.verify(adminOrderService).unlinkOrdersOf(member.getId());
 			inOrder.verify(memberRepository).delete(member);
 		}
 

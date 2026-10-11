@@ -1,11 +1,17 @@
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 
+import { useOrder } from '@/api/ordersAdminApi'
 import { CreateMemberForm } from '@/components/admin/CreateMemberForm'
 import { PageHeading } from '@/components/ui/PageHeading'
-import { ArrowLeftIcon } from '@/components/ui/icons'
+import { ArrowLeftIcon, ReceiptIcon } from '@/components/ui/icons'
 
 export function NewMemberPage() {
   const navigate = useNavigate()
+  // `?siparis=S2K-…` arrives from the orders page: the buyer's details are carried over so
+  // the same person is not typed in twice.
+  const [searchParams] = useSearchParams()
+  const orderNumber = searchParams.get('siparis')
+  const { data: order } = useOrder(orderNumber)
 
   return (
     <>
@@ -22,7 +28,24 @@ export function NewMemberPage() {
         description="Üye oluşturulduğunda e-posta adresine onay kodu gönderilir; üyelik kod doğrulanınca tamamlanır."
       />
 
-      <CreateMemberForm onCreated={(member) => navigate(`/yonetim/uyeler/${member.id}`)} />
+      {order ? (
+        <div className="mb-5 flex items-start gap-2 rounded-xl border border-border bg-surface-elevated p-3.5 text-xs leading-relaxed text-text-secondary">
+          <ReceiptIcon className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+          <span>
+            <span className="font-mono text-text-primary">{order.orderNumber}</span> numaralı siparişten
+            dolduruldu ({order.packageName}). Üye oluşturulduğunda bu sipariş üyeye bağlanır.
+          </span>
+        </div>
+      ) : null}
+
+      <CreateMemberForm
+        prefill={
+          order
+            ? { email: order.email, fullName: order.customerName, phone: order.phone }
+            : undefined
+        }
+        onCreated={(member) => navigate(`/yonetim/uyeler/${member.id}`)}
+      />
     </>
   )
 }

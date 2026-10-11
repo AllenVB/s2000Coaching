@@ -112,6 +112,19 @@ yazar.
 Yönetim paneli, **son mesajı okunmamış** (yani cevap bekleyen) üyeleri ayrı bir blokta listeler; koç
 diziyi açtığı anda üye bu kuyruktan düşer.
 
+## Sipariş ↔ üyelik
+
+Checkout ad, e-posta ve telefon topluyor ama üye oluşturmuyordu; aynı kişiyi bir de yönetim panelinden
+elle girmek gerekiyordu. Artık:
+
+- `/yonetim/siparisler` her siparişi **Üye / Üye değil** olarak işaretler. "Üyeye Dönüştür" düğmesi üye
+  formunu siparişteki ad, e-posta ve telefonla açar (`/yonetim/uyeler/yeni?siparis=S2K-…`); koç yalnızca
+  boy, kilo ve spor geçmişini ekler.
+- Üye oluşturulduğunda **aynı e-posta ile verilmiş tüm bağlanmamış siparişler** otomatik olarak o üyeye
+  bağlanır, böylece sipariş geçmişi ilk günden görünür (üye detayı → Profil → Siparişler).
+- Üye silindiğinde siparişler **silinmez, yalnızca üyeden kopar** — sipariş mali bir kayıttır ve üyelikten
+  uzun yaşar.
+
 ## Ölçüm takibi
 
 Üye `/uye/olcumler` sayfasından haftalık check-in girer: tarih ve kilo zorunlu, bel/göğüs/kalça/kol/bacak

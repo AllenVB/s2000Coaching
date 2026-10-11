@@ -13,7 +13,14 @@ import type { Member } from '@/types/member'
  * Member creation. Submitting only opens the confirmation prompt — nothing is sent until the
  * admin confirms, because creating a member also mails that person a code.
  */
-export function CreateMemberForm({ onCreated }: { onCreated: (member: Member) => void }) {
+export function CreateMemberForm({
+  onCreated,
+  prefill,
+}: {
+  onCreated: (member: Member) => void
+  /** Name, e-mail and phone carried over from an order, so they are not retyped. */
+  prefill?: { email: string; fullName: string; phone: string }
+}) {
   const createMember = useCreateMember()
   const [confirming, setConfirming] = useState<CreateMemberFormValues | null>(null)
 
@@ -24,7 +31,13 @@ export function CreateMemberForm({ onCreated }: { onCreated: (member: Member) =>
     formState: { errors },
   } = useForm<CreateMemberFormValues>({
     resolver: zodResolver(createMemberSchema),
-    defaultValues: { email: '', fullName: '', phone: '', sportsBackground: '' },
+    // `values` rather than `defaultValues`, so the form fills in once the order loads.
+    values: {
+      email: prefill?.email ?? '',
+      fullName: prefill?.fullName ?? '',
+      phone: prefill?.phone ?? '',
+      sportsBackground: '',
+    } as CreateMemberFormValues,
   })
 
   const onSubmit = (values: CreateMemberFormValues) => {

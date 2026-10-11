@@ -9,10 +9,13 @@ import {
   useResendVerificationCode,
   useUpdateMember,
 } from '@/api/adminMembersApi'
+import { useMemberOrders } from '@/api/ordersAdminApi'
 import { Button } from '@/components/ui/Button'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { Field, inputClasses, textareaClasses } from '@/components/ui/FormField'
 import { CheckIcon, TrashIcon } from '@/components/ui/icons'
+import { formatDate } from '@/lib/date'
+import { formatMinor } from '@/lib/money'
 import { useMemberDetail } from '@/pages/admin/MemberDetailPage'
 import { updateMemberSchema, type UpdateMemberFormValues } from '@/schemas/memberSchema'
 
@@ -114,6 +117,8 @@ export function MemberProfileTab() {
         </form>
       </section>
 
+      <MemberOrdersCard memberId={member.id} />
+
       <section className="rounded-2xl border border-error/30 bg-surface p-6">
         <h2 className="text-sm font-bold uppercase tracking-wider text-text-primary">Üyeliği Sil</h2>
         <p className="mt-2 text-xs leading-relaxed text-text-secondary">
@@ -150,6 +155,39 @@ export function MemberProfileTab() {
         />
       ) : null}
     </div>
+  )
+}
+
+/** Orders placed with this member's address, attached when the member was created. */
+function MemberOrdersCard({ memberId }: { memberId: string }) {
+  const { data: orders } = useMemberOrders(memberId)
+
+  if (!orders || orders.length === 0) {
+    return null
+  }
+
+  return (
+    <section className="rounded-2xl border border-border bg-surface p-6">
+      <h2 className="mb-4 border-b border-border pb-3 text-sm font-bold uppercase tracking-wider text-text-primary">
+        Siparişler
+      </h2>
+      <ul className="space-y-2">
+        {orders.map((order) => (
+          <li
+            key={order.orderNumber}
+            className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-surface-elevated px-4 py-3 text-sm"
+          >
+            <span className="min-w-0">
+              <span className="block font-semibold text-text-primary">{order.packageName}</span>
+              <span className="block text-xs text-text-muted">
+                {formatDate(order.createdAt)} · <span className="font-mono">{order.orderNumber}</span>
+              </span>
+            </span>
+            <span className="font-semibold text-primary">{formatMinor(order.priceMinor)}</span>
+          </li>
+        ))}
+      </ul>
+    </section>
   )
 }
 
