@@ -188,3 +188,7 @@ cd backend && ./gradlew test   # unit + @WebMvcTest + Testcontainers (Docker ger
 cd frontend && npm run build   # tsc + vite build
 cd frontend && npm run lint    # oxlint
 ```
+
+Aynı üçü her push ve pull request'te GitHub Actions'ta da koşar (`.github/workflows/ci.yml`).
+Testcontainers testleri runner'ın Docker'ıyla çalışır; backend testi düşerse HTML raporu iş
+çıktısı olarak yüklenir.
