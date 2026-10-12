@@ -20,7 +20,21 @@ klasörlerdeki `DESIGN.md`).
 | `/yonetim` | Yönetim paneli | E-posta + şifre ile giriş yapan koç hesapları |
 
 **Üye alanı** (masaüstünde sol menü, telefonda alt sekme çubuğu): `/uye` bugün · `/uye/antrenman` (ve
-`/uye/antrenman/:gunId` gün detayı) · `/uye/beslenme` · `/uye/olcumler` · `/uye/mesajlar` · `/uye/profil`.
+`/uye/antrenman/:gunId` gün detayı) · `/uye/beslenme` · `/uye/olcumler` · `/uye/gecmis` ·
+`/uye/mesajlar` · `/uye/profil`.
+
+`/uye/gecmis` telefon sekme çubuğunda yoktur: çubuk genişliği sekmelere böler, altıdan sonrası
+parmak boyutunun altına iner. Sayfaya bugün ekranındaki kısayol kartından girilir
+(`PortalNavItem.desktopOnly`).
+
+**Bugün ekranı** üç şey gösterir: 10 gündür ölçüm girilmediyse (ya da hiç girilmediyse) ölçüm
+hatırlatıcısı, sıradaki antrenman, ve beslenme planından gelen günün makroları. Makro kartı hem
+plandaki hedefi hem öğünlerin toplamını gösterir; ikisi birlikte varsa çubuk planın hedefe ne kadar
+yaklaştığını söyler — planın kendi içinde tutarlı olup olmadığını görmenin yolu budur.
+
+> Hatırlatıcının eşiği (`MeasurementReminder.STALE_AFTER_DAYS`) koçun panelindeki "ölçüm girmeyenler"
+> listesiyle (`AdminDashboardService.STALE_AFTER_DAYS`) aynı olmak zorundadır; farklı olurlarsa üyeye
+> "güncelsin" derken koça aynı üyeyi kovalaması söylenir.
 
 **Yönetim**: `/yonetim` panel (onay bekleyenler, ölçüm girmeyenler, son siparişler) · `/yonetim/uyeler`
 liste (arama + durum filtresi) · `/yonetim/uyeler/yeni` · `/yonetim/uyeler/:id` üye detayı ·
@@ -166,6 +180,19 @@ kapsam dışı bırakıldı.
 **Önemli:** `SPRING_MAIL_HOST` tanımlı değilse e-posta gönderilmez; kodlar yalnızca uygulama loguna
 `WARN` seviyesinde yazılır (`LoggingVerificationMailSender`). Bu yalnızca yerel geliştirme içindir —
 prodüksiyonda SMTP ayarları mutlaka verilmelidir.
+
+### Üyenin kendi bilgileri
+
+Üye `/uye/profil` sayfasından ad soyad, telefon, boy ve spor geçmişini kendisi güncelleyebilir
+(`PATCH /api/member/me`). Düzenlenebilir alanlar koçun formundan dar tutulmuştur:
+
+- **E-posta** hesabı tanımlayan ve giriş kodlarının gittiği adrestir; değişmesi kendi doğrulama
+  akışını gerektirir.
+- **Başlangıç kilosu** gelişim grafiklerinin çizildiği referans noktasıdır; üye değiştirebilseydi
+  kendi geçmişini farkında olmadan yeniden çizerdi. Üye bugünkü kilosunu ölçüm olarak girer.
+
+Düzenlenen üye her zaman jetondan çözülür, istek gövdesindeki bir kimlikten değil — bir üye
+başkasının bilgilerini değiştiremez.
 
 ### Yönetim girişi
 

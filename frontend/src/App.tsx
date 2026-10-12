@@ -17,6 +17,7 @@ import { MemberNutritionTab } from '@/pages/admin/tabs/MemberNutritionTab'
 import { MemberTrainingTab } from '@/pages/admin/tabs/MemberTrainingTab'
 import { MemberProfileTab } from '@/pages/admin/tabs/MemberProfileTab'
 import { LandingPage } from '@/pages/LandingPage'
+import { MemberHistoryPage } from '@/pages/member/MemberHistoryPage'
 import { MemberMeasurementsPage } from '@/pages/member/MemberMeasurementsPage'
 import { MemberMessagesPage } from '@/pages/member/MemberMessagesPage'
 import { MemberNutritionPage } from '@/pages/member/MemberNutritionPage'
@@ -37,6 +38,7 @@ export default function App() {
         <Route path="antrenman/:dayId" element={<MemberWorkoutDayPage />} />
         <Route path="beslenme" element={<MemberNutritionPage />} />
         <Route path="olcumler" element={<MemberMeasurementsPage />} />
+        <Route path="gecmis" element={<MemberHistoryPage />} />
         <Route path="mesajlar" element={<MemberMessagesPage />} />
         <Route path="profil" element={<MemberProfilePage />} />
       </Route>

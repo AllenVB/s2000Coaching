@@ -24,6 +24,18 @@ export interface CreateMemberInput {
   sportsBackground: string
 }
 
+/**
+ * What a member may change about themselves — narrower than `CreateMemberInput`, which is
+ * the coach's form. E-mail identifies the account, and the starting weight is the baseline
+ * the progress charts are drawn against, so neither is editable here.
+ */
+export interface UpdateMyProfileBody {
+  fullName: string
+  phone: string
+  heightCm: number
+  sportsBackground: string
+}
+
 export interface MemberSession {
   token: string
   expiresAt: string

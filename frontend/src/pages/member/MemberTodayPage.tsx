@@ -2,16 +2,22 @@ import { Link } from 'react-router-dom'
 
 import type { TrainingPlan } from '@/types/training'
 
+import { useMyMeasurements } from '@/api/measurementsApi'
+import { useMyNutritionPlan } from '@/api/nutritionApi'
 import { useMyTrainingPlan } from '@/api/trainingApi'
+import { MeasurementReminder } from '@/components/member/MeasurementReminder'
+import { TodayMacrosCard } from '@/components/member/TodayMacrosCard'
 import { ComingSoonCard, PageHeading } from '@/components/ui/PageHeading'
 import { useMemberProfileSync } from '@/hooks/useMemberProfileSync'
 import { formatDate } from '@/lib/date'
-import { AppleIcon, ChartIcon, DumbbellIcon } from '@/components/ui/icons'
+import { AppleIcon, ChartIcon, DumbbellIcon, HistoryIcon } from '@/components/ui/icons'
 
 /** The member's landing screen: what to do today, then the shortcuts into each section. */
 export function MemberTodayPage() {
   const { member, error } = useMemberProfileSync()
   const { data: plan } = useMyTrainingPlan()
+  const { data: nutritionPlan } = useMyNutritionPlan()
+  const { data: measurements } = useMyMeasurements()
 
   if (!member) {
     return null
@@ -31,6 +37,10 @@ export function MemberTodayPage() {
       ) : null}
 
       <div className="space-y-6">
+        {/* Only once the list has loaded: an empty array while loading would claim the
+            member has never checked in. */}
+        {measurements ? <MeasurementReminder measurements={measurements} /> : null}
+
         {plan ? <NextWorkoutCard plan={plan} /> : (
           <ComingSoonCard
             title="Antrenman Planınız Hazırlanıyor"
@@ -38,10 +48,13 @@ export function MemberTodayPage() {
           />
         )}
 
-        <div className="grid gap-4 sm:grid-cols-3">
+        {nutritionPlan ? <TodayMacrosCard plan={nutritionPlan} /> : null}
+
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <ShortcutCard to="/uye/antrenman" label="Antrenman" icon={DumbbellIcon} />
           <ShortcutCard to="/uye/beslenme" label="Beslenme" icon={AppleIcon} />
           <ShortcutCard to="/uye/olcumler" label="Ölçümler" icon={ChartIcon} />
+          <ShortcutCard to="/uye/gecmis" label="Geçmiş" icon={HistoryIcon} />
         </div>
       </div>
     </>

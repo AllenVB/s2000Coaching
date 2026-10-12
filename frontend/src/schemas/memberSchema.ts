@@ -43,3 +43,12 @@ export type MemberCodeFormValues = z.infer<typeof memberCodeSchema>
 export const updateMemberSchema = createMemberSchema.omit({ email: true })
 
 export type UpdateMemberFormValues = z.infer<typeof updateMemberSchema>
+
+/**
+ * What a member may change about themselves. Narrower than the coach's form on purpose:
+ * the e-mail identifies the account, and the starting weight is the baseline the progress
+ * charts are drawn against, so members record today's weight as a measurement instead.
+ */
+export const updateMyProfileSchema = createMemberSchema.omit({ email: true, weightKg: true })
+
+export type UpdateMyProfileFormValues = z.infer<typeof updateMyProfileSchema>

@@ -17,6 +17,7 @@ import com.s2000coaching.repository.WorkoutLogRepository;
 import com.s2000coaching.web.dto.CreateMemberRequest;
 import com.s2000coaching.web.dto.MemberResponse;
 import com.s2000coaching.web.dto.UpdateMemberRequest;
+import com.s2000coaching.web.dto.UpdateOwnProfileRequest;
 import java.time.Instant;
 import java.util.List;
 import java.util.Locale;
@@ -87,6 +88,20 @@ public class MemberService {
 		member.setPhone(request.phone().trim());
 		member.setHeightCm(request.heightCm());
 		member.setWeightKg(request.weightKg());
+		member.setSportsBackground(request.sportsBackground().trim());
+		return MemberResponse.from(member);
+	}
+
+	/**
+	 * The member editing themselves. Narrower than {@link #updateMember}: see
+	 * {@link UpdateOwnProfileRequest} for which fields are withheld and why.
+	 */
+	@Transactional
+	public MemberResponse updateOwnProfile(UUID memberId, UpdateOwnProfileRequest request) {
+		Member member = getOrThrow(memberId);
+		member.setFullName(request.fullName().trim());
+		member.setPhone(request.phone().trim());
+		member.setHeightCm(request.heightCm());
 		member.setSportsBackground(request.sportsBackground().trim());
 		return MemberResponse.from(member);
 	}

@@ -5,13 +5,22 @@ import { PortalHeader } from '@/components/layout/PortalHeader'
 import { PortalSidebarNav, PortalTabBar, type PortalNavItem } from '@/components/layout/PortalNav'
 import { MemberLogin } from '@/components/member/MemberLogin'
 import { MemberAuthProvider, useMemberAuth } from '@/context/MemberAuthContext'
-import { AppleIcon, ChartIcon, ChatIcon, DumbbellIcon, HomeIcon, UserIcon } from '@/components/ui/icons'
+import {
+  AppleIcon,
+  ChartIcon,
+  ChatIcon,
+  DumbbellIcon,
+  HistoryIcon,
+  HomeIcon,
+  UserIcon,
+} from '@/components/ui/icons'
 
 const navItems: PortalNavItem[] = [
   { to: '/uye', label: 'Bugün', icon: HomeIcon, end: true },
   { to: '/uye/antrenman', label: 'Antrenman', icon: DumbbellIcon },
   { to: '/uye/beslenme', label: 'Beslenme', icon: AppleIcon },
   { to: '/uye/olcumler', label: 'Ölçümler', icon: ChartIcon },
+  { to: '/uye/gecmis', label: 'Geçmiş', icon: HistoryIcon, desktopOnly: true },
   { to: '/uye/mesajlar', label: 'Mesajlar', icon: ChatIcon },
   { to: '/uye/profil', label: 'Profil', icon: UserIcon },
 ]

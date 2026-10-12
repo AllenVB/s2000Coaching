@@ -25,6 +25,7 @@ import com.s2000coaching.repository.TrainingPlanRepository;
 import com.s2000coaching.repository.WorkoutLogRepository;
 import com.s2000coaching.web.dto.CreateMemberRequest;
 import com.s2000coaching.web.dto.UpdateMemberRequest;
+import com.s2000coaching.web.dto.UpdateOwnProfileRequest;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Optional;
@@ -219,6 +220,37 @@ class MemberServiceTest {
 			assertThatThrownBy(() -> memberService.updateMember(unknown, new UpdateMemberRequest(
 					"Ad Soyad", "+905551112233", 180, new BigDecimal("80.00"), "Fitness")))
 					.isInstanceOf(NotFoundException.class);
+		}
+
+		@Test
+		void shouldLetAMemberEditTheirOwnContactDetails() {
+			Member member = pendingMember();
+			when(memberRepository.findById(member.getId())).thenReturn(Optional.of(member));
+
+			var response = memberService.updateOwnProfile(member.getId(), new UpdateOwnProfileRequest(
+					"  Mehmet Demir ", " +905559998877 ", 175, "  Yüzme  "));
+
+			assertThat(response.fullName()).isEqualTo("Mehmet Demir");
+			assertThat(response.phone()).isEqualTo("+905559998877");
+			assertThat(response.heightCm()).isEqualTo(175);
+			assertThat(response.sportsBackground()).isEqualTo("Yüzme");
+		}
+
+		/**
+		 * The starting weight is the baseline every progress chart is drawn against, so the
+		 * member's own form must not be able to move it — only the coach's form can.
+		 */
+		@Test
+		void shouldNotLetAMemberRewriteTheirStartingWeight() {
+			Member member = pendingMember();
+			BigDecimal before = member.getWeightKg();
+			when(memberRepository.findById(member.getId())).thenReturn(Optional.of(member));
+
+			var response = memberService.updateOwnProfile(member.getId(),
+					new UpdateOwnProfileRequest("Mehmet Demir", "+905559998877", 175, "Yüzme"));
+
+			assertThat(response.weightKg()).isEqualByComparingTo(before);
+			assertThat(response.email()).isEqualTo("sporcu@example.com");
 		}
 	}
 

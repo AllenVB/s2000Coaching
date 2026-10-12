@@ -1,8 +1,9 @@
-import { useMutation, useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
+import { useMemberAuth } from '@/context/MemberAuthContext'
 import { apiFetch } from '@/lib/api'
 import { memberHeaders } from '@/lib/memberSession'
-import type { Member, MemberSession } from '@/types/member'
+import type { Member, MemberSession, UpdateMyProfileBody } from '@/types/member'
 
 export function useRequestMemberCode() {
   return useMutation({
@@ -31,6 +32,30 @@ export function useMemberProfile(token: string | null) {
     queryFn: () => apiFetch<Member>('/api/member/me', { headers: memberHeaders(token!) }),
     enabled: Boolean(token),
     retry: false,
+  })
+}
+
+/**
+ * The member editing their own details. The API deliberately takes fewer fields than the
+ * coach's form: see `UpdateOwnProfileRequest` on the backend for what is withheld and why.
+ */
+export function useUpdateMyProfile() {
+  const { session, updateMember } = useMemberAuth()
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (body: UpdateMyProfileBody) =>
+      apiFetch<Member>('/api/member/me', {
+        method: 'PATCH',
+        headers: memberHeaders(session!.token),
+        body: JSON.stringify(body),
+      }),
+    onSuccess: (member) => {
+      // Two readers of the profile: the stored session and the `member-profile` query, which
+      // `useMemberProfileSync` prefers. Both have to move, or the page keeps the stale copy.
+      updateMember(member)
+      queryClient.setQueryData<Member>(['member-profile'], member)
+    },
   })
 }
 
