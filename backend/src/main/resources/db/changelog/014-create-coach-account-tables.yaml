@@ -1,0 +1,64 @@
+databaseChangeLog:
+  - changeSet:
+      id: 026-create-coach-account-tables
+      author: s2000coaching
+      comment: >
+        Replaces the single shared ADMIN_TOKEN with real accounts: bcrypt-hashed passwords,
+        per-login sessions that can be revoked one at a time, and a lockout after repeated
+        wrong passwords. The first account is seeded from ADMIN_EMAIL / ADMIN_PASSWORD.
+      changes:
+        - createTable:
+            tableName: coach_account
+            columns:
+              - column: { name: id, type: uuid, constraints: { primaryKey: true, nullable: false } }
+              - column:
+                  name: email
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+                    unique: true
+                    uniqueConstraintName: uk_coach_account_email
+              - column: { name: password_hash, type: varchar(100), constraints: { nullable: false } }
+              - column: { name: full_name, type: varchar(160), constraints: { nullable: false } }
+              - column:
+                  name: failed_attempts
+                  type: int
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+              - column: { name: locked_until, type: timestamp with time zone }
+              - column: { name: last_login_at, type: timestamp with time zone }
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false
+
+        - createTable:
+            tableName: coach_session
+            columns:
+              - column: { name: id, type: uuid, constraints: { primaryKey: true, nullable: false } }
+              - column:
+                  name: coach_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_coach_session_coach
+                    references: coach_account(id)
+              - column:
+                  name: token_hash
+                  type: varchar(64)
+                  constraints:
+                    nullable: false
+                    unique: true
+                    uniqueConstraintName: uk_coach_session_token_hash
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false
+              - column:
+                  name: expires_at
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false

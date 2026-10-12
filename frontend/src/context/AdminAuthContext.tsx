@@ -1,31 +1,34 @@
 import { createContext, useCallback, useContext, useMemo, useState, type ReactNode } from 'react'
 
-import { clearAdminToken, readAdminToken, storeAdminToken } from '@/lib/adminSession'
+import { clearCoachSession, readCoachSession, storeCoachSession } from '@/lib/adminSession'
+import type { CoachSession } from '@/types/coach'
 
 interface AdminAuthContextValue {
+  session: CoachSession | null
+  /** The bearer token, or null when signed out — what the API hooks read. */
   token: string | null
-  signIn: (token: string) => void
+  signIn: (session: CoachSession) => void
   signOut: () => void
 }
 
 const AdminAuthContext = createContext<AdminAuthContextValue | null>(null)
 
 export function AdminAuthProvider({ children }: { children: ReactNode }) {
-  const [token, setToken] = useState<string | null>(() => readAdminToken())
+  const [session, setSession] = useState<CoachSession | null>(() => readCoachSession())
 
-  const signIn = useCallback((next: string) => {
-    storeAdminToken(next)
-    setToken(next)
+  const signIn = useCallback((next: CoachSession) => {
+    storeCoachSession(next)
+    setSession(next)
   }, [])
 
   const signOut = useCallback(() => {
-    clearAdminToken()
-    setToken(null)
+    clearCoachSession()
+    setSession(null)
   }, [])
 
   const value = useMemo<AdminAuthContextValue>(
-    () => ({ token, signIn, signOut }),
-    [token, signIn, signOut],
+    () => ({ session, token: session?.token ?? null, signIn, signOut }),
+    [session, signIn, signOut],
   )
 
   return <AdminAuthContext.Provider value={value}>{children}</AdminAuthContext.Provider>

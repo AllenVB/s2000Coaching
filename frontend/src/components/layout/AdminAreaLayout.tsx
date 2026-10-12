@@ -33,7 +33,7 @@ export function AdminAreaLayout() {
 }
 
 function AdminAreaShell() {
-  const { token } = useAdminAuth()
+  const { session, token } = useAdminAuth()
   const handleSignOut = useAdminSignOut()
 
   if (!token) {
@@ -51,7 +51,7 @@ function AdminAreaShell() {
     <>
       <PortalHeader
         eyebrow="Yönetim"
-        title="Koç Paneli"
+        title={session?.coach.fullName ?? 'Koç Paneli'}
         action={
           <button
             type="button"

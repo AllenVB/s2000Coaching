@@ -19,8 +19,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Management page API. Every route is behind the {@code X-Admin-Token} gate configured in
- * {@code WebConfig} / {@code AdminTokenInterceptor}.
+ * Management page API. Every route is behind the coach session gate configured in
+ * {@code WebConfig} / {@code CoachAuthInterceptor}.
  */
 @RestController
 public class AdminMemberController {

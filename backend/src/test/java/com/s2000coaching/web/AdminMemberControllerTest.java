@@ -3,12 +3,16 @@ package com.s2000coaching.web;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.s2000coaching.service.MemberService;
 import com.s2000coaching.domain.MemberStatus;
+import com.s2000coaching.exception.UnauthorizedException;
+import com.s2000coaching.service.CoachAuthService;
 import com.s2000coaching.web.dto.CreateMemberRequest;
 import com.s2000coaching.web.dto.MemberResponse;
 import com.s2000coaching.web.dto.UpdateMemberRequest;
@@ -16,22 +20,21 @@ import com.s2000coaching.web.dto.VerificationCodeRequest;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
 import tools.jackson.databind.json.JsonMapper;
 
 @WebMvcTest(AdminMemberController.class)
-@TestPropertySource(properties = "app.admin.token=test-admin-token")
 class AdminMemberControllerTest {
 
-	private static final String ADMIN_HEADER = "X-Admin-Token";
-	private static final String ADMIN_TOKEN = "test-admin-token";
+	private static final String BEARER = "Bearer coach-token";
 
 	@Autowired
 	private MockMvcTester mvc;
@@ -41,6 +44,20 @@ class AdminMemberControllerTest {
 
 	@MockitoBean
 	private MemberService memberService;
+
+	/** The /api/admin/** interceptor resolves the coach session through this. */
+	@MockitoBean
+	private CoachAuthService coachAuthService;
+
+	@BeforeEach
+	void stubCoachSession() {
+		// The interceptor only cares whether this throws, so the valid token resolves to
+		// nothing in particular and everything else is rejected — as the real one does.
+		// doThrow/doReturn rather than when(...): a second when() would itself call the
+		// already-stubbed method and trip the exception during setup.
+		doThrow(new UnauthorizedException("Oturum yok.")).when(coachAuthService).requireCoach(any());
+		doReturn(null).when(coachAuthService).requireCoach(BEARER);
+	}
 
 	private static CreateMemberRequest validRequest() {
 		return new CreateMemberRequest("sporcu@example.com", "Ahmet Yılmaz", "+905551112233", 182,
@@ -62,7 +79,7 @@ class AdminMemberControllerTest {
 	@Test
 	void shouldRejectRequestsWithAWrongAdminToken() {
 		assertThat(mvc.post().uri("/api/admin/members")
-				.header(ADMIN_HEADER, "wrong")
+				.header(HttpHeaders.AUTHORIZATION, "Bearer wrong")
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(jsonMapper.writeValueAsString(validRequest())))
 				.hasStatus(HttpStatus.UNAUTHORIZED);
@@ -75,7 +92,7 @@ class AdminMemberControllerTest {
 				MemberStatus.PENDING_VERIFICATION));
 
 		assertThat(mvc.post().uri("/api/admin/members")
-				.header(ADMIN_HEADER, ADMIN_TOKEN)
+				.header(HttpHeaders.AUTHORIZATION, BEARER)
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(jsonMapper.writeValueAsString(validRequest())))
 				.hasStatus(HttpStatus.CREATED)
@@ -89,7 +106,7 @@ class AdminMemberControllerTest {
 				new BigDecimal("4.0"), "5 yıl fitness");
 
 		assertThat(mvc.post().uri("/api/admin/members")
-				.header(ADMIN_HEADER, ADMIN_TOKEN)
+				.header(HttpHeaders.AUTHORIZATION, BEARER)
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(jsonMapper.writeValueAsString(invalid)))
 				.hasStatus(HttpStatus.BAD_REQUEST);
@@ -103,7 +120,7 @@ class AdminMemberControllerTest {
 				.thenReturn(response(memberId, MemberStatus.ACTIVE));
 
 		assertThat(mvc.post().uri("/api/admin/members/" + memberId + "/verification")
-				.header(ADMIN_HEADER, ADMIN_TOKEN)
+				.header(HttpHeaders.AUTHORIZATION, BEARER)
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(jsonMapper.writeValueAsString(new VerificationCodeRequest("123456"))))
 				.hasStatus(HttpStatus.OK)
@@ -116,7 +133,7 @@ class AdminMemberControllerTest {
 		UUID memberId = UUID.randomUUID();
 		when(memberService.getMember(memberId)).thenReturn(response(memberId, MemberStatus.ACTIVE));
 
-		assertThat(mvc.get().uri("/api/admin/members/" + memberId).header(ADMIN_HEADER, ADMIN_TOKEN))
+		assertThat(mvc.get().uri("/api/admin/members/" + memberId).header(HttpHeaders.AUTHORIZATION, BEARER))
 				.hasStatus(HttpStatus.OK)
 				.bodyJson()
 				.extractingPath("$.email").isEqualTo("sporcu@example.com");
@@ -130,7 +147,7 @@ class AdminMemberControllerTest {
 		when(memberService.updateMember(eq(memberId), any())).thenReturn(response(memberId, MemberStatus.ACTIVE));
 
 		assertThat(mvc.put().uri("/api/admin/members/" + memberId)
-				.header(ADMIN_HEADER, ADMIN_TOKEN)
+				.header(HttpHeaders.AUTHORIZATION, BEARER)
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(jsonMapper.writeValueAsString(request)))
 				.hasStatus(HttpStatus.OK);
@@ -155,9 +172,9 @@ class AdminMemberControllerTest {
 		UUID memberId = UUID.randomUUID();
 
 		assertThat(mvc.post().uri("/api/admin/members/" + memberId + "/verification-code")
-				.header(ADMIN_HEADER, ADMIN_TOKEN))
+				.header(HttpHeaders.AUTHORIZATION, BEARER))
 				.hasStatus(HttpStatus.NO_CONTENT);
-		assertThat(mvc.delete().uri("/api/admin/members/" + memberId).header(ADMIN_HEADER, ADMIN_TOKEN))
+		assertThat(mvc.delete().uri("/api/admin/members/" + memberId).header(HttpHeaders.AUTHORIZATION, BEARER))
 				.hasStatus(HttpStatus.NO_CONTENT);
 
 		verify(memberService).resendRegistrationCode(memberId);

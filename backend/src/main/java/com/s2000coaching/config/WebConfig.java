@@ -1,7 +1,9 @@
 package com.s2000coaching.config;
 
+import com.s2000coaching.service.CoachAuthService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -10,12 +12,12 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 public class WebConfig implements WebMvcConfigurer {
 
 	private final String[] allowedOrigins;
-	private final String adminToken;
+	private final CoachAuthService coachAuthService;
 
 	public WebConfig(@Value("${app.cors.allowed-origins}") String allowedOrigins,
-			@Value("${app.admin.token}") String adminToken) {
+			@Lazy CoachAuthService coachAuthService) {
 		this.allowedOrigins = allowedOrigins.split(",");
-		this.adminToken = adminToken;
+		this.coachAuthService = coachAuthService;
 	}
 
 	@Override
@@ -27,7 +29,9 @@ public class WebConfig implements WebMvcConfigurer {
 
 	@Override
 	public void addInterceptors(InterceptorRegistry registry) {
-		registry.addInterceptor(new AdminTokenInterceptor(adminToken))
-				.addPathPatterns("/api/admin/**");
+		registry.addInterceptor(new CoachAuthInterceptor(coachAuthService))
+				.addPathPatterns("/api/admin/**")
+				// Signing in cannot itself require a session.
+				.excludePathPatterns("/api/admin/auth/login");
 	}
 }

@@ -1,21 +1,45 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { useCallback, useEffect } from 'react'
 
+import { useCoachLogout } from '@/api/coachAuthApi'
 import { useAdminAuth } from '@/context/AdminAuthContext'
 import { ApiError } from '@/lib/api'
 
-const ADMIN_QUERY_KEYS = ['admin-members', 'admin-member', 'admin-member-notes', 'admin-dashboard']
+const ADMIN_QUERY_KEYS = [
+  'admin-members',
+  'admin-member',
+  'admin-member-notes',
+  'admin-member-measurements',
+  'admin-member-messages',
+  'admin-member-plans',
+  'admin-member-nutrition-plans',
+  'admin-member-workout-logs',
+  'admin-member-orders',
+  'admin-plan-templates',
+  'admin-nutrition-templates',
+  'admin-exercises',
+  'admin-orders',
+  'admin-order',
+  'admin-dashboard',
+]
 
-/** Clears the management key and every cached management response. */
+/** Revokes the session server-side, then clears every cached management response. */
 export function useAdminSignOut() {
-  const { signOut } = useAdminAuth()
+  const { token, signOut } = useAdminAuth()
+  const logout = useCoachLogout()
   const queryClient = useQueryClient()
 
   return useCallback(() => {
-    signOut()
-    // The next key may belong to someone else, so nothing cached may survive.
+    // Sign out locally regardless of the response: the stored token is useless to us either way.
+    if (token) {
+      logout.mutate({ token }, { onSettled: () => signOut() })
+    }
+    else {
+      signOut()
+    }
+    // Another coach may sign in next, so nothing cached may survive.
     ADMIN_QUERY_KEYS.forEach((key) => queryClient.removeQueries({ queryKey: [key] }))
-  }, [signOut, queryClient])
+  }, [token, logout, signOut, queryClient])
 }
 
 /**

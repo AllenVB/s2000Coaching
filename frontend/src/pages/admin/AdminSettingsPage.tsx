@@ -13,9 +13,10 @@ export function AdminSettingsPage() {
         <section className="rounded-2xl border border-border bg-surface p-6">
           <h2 className="text-sm font-bold uppercase tracking-wider text-text-primary">Yönetim Erişimi</h2>
           <p className="mt-2 text-xs leading-relaxed text-text-secondary">
-            Yönetim anahtarı sunucuda <code className="text-text-primary">ADMIN_TOKEN</code> ortam değişkeniyle
-            tanımlanır ve bu tarayıcı sekmesinde saklanır. Anahtarı değiştirmek için sunucu yapılandırmasını
-            güncelleyin, ardından buradan çıkış yapıp yeni anahtarla girin.
+            Giriş koç hesabıyla yapılır; şifreler bcrypt ile özetlenerek saklanır. İlk hesap sunucuda{' '}
+            <code className="text-text-primary">ADMIN_EMAIL</code> ve{' '}
+            <code className="text-text-primary">ADMIN_PASSWORD</code> ile oluşturulur; mevcut bir hesap asla
+            üzerine yazılmaz. Oturum bu sekmede saklanır ve çıkışta sunucu tarafında da iptal edilir.
           </p>
           <Button type="button" variant="secondary" className="mt-4" onClick={signOut}>
             Oturumu Kapat

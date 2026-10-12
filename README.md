@@ -17,7 +17,7 @@ klasörlerdeki `DESIGN.md`).
 | --- | --- | --- |
 | `/` | Tanıtım sitesi, paketler ve checkout | Herkese açık |
 | `/uye` | Üye alanı | E-posta koduyla giriş yapan üyeler |
-| `/yonetim` | Yönetim paneli | Yönetim anahtarı (`ADMIN_TOKEN`) |
+| `/yonetim` | Yönetim paneli | E-posta + şifre ile giriş yapan koç hesapları |
 
 **Üye alanı** (masaüstünde sol menü, telefonda alt sekme çubuğu): `/uye` bugün · `/uye/antrenman` (ve
 `/uye/antrenman/:gunId` gün detayı) · `/uye/beslenme` · `/uye/olcumler` · `/uye/mesajlar` · `/uye/profil`.
@@ -153,7 +153,11 @@ kapsam dışı bırakıldı.
 
 | Ortam değişkeni | Varsayılan | Açıklama |
 | --- | --- | --- |
-| `ADMIN_TOKEN` | `s2000-dev-admin` | `/api/admin/**` uçlarının `X-Admin-Token` başlığıyla karşılaştırdığı anahtar. **Prodüksiyonda mutlaka değiştirin.** |
+| `ADMIN_EMAIL` | — | İlk koç hesabının e-postası. Tanımlı değilse hesap oluşturulmaz ve panele girilemez. |
+| `ADMIN_PASSWORD` | — | İlk koç hesabının şifresi. Yalnızca bcrypt özeti saklanır. |
+| `ADMIN_NAME` | `Koç` | Panelde görünen ad. |
+| `ADMIN_SESSION_TTL` | `12h` | Yönetim oturumunun geçerlilik süresi. |
+| `ADMIN_LOCKOUT_DURATION` | `15m` | 5 hatalı şifreden sonra hesabın kilitli kalma süresi. |
 | `VERIFICATION_CODE_TTL` | `15m` | Onay/giriş kodunun geçerlilik süresi. |
 | `MEMBER_SESSION_TTL` | `14d` | Üye oturumunun geçerlilik süresi. |
 | `MAIL_FROM` | `no-reply@s2000coaching.com` | Gönderen adresi. |
@@ -163,9 +167,27 @@ kapsam dışı bırakıldı.
 `WARN` seviyesinde yazılır (`LoggingVerificationMailSender`). Bu yalnızca yerel geliştirme içindir —
 prodüksiyonda SMTP ayarları mutlaka verilmelidir.
 
-**Yetkilendirme notu:** Yönetim paneli tek bir paylaşılan anahtarla korunur, gerçek kullanıcı hesabı
-değildir. Koç dışında kişilerin erişmesi gerekirse Spring Security tabanlı gerçek kimlik doğrulamaya
-geçilmelidir.
+### Yönetim girişi
+
+Panel artık paylaşılan bir anahtarla değil, gerçek koç hesaplarıyla korunuyor:
+
+- **İlk hesap** uygulama ilk açılışta `ADMIN_EMAIL` / `ADMIN_PASSWORD` değişkenlerinden oluşturulur
+  (`CoachAccountSeeder`). Veritabanında hesap varsa bir daha çalışmaz — yani değişkenleri sonradan
+  değiştirmek, koçun kendi değiştirdiği şifreyi sıfırlamaz.
+- **Şifreler** yalnızca bcrypt özeti olarak saklanır; düz metin hiçbir yere yazılmaz.
+- **Oturum** `POST /api/admin/auth/login` ile açılır, `Authorization: Bearer <jeton>` başlığıyla
+  taşınır ve `ADMIN_SESSION_TTL` sonunda düşer. Jetonun kendisi değil SHA-256 özeti saklanır, bu
+  yüzden çalınan bir oturum (`POST /api/admin/auth/logout`) tek tek iptal edilebilir.
+- **Yanlış e-posta ile yanlış şifre aynı cevabı verir** (`E-posta veya şifre hatalı.`), böylece uç
+  nokta hangi hesapların var olduğunu söylemez.
+- **5 hatalı denemeden sonra** hesap `ADMIN_LOCKOUT_DURATION` süresince şifre kabul etmez.
+
+> **Sunucu dil ayarı:** JVM ortam değişkenlerini `sun.jnu.encoding` ile çözer. Sunucunun dil ayarı
+> UTF-8 değilse `ADMIN_NAME=Süleyman Koç` uygulamaya bozuk ulaşır. Seeder bunu fark edip uyarı
+> basar ve adı bozuk kaydetmez, ama doğru ad için `LANG=C.UTF-8` tanımlanmalıdır.
+
+Birden fazla koç gerektiğinde `coach_account` tablosuna satır eklemek yeterli; panelde hesap
+yönetimi ekranı henüz yok.
 
 ## Ödeme durumu
 
