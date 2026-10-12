@@ -1,0 +1,25 @@
+databaseChangeLog:
+  - changeSet:
+      id: 031-add-member-id-to-customer-order
+      author: s2000coaching
+      comment: >
+        Checkout collects a name, e-mail and phone but creates no member, so the same person
+        had to be entered twice. An order is now attached to a member as soon as one exists
+        for that e-mail. Nullable: an order from someone who never became a member stays
+        unattached, and deleting a member detaches their orders rather than deleting them —
+        an order is a financial record and outlives the membership.
+      changes:
+        - addColumn:
+            tableName: customer_order
+            columns:
+              - column:
+                  name: member_id
+                  type: uuid
+                  constraints:
+                    foreignKeyName: fk_order_member
+                    references: member(id)
+        - createIndex:
+            indexName: idx_customer_order_member
+            tableName: customer_order
+            columns:
+              - column: { name: member_id }

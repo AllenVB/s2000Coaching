@@ -1,0 +1,45 @@
+databaseChangeLog:
+  - changeSet:
+      id: 022-create-coach-note-table
+      author: s2000coaching
+      comment: >
+        Coach-only notes about a member. Deliberately has no member-facing endpoint — the
+        member area never reads this table.
+      changes:
+        - createTable:
+            tableName: coach_note
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: member_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_coach_note_member
+                    references: member(id)
+              - column:
+                  name: body
+                  type: text
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false
+        - createIndex:
+            indexName: idx_coach_note_member
+            tableName: coach_note
+            columns:
+              - column:
+                  name: member_id

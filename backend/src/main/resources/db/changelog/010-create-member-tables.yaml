@@ -1,0 +1,163 @@
+databaseChangeLog:
+  - changeSet:
+      id: 019-create-member-table
+      author: s2000coaching
+      comment: >
+        Members are created from the management page and stay PENDING_VERIFICATION until the
+        code mailed to them is confirmed, at which point they become ACTIVE and can sign in
+        to the member page.
+      changes:
+        - createTable:
+            tableName: member
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: email
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+                    unique: true
+                    uniqueConstraintName: uk_member_email
+              - column:
+                  name: full_name
+                  type: varchar(160)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: phone
+                  type: varchar(40)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: height_cm
+                  type: int
+                  constraints:
+                    nullable: false
+              - column:
+                  name: weight_kg
+                  type: numeric(5, 2)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: sports_background
+                  type: text
+                  constraints:
+                    nullable: false
+              - column:
+                  name: status
+                  type: varchar(30)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false
+              - column:
+                  name: verified_at
+                  type: timestamp with time zone
+
+  - changeSet:
+      id: 020-create-member-verification-code-table
+      author: s2000coaching
+      comment: >
+        Only the SHA-256 hash of a mailed code is stored. `attempt_count` caps brute-force
+        guessing; `consumed_at` makes a code single-use and also marks superseded codes.
+      changes:
+        - createTable:
+            tableName: member_verification_code
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: member_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_verification_code_member
+                    references: member(id)
+              - column:
+                  name: purpose
+                  type: varchar(20)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: code_hash
+                  type: varchar(64)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: attempt_count
+                  type: int
+                  defaultValueNumeric: 0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false
+              - column:
+                  name: expires_at
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false
+              - column:
+                  name: consumed_at
+                  type: timestamp with time zone
+        - createIndex:
+            indexName: idx_verification_code_member_purpose
+            tableName: member_verification_code
+            columns:
+              - column:
+                  name: member_id
+              - column:
+                  name: purpose
+
+  - changeSet:
+      id: 021-create-member-session-table
+      author: s2000coaching
+      comment: Bearer sessions for the member page; only the token hash is stored.
+      changes:
+        - createTable:
+            tableName: member_session
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: member_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_member_session_member
+                    references: member(id)
+              - column:
+                  name: token_hash
+                  type: varchar(64)
+                  constraints:
+                    nullable: false
+                    unique: true
+                    uniqueConstraintName: uk_member_session_token_hash
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false
+              - column:
+                  name: expires_at
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false

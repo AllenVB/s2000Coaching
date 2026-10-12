@@ -1,0 +1,33 @@
+databaseChangeLog:
+  - changeSet:
+      id: 030-create-message-table
+      author: s2000coaching
+      comment: >
+        One thread per member with two participants. `read_at` is set when the *other* side
+        opens the thread, which is what drives the unread badges and the coach's reply queue.
+      changes:
+        - createTable:
+            tableName: message
+            columns:
+              - column: { name: id, type: uuid, constraints: { primaryKey: true, nullable: false } }
+              - column:
+                  name: member_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_message_member
+                    references: member(id)
+              - column: { name: sender, type: varchar(10), constraints: { nullable: false } }
+              - column: { name: body, type: text, constraints: { nullable: false } }
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false
+              - column: { name: read_at, type: timestamp with time zone }
+        - createIndex:
+            indexName: idx_message_member_created
+            tableName: message
+            columns:
+              - column: { name: member_id }
+              - column: { name: created_at }

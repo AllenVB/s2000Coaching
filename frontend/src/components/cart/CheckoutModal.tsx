@@ -3,6 +3,7 @@ import { useForm } from 'react-hook-form'
 
 import { useCreateOrder } from '@/api/ordersApi'
 import { Button } from '@/components/ui/Button'
+import { Field, inputClasses } from '@/components/ui/FormField'
 import { CheckIcon, CloseIcon, ShieldIcon } from '@/components/ui/icons'
 import { useCart } from '@/context/CartContext'
 import { formatMinor } from '@/lib/money'
@@ -203,27 +204,6 @@ export function CheckoutModal() {
           )}
         </div>
       </div>
-    </div>
-  )
-}
-
-const inputClasses =
-  'h-11 w-full rounded-lg border border-border bg-surface px-3.5 text-xs text-text-primary focus:border-primary focus:outline-none'
-
-function Field({
-  label,
-  error,
-  children,
-}: {
-  label: string
-  error?: string
-  children: React.ReactNode
-}) {
-  return (
-    <div>
-      <label className="mb-1.5 block text-xs font-medium text-text-secondary">{label}</label>
-      {children}
-      {error ? <p className="mt-1 text-[11px] text-error">{error}</p> : null}
     </div>
   )
 }

@@ -50,6 +50,15 @@ public class Order {
 	@Column(name = "created_at", nullable = false)
 	private Instant createdAt;
 
+	/**
+	 * The member this order belongs to, once one exists for the buyer's e-mail. Null for an
+	 * order whose buyer has not been turned into a member yet, which is what the management
+	 * page's "üyeye dönüştür" action is for.
+	 */
+	@ManyToOne
+	@JoinColumn(name = "member_id")
+	private Member member;
+
 	protected Order() {
 	}
 
@@ -111,6 +120,14 @@ public class Order {
 
 	public boolean isKvkkConsent() {
 		return kvkkConsent;
+	}
+
+	public Member getMember() {
+		return member;
+	}
+
+	public void setMember(Member member) {
+		this.member = member;
 	}
 
 	public Instant getCreatedAt() {

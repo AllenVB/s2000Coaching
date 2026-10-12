@@ -1,9 +1,9 @@
-import type { ButtonHTMLAttributes, ReactNode } from 'react'
+import type { ComponentPropsWithRef, ReactNode } from 'react'
 
-type Variant = 'primary' | 'secondary' | 'ghost'
-type Size = 'md' | 'lg'
+type Variant = 'primary' | 'secondary' | 'ghost' | 'danger'
+type Size = 'sm' | 'md' | 'lg'
 
-interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+interface ButtonProps extends ComponentPropsWithRef<'button'> {
   variant?: Variant
   size?: Size
   children: ReactNode
@@ -15,9 +15,11 @@ const variantClasses: Record<Variant, string> = {
   secondary:
     'bg-surface-elevated text-text-primary border border-border-strong hover:border-white/30 hover:bg-surface-high',
   ghost: 'bg-transparent text-text-secondary hover:text-text-primary hover:bg-white/5',
+  danger: 'bg-error text-white hover:bg-error/85',
 }
 
 const sizeClasses: Record<Size, string> = {
+  sm: 'h-9 px-3.5 text-xs',
   md: 'h-11 px-5 text-sm',
   lg: 'h-12 px-7 text-sm',
 }
