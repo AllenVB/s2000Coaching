@@ -21,3 +21,7 @@ Thumbs.db
 
 # Claude
 .claude/launch.json
+
+# Uploaded progress photos (app.photos.storage-path default). Members' body photos must
+# never reach the repository.
+backend/data/

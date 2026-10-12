@@ -21,10 +21,10 @@ klasörlerdeki `DESIGN.md`).
 
 **Üye alanı** (masaüstünde sol menü, telefonda alt sekme çubuğu): `/uye` bugün · `/uye/antrenman` (ve
 `/uye/antrenman/:gunId` gün detayı) · `/uye/beslenme` · `/uye/olcumler` · `/uye/gecmis` ·
-`/uye/mesajlar` · `/uye/profil`.
+`/uye/fotograflar` · `/uye/mesajlar` · `/uye/profil`.
 
-`/uye/gecmis` telefon sekme çubuğunda yoktur: çubuk genişliği sekmelere böler, altıdan sonrası
-parmak boyutunun altına iner. Sayfaya bugün ekranındaki kısayol kartından girilir
+`/uye/gecmis` ve `/uye/fotograflar` telefon sekme çubuğunda yoktur: çubuk genişliği sekmelere böler, altıdan sonrası
+parmak boyutunun altına iner. Sayfalara bugün ekranındaki kısayol kartlarından girilir
 (`PortalNavItem.desktopOnly`).
 
 **Bugün ekranı** üç şey gösterir: 10 gündür ölçüm girilmediyse (ya da hiç girilmediyse) ölçüm
@@ -152,16 +152,44 @@ aramalıyım" sorusunun cevabı.
 
 ### KVKK — sağlık verisi
 
-Ölçümler KVKK'da **özel nitelikli kişisel veri** sayılır, bu yüzden checkout'taki KVKK onayı bunları
-kapsamaz. Üye, ölçüm girmeden önce `/uye/olcumler` sayfasındaki ayrı onayı vermek zorundadır; onay
-verilene kadar sunucu hiçbir ölçüm yazmaz (`member.health_data_consent_at`). Onay verilmemesi üyeliği
-etkilemez, yalnızca ölçüm takibi kapalı kalır.
+Ölçümler ve gelişim fotoğrafları KVKK'da **özel nitelikli kişisel veri** sayılır, bu yüzden
+checkout'taki KVKK onayı bunları kapsamaz. Üye, ölçüm girmeden ya da fotoğraf yüklemeden önce aynı
+onayı vermek zorundadır; onay verilene kadar sunucu hiçbir satır yazmaz
+(`member.health_data_consent_at`). Onay verilmemesi üyeliği etkilemez, yalnızca takip kapalı kalır.
+
+Üye silindiğinde ölçüm satırları, fotoğraf satırları **ve fotoğraf dosyaları** birlikte silinir.
+Yalnızca satırları silmek, silinme talebinde bulunmuş birinin vücut fotoğraflarını diskte bırakırdı.
 
 > **Yapılacak:** `frontend/src/components/member/HealthDataConsent.tsx` içindeki aydınlatma metni
 > **taslaktır**. Yayına çıkmadan önce kendi hukuk danışmanınızın onayladığı metinle değiştirin.
 
-Fotoğraflı takip (önce/sonra karşılaştırması) henüz yok: nesne depolama (S3 vb.) kararı gerektirdiği için
-kapsam dışı bırakıldı.
+## Gelişim fotoğrafları
+
+Üye `/uye/fotograflar` sayfasından fotoğraf yükler, siler ve **önce/sonra karşılaştırması** yapar.
+Koç aynı fotoğrafları üye detayındaki **Fotoğraflar** sekmesinden görür ve silebilir, ama **yükleyemez**
+— birinin vücut fotoğrafını oraya koymak yalnızca kendi kararıdır.
+
+Karşılaştırma **yalnızca aynı duruştaki** (ön / yan / arka) iki fotoğrafı yan yana koyar; önden çekilmiş
+bir fotoğrafın yanına arkadan çekilmiş birini koymak gelişim hakkında bir şey söylemez. Varsayılan
+olarak o duruşun en eski ve en yeni fotoğrafı seçilir, yani eldeki en geniş aralık.
+
+Yüklemede kabul edilenler: **JPEG, PNG, WebP**. SVG ve HTML bilerek reddedilir — kendi alan adımızdan
+geri servis edilen böyle bir dosya script çalıştırabilirdi.
+
+### Depolama
+
+Veritabanında yalnızca **anahtar** tutulur, baytlar değil: görüntüler her yedeği ve bu tabloya dokunan
+her sorgu planını şişirirdi. Baytlar `PhotoStorage` arayüzünün arkasındadır:
+
+- `FilesystemPhotoStorage` bugünkü tek uygulamadır ve `PHOTO_STORAGE_PATH` altına yazar.
+- Anahtarlar burada üretilir ve çağıranlar için anlamsızdır: iki seviyeli dağıtım altında rastgele bir
+  ad. Yüklemeden hiçbir şey — ne üye kimliği ne özgün dosya adı — anahtara girmez, böylece sızan bir
+  anahtar bir şey söylemez ve kötü niyetli bir dosya adı kök dizinden çıkamaz.
+- **Tek sunucu** çözümüdür. Birden fazla makinede çalışan bir kurulum ya paylaşılan bir birim ya da
+  `PhotoStorage` arayüzünün nesne depolama (S3 vb.) uygulamasını ister — şema değişmeden eklenebilir.
+
+Satır yazılmadan önce baytlar yazılır: hiçbir şeye işaret etmeyen bir satır arayüzde kırık bir fotoğraf
+demektir, satırı olmayan baytlar ise görünmez ve geri kazanılabilir.
 
 ## Yapılandırma
 
@@ -172,6 +200,9 @@ kapsam dışı bırakıldı.
 | `ADMIN_NAME` | `Koç` | Panelde görünen ad. |
 | `ADMIN_SESSION_TTL` | `12h` | Yönetim oturumunun geçerlilik süresi. |
 | `ADMIN_LOCKOUT_DURATION` | `15m` | 5 hatalı şifreden sonra hesabın kilitli kalma süresi. |
+| `PHOTO_STORAGE_PATH` | `./data/photos` | Gelişim fotoğraflarının yazıldığı dizin. Veritabanında yalnızca anahtar tutulur. |
+| `PHOTO_MAX_SIZE_BYTES` | `8388608` (8 MB) | Tek fotoğrafın üst sınırı. `spring.servlet.multipart.max-file-size` ile aynı değeri kullanır; altında kalırsa yükleme servise ulaşmadan reddedilir. |
+| `PHOTO_MAX_PER_MEMBER` | `60` | Üye başına saklanan fotoğraf sayısı. Sınır olmadan tek üye herkesin diskini doldurabilir. |
 | `VERIFICATION_CODE_TTL` | `15m` | Onay/giriş kodunun geçerlilik süresi. |
 | `MEMBER_SESSION_TTL` | `14d` | Üye oturumunun geçerlilik süresi. |
 | `MAIL_FROM` | `no-reply@s2000coaching.com` | Gönderen adresi. |

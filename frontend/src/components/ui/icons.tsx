@@ -162,6 +162,18 @@ export function ChartIcon({ className = '' }: { className?: string }) {
   )
 }
 
+export function CameraIcon({ className = '' }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path
+        d="M4 8.5h2.6l1.3-2h8.2l1.3 2H20a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1v-8a1 1 0 0 1 1-1Z"
+        strokeLinejoin="round"
+      />
+      <circle cx="12" cy="13.5" r="3.2" />
+    </svg>
+  )
+}
+
 export function HistoryIcon({ className = '' }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

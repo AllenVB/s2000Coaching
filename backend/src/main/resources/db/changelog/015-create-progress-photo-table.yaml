@@ -1,0 +1,69 @@
+databaseChangeLog:
+  - changeSet:
+      id: 027-create-progress-photo-table
+      author: s2000coaching
+      comment: >
+        Progress photos. Only the storage key is kept here, never the bytes: images would
+        bloat every backup and every query plan touching the table, and keeping them behind
+        a PhotoStorage implementation is what lets object storage replace the filesystem
+        later without a schema change. Deleting a member deletes these rows and their files
+        — a body photo is special-category personal data under KVKK and must not outlive the
+        membership.
+      changes:
+        - createTable:
+            tableName: progress_photo
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: member_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_progress_photo_member
+                    references: member(id)
+              - column:
+                  name: taken_on
+                  type: date
+                  constraints:
+                    nullable: false
+              - column:
+                  name: pose
+                  type: varchar(20)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: storage_key
+                  type: varchar(300)
+                  constraints:
+                    nullable: false
+                    unique: true
+                    uniqueConstraintName: uk_progress_photo_storage_key
+              - column:
+                  name: content_type
+                  type: varchar(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: size_bytes
+                  type: bigint
+                  constraints:
+                    nullable: false
+              - column:
+                  name: note
+                  type: varchar(2000)
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false
+        - createIndex:
+            indexName: idx_progress_photo_member_date
+            tableName: progress_photo
+            columns:
+              - column: { name: member_id }
+              - column: { name: taken_on }

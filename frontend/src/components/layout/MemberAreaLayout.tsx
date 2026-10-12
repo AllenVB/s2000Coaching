@@ -9,6 +9,7 @@ import {
   AppleIcon,
   ChartIcon,
   ChatIcon,
+  CameraIcon,
   DumbbellIcon,
   HistoryIcon,
   HomeIcon,
@@ -21,6 +22,7 @@ const navItems: PortalNavItem[] = [
   { to: '/uye/beslenme', label: 'Beslenme', icon: AppleIcon },
   { to: '/uye/olcumler', label: 'Ölçümler', icon: ChartIcon },
   { to: '/uye/gecmis', label: 'Geçmiş', icon: HistoryIcon, desktopOnly: true },
+  { to: '/uye/fotograflar', label: 'Fotoğraflar', icon: CameraIcon, desktopOnly: true },
   { to: '/uye/mesajlar', label: 'Mesajlar', icon: ChatIcon },
   { to: '/uye/profil', label: 'Profil', icon: UserIcon },
 ]

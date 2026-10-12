@@ -75,13 +75,17 @@ class MemberServiceTest {
 	@Mock
 	private VerificationCodeService verificationCodeService;
 
+	@Mock
+	private ProgressPhotoService progressPhotoService;
+
 	private MemberService memberService;
 
 	@BeforeEach
 	void setUp() {
 		memberService = new MemberService(memberRepository, codeRepository, sessionRepository,
 				coachNoteRepository, measurementRepository, workoutLogRepository, trainingPlanRepository,
-				nutritionPlanRepository, messageRepository, adminOrderService, verificationCodeService);
+				nutritionPlanRepository, messageRepository, adminOrderService, verificationCodeService,
+				progressPhotoService);
 	}
 
 	private static CreateMemberRequest request(String email) {
@@ -266,7 +270,8 @@ class MemberServiceTest {
 
 			InOrder inOrder = Mockito.inOrder(sessionRepository, codeRepository, coachNoteRepository,
 					measurementRepository, workoutLogRepository, trainingPlanRepository,
-					nutritionPlanRepository, messageRepository, adminOrderService, memberRepository);
+					nutritionPlanRepository, messageRepository, progressPhotoService, adminOrderService,
+					memberRepository);
 			inOrder.verify(sessionRepository).deleteAllByMemberId(member.getId());
 			inOrder.verify(codeRepository).deleteAllByMemberId(member.getId());
 			inOrder.verify(coachNoteRepository).deleteAllByMemberId(member.getId());
@@ -276,6 +281,9 @@ class MemberServiceTest {
 			inOrder.verify(trainingPlanRepository).deleteAllByMemberId(member.getId());
 			inOrder.verify(nutritionPlanRepository).deleteAllByMemberId(member.getId());
 			inOrder.verify(messageRepository).deleteAllByMemberId(member.getId());
+			// Through the service, not the repository: the files have to go with the rows, or
+			// body photos stay on disk after the member asked to be removed.
+			inOrder.verify(progressPhotoService).deleteAllOfMember(member.getId());
 			// Orders are detached, never deleted: they outlive the membership.
 			inOrder.verify(adminOrderService).unlinkOrdersOf(member.getId());
 			inOrder.verify(memberRepository).delete(member);

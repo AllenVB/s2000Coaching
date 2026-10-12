@@ -22,6 +22,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -40,6 +41,7 @@ public class MemberService {
 	private final MessageRepository messageRepository;
 	private final AdminOrderService adminOrderService;
 	private final VerificationCodeService verificationCodeService;
+	private final ProgressPhotoService progressPhotoService;
 
 	public MemberService(MemberRepository memberRepository,
 			MemberVerificationCodeRepository codeRepository,
@@ -51,7 +53,11 @@ public class MemberService {
 			NutritionPlanRepository nutritionPlanRepository,
 			MessageRepository messageRepository,
 			AdminOrderService adminOrderService,
-			VerificationCodeService verificationCodeService) {
+			VerificationCodeService verificationCodeService,
+			// Photos need a member to hang off, so ProgressPhotoService depends on this class;
+			// deleting a member has to delete their photos, so this class depends back. @Lazy
+			// breaks the cycle at startup rather than duplicating the photo-deletion logic here.
+			@Lazy ProgressPhotoService progressPhotoService) {
 		this.memberRepository = memberRepository;
 		this.codeRepository = codeRepository;
 		this.sessionRepository = sessionRepository;
@@ -63,6 +69,7 @@ public class MemberService {
 		this.messageRepository = messageRepository;
 		this.adminOrderService = adminOrderService;
 		this.verificationCodeService = verificationCodeService;
+		this.progressPhotoService = progressPhotoService;
 	}
 
 	static String normalizeEmail(String email) {
@@ -170,6 +177,9 @@ public class MemberService {
 		trainingPlanRepository.deleteAllByMemberId(memberId);
 		nutritionPlanRepository.deleteAllByMemberId(memberId);
 		messageRepository.deleteAllByMemberId(memberId);
+		// Photos carry their files with them: dropping only the rows would leave body photos
+		// on disk after the member asked to be removed.
+		progressPhotoService.deleteAllOfMember(memberId);
 		// Orders are financial records: detach them rather than deleting them with the member.
 		adminOrderService.unlinkOrdersOf(memberId);
 		memberRepository.delete(member);
