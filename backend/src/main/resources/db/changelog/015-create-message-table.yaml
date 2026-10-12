@@ -1,6 +1,6 @@
 databaseChangeLog:
   - changeSet:
-      id: 024-create-message-table
+      id: 030-create-message-table
       author: s2000coaching
       comment: >
         One thread per member with two participants. `read_at` is set when the *other* side

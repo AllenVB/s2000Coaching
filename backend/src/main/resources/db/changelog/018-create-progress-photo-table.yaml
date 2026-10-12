@@ -1,6 +1,6 @@
 databaseChangeLog:
   - changeSet:
-      id: 027-create-progress-photo-table
+      id: 033-create-progress-photo-table
       author: s2000coaching
       comment: >
         Progress photos. Only the storage key is kept here, never the bytes: images would

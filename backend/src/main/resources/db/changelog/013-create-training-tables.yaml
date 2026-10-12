@@ -1,6 +1,6 @@
 databaseChangeLog:
   - changeSet:
-      id: 019-create-exercise-table
+      id: 025-create-exercise-table
       author: s2000coaching
       comment: Shared exercise catalogue the coach builds plans from.
       changes:
@@ -19,7 +19,7 @@ databaseChangeLog:
                     nullable: false
 
   - changeSet:
-      id: 020-create-training-plan-tables
+      id: 026-create-training-plan-tables
       author: s2000coaching
       comment: >
         `training_plan.member_id` is null for a template. Assigning a template to a member
@@ -102,7 +102,7 @@ databaseChangeLog:
               - column: { name: member_id }
 
   - changeSet:
-      id: 021-create-workout-log-tables
+      id: 027-create-workout-log-tables
       author: s2000coaching
       comment: >
         One log per member per plan day per date, so re-saving a session corrects it instead
@@ -166,7 +166,7 @@ databaseChangeLog:
               - column: { name: weight_kg, type: "numeric(6, 2)" }
 
   - changeSet:
-      id: 022-seed-exercise-catalogue
+      id: 028-seed-exercise-catalogue
       author: s2000coaching
       comment: A small starter catalogue so a new install can build a plan immediately.
       changes:

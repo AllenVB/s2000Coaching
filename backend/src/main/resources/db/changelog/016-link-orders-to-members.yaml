@@ -1,6 +1,6 @@
 databaseChangeLog:
   - changeSet:
-      id: 025-add-member-id-to-customer-order
+      id: 031-add-member-id-to-customer-order
       author: s2000coaching
       comment: >
         Checkout collects a name, e-mail and phone but creates no member, so the same person

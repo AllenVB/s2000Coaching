@@ -27,7 +27,7 @@ public class ExperienceCategory {
 
 	@OneToMany(mappedBy = "category", cascade = CascadeType.ALL, orphanRemoval = true)
 	@OrderBy("createdAt asc")
-	private List<ExperienceItem> items = new ArrayList<>();
+	private List<ExperienceTopic> topics = new ArrayList<>();
 
 	protected ExperienceCategory() {
 	}
@@ -46,15 +46,11 @@ public class ExperienceCategory {
 		return name;
 	}
 
-	public void setName(String name) {
-		this.name = name;
-	}
-
 	public Instant getCreatedAt() {
 		return createdAt;
 	}
 
-	public List<ExperienceItem> getItems() {
-		return items;
+	public List<ExperienceTopic> getTopics() {
+		return topics;
 	}
 }

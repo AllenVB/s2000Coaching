@@ -1,0 +1,26 @@
+databaseChangeLog:
+  - changeSet:
+      id: 017-seed-karbonhidrat-note
+      author: s2000coaching
+      comment: First note under the Karbonhidrat topic (id ...602).
+      changes:
+        - insert:
+            tableName: experience_topic_note
+            columns:
+              - column: { name: id, value: "77777777-7777-4777-8777-777777777703" }
+              - column: { name: topic_id, value: "66666666-6666-4666-8666-666666666602" }
+              - column: { name: content, value: "Karbonhidratı tamamen sıfırlamak; vücut sağlığı, hormonal denge ve gelişim açısından oldukça dezavantajlı bir durum yaratır." }
+              - column: { name: created_at, valueDate: "2026-01-04T00:00:00" }
+
+  - changeSet:
+      id: 018-seed-karbonhidrat-note-2
+      author: s2000coaching
+      comment: Second note under the Karbonhidrat topic (id ...602).
+      changes:
+        - insert:
+            tableName: experience_topic_note
+            columns:
+              - column: { name: id, value: "77777777-7777-4777-8777-777777777704" }
+              - column: { name: topic_id, value: "66666666-6666-4666-8666-666666666602" }
+              - column: { name: content, value: "Definisyon (yağ yakım) döneminde antrenman performansının fazla düşmemesi için kişi, vücut ağırlığının kilogramı başına en az 2,5 gram karbonhidrat almalıdır." }
+              - column: { name: created_at, valueDate: "2026-01-04T00:00:01" }

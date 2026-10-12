@@ -1,6 +1,6 @@
 databaseChangeLog:
   - changeSet:
-      id: 017-add-member-health-data-consent
+      id: 023-add-member-health-data-consent
       author: s2000coaching
       comment: >
         Measurements are health data, which KVKK treats as special-category: it needs its own
@@ -15,7 +15,7 @@ databaseChangeLog:
                   type: timestamp with time zone
 
   - changeSet:
-      id: 018-create-measurement-table
+      id: 024-create-measurement-table
       author: s2000coaching
       comment: >
         One check-in per member per day; re-submitting the same date updates that row, which

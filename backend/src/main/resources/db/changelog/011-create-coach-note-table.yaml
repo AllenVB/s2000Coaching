@@ -1,6 +1,6 @@
 databaseChangeLog:
   - changeSet:
-      id: 016-create-coach-note-table
+      id: 022-create-coach-note-table
       author: s2000coaching
       comment: >
         Coach-only notes about a member. Deliberately has no member-facing endpoint — the

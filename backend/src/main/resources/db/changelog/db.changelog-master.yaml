@@ -1,10 +1,10 @@
 # Changelog file names are numbered by creation order only. ChangeSet `id`s inside
-# them are a separate, repo-wide monotonic counter (currently at 027) — always
+# them are a separate, repo-wide monotonic counter (currently at 033) — always
 # continue that counter for a new changeSet id, never reuse a file's own ordinal.
 #
-# `experience_note` (005) is superseded by `experience_category` + `experience_item`
-# (006) and is intentionally left in place, unused — dropping a table needs explicit
-# user confirmation first (see project conventions), so it's just orphaned, not deleted.
+# Superseded experience tables are left orphaned in place (dropping needs explicit
+# confirmation): `experience_note` (005) -> `experience_item` (006/007) -> the current
+# `experience_topic` + `experience_topic_note` three-level model (008).
 databaseChangeLog:
   - include:
       file: db/changelog/001-init-schema.yaml
@@ -19,20 +19,26 @@ databaseChangeLog:
   - include:
       file: db/changelog/006-create-experience-category-and-item-tables.yaml
   - include:
-      file: db/changelog/007-create-member-tables.yaml
+      file: db/changelog/007-seed-nutrition-topics.yaml
   - include:
-      file: db/changelog/008-create-coach-note-table.yaml
+      file: db/changelog/008-restructure-experience-to-topics.yaml
   - include:
-      file: db/changelog/009-create-measurement-table.yaml
+      file: db/changelog/009-seed-karbonhidrat-note.yaml
   - include:
-      file: db/changelog/010-create-training-tables.yaml
+      file: db/changelog/010-create-member-tables.yaml
   - include:
-      file: db/changelog/011-create-nutrition-tables.yaml
+      file: db/changelog/011-create-coach-note-table.yaml
   - include:
-      file: db/changelog/012-create-message-table.yaml
+      file: db/changelog/012-create-measurement-table.yaml
   - include:
-      file: db/changelog/013-link-orders-to-members.yaml
+      file: db/changelog/013-create-training-tables.yaml
   - include:
-      file: db/changelog/014-create-coach-account-tables.yaml
+      file: db/changelog/014-create-nutrition-tables.yaml
   - include:
-      file: db/changelog/015-create-progress-photo-table.yaml
+      file: db/changelog/015-create-message-table.yaml
+  - include:
+      file: db/changelog/016-link-orders-to-members.yaml
+  - include:
+      file: db/changelog/017-create-coach-account-tables.yaml
+  - include:
+      file: db/changelog/018-create-progress-photo-table.yaml

@@ -1,6 +1,6 @@
 databaseChangeLog:
   - changeSet:
-      id: 026-create-coach-account-tables
+      id: 032-create-coach-account-tables
       author: s2000coaching
       comment: >
         Replaces the single shared ADMIN_TOKEN with real accounts: bcrypt-hashed passwords,

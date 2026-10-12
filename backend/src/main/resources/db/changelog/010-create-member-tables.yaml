@@ -1,6 +1,6 @@
 databaseChangeLog:
   - changeSet:
-      id: 013-create-member-table
+      id: 019-create-member-table
       author: s2000coaching
       comment: >
         Members are created from the management page and stay PENDING_VERIFICATION until the
@@ -63,7 +63,7 @@ databaseChangeLog:
                   type: timestamp with time zone
 
   - changeSet:
-      id: 014-create-member-verification-code-table
+      id: 020-create-member-verification-code-table
       author: s2000coaching
       comment: >
         Only the SHA-256 hash of a mailed code is stored. `attempt_count` caps brute-force
@@ -124,7 +124,7 @@ databaseChangeLog:
                   name: purpose
 
   - changeSet:
-      id: 015-create-member-session-table
+      id: 021-create-member-session-table
       author: s2000coaching
       comment: Bearer sessions for the member page; only the token hash is stored.
       changes:
