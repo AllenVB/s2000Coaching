@@ -79,7 +79,7 @@ npm run dev
 Windows CMD'de `./` öneki yoktur (`gradlew bootRun`), ortam değişkenleri de ayrı satırda
 `set ADMIN_EMAIL=...` ile tanımlanır.
 
-Frontend `http://localhost:5173`, backend varsayılan olarak `http://localhost:8080` üzerinde
+Frontend `http://localhost:3000`, backend varsayılan olarak `http://localhost:8080` üzerinde
 çalışır. Yönetim paneline `ADMIN_EMAIL` / `ADMIN_PASSWORD` ile girilir.
 
 **Gerekenler:** Java 21, Node 22, Docker (yalnızca PostgreSQL için).

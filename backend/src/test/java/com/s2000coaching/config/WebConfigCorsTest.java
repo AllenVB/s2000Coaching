@@ -27,10 +27,10 @@ import org.springframework.test.web.servlet.assertj.MvcTestResult;
  */
 @WebMvcTest(MemberController.class)
 @Import(WebConfig.class)
-@TestPropertySource(properties = "app.cors.allowed-origins=http://localhost:5173")
+@TestPropertySource(properties = "app.cors.allowed-origins=http://localhost:3000")
 class WebConfigCorsTest {
 
-	private static final String ORIGIN = "http://localhost:5173";
+	private static final String ORIGIN = "http://localhost:3000";
 
 	@Autowired
 	private MockMvcTester mvc;

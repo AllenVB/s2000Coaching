@@ -65,16 +65,16 @@ if errorlevel 1 (
 echo       Java, Node ve Docker hazir.
 
 rem --- Portlar bos mu
-rem 5173 mesgulse Vite normalde sessizce 5174'e kayar; backend'in CORS listesinde
-rem yalnizca 5173 oldugu icin sayfa acilir ama hicbir veri gelmez. vite.config.ts
-rem artik strictPort ile buna izin vermiyor, burada da pesinen sebebini soyluyoruz.
-netstat -ano | findstr /r /c:":5173 .*LISTENING" >nul 2>&1
+rem 3000 mesgulse Vite normalde sessizce bir sonraki bos porta kayar; backend'in CORS
+rem listesinde yalnizca 3000 oldugu icin sayfa acilir ama hicbir veri gelmez.
+rem vite.config.ts artik strictPort ile buna izin vermiyor, burada da pesinen soyluyoruz.
+netstat -ano | findstr /r /c:":3000 .*LISTENING" >nul 2>&1
 if not errorlevel 1 (
     echo.
-    echo   HATA: 5173 portu kullanimda. Frontend baska bir porta kayamaz,
-    echo         cunku backend yalnizca 5173'e izin veriyor.
+    echo   HATA: 3000 portu kullanimda. Frontend baska bir porta kayamaz,
+    echo         cunku backend yalnizca 3000'e izin veriyor.
     echo.
-    echo         Kullanani bulmak icin:   netstat -ano ^| findstr :5173
+    echo         Kullanani bulmak icin:   netstat -ano ^| findstr :3000
     echo         Sonra o PID'i kapatin:   taskkill /PID ^<numara^> /F
     echo         Genelde sebebi: onceden acik kalmis bir frontend penceresi.
     goto :hata
@@ -87,7 +87,7 @@ if not errorlevel 1 (
     echo         Sonra o PID'i kapatin:   taskkill /PID ^<numara^> /F
     goto :hata
 )
-echo       5173 ve 8080 portlari bos.
+echo       3000 ve 8080 portlari bos.
 
 rem ---------------------------------------------------------------
 rem  2) PostgreSQL
@@ -157,9 +157,9 @@ echo.
 echo ====================================================
 echo   Hazir. Adresler:
 echo.
-echo     Tanitim sitesi  :  http://localhost:5173
-echo     Uye alani       :  http://localhost:5173/uye
-echo     Yonetim paneli  :  http://localhost:5173/yonetim
+echo     Tanitim sitesi  :  http://localhost:3000
+echo     Uye alani       :  http://localhost:3000/uye
+echo     Yonetim paneli  :  http://localhost:3000/yonetim
 echo.
 echo   Yonetim girisi:
 echo     E-posta : %ADMIN_EMAIL%
@@ -179,7 +179,7 @@ echo Frontend hazir olunca tarayici acilacak...
 set /a fdeneme=0
 :fbekle
 set /a fdeneme+=1
-curl -s -o nul http://localhost:5173 >nul 2>&1
+curl -s -o nul http://localhost:3000 >nul 2>&1
 if not errorlevel 1 goto :fhazir
 if %fdeneme% geq 150 (
     echo   Frontend 5 dakikada acilmadi. Frontend penceresindeki mesajlara bakin.
@@ -189,7 +189,7 @@ timeout /t 2 /nobreak >nul
 goto :fbekle
 
 :fhazir
-start "" http://localhost:5173
+start "" http://localhost:3000
 goto :son
 
 :hata
