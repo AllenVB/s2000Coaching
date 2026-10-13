@@ -51,13 +51,23 @@ Yönlendirme `BrowserRouter` ile yapılır; prodüksiyonda statik sunucunun bili
 
 ## Yerel geliştirme
 
+**Windows'ta tek komut:** proje kökündeki `baslat.bat` dosyasına çift tıklayın (ya da CMD'de
+`baslat.bat` yazın). Betik gerekli programları kontrol eder, PostgreSQL'i açar, hazır olmasını
+bekler, backend ile frontend'i kendi pencerelerinde başlatır ve hazır olunca tarayıcıyı açar.
+İlk koç hesabının e-postası ve şifresi betiğin başındaki üç satırda tanımlıdır; değiştirmek
+isterseniz orayı düzenleyin.
+
+Elle çalıştırmak isterseniz (ya da Linux/macOS'taysanız):
+
 ```bash
 # 1) Veritabanı
 docker compose up -d postgres
 
 # 2) Backend (varsayılan port 8080; meşgulse SERVER_PORT ile değiştirin)
+#    ADMIN_EMAIL ve ADMIN_PASSWORD tanımlı değilse koç hesabı oluşmaz ve
+#    yönetim paneline giriş yapılamaz.
 cd backend
-./gradlew bootRun
+ADMIN_EMAIL=koc@ornek.com ADMIN_PASSWORD=GucluBirSifre ./gradlew bootRun
 
 # 3) Frontend
 cd frontend
@@ -66,8 +76,13 @@ npm install
 npm run dev
 ```
 
-Frontend `http://localhost:5173`, backend varsayılan olarak `http://localhost:8080` üzerinde çalışır.
-Yerel yönetim anahtarı varsayılan olarak `s2000-dev-admin`'dir (`/yonetim` sayfasında sorulur).
+Windows CMD'de `./` öneki yoktur (`gradlew bootRun`), ortam değişkenleri de ayrı satırda
+`set ADMIN_EMAIL=...` ile tanımlanır.
+
+Frontend `http://localhost:5173`, backend varsayılan olarak `http://localhost:8080` üzerinde
+çalışır. Yönetim paneline `ADMIN_EMAIL` / `ADMIN_PASSWORD` ile girilir.
+
+**Gerekenler:** Java 21, Node 22, Docker (yalnızca PostgreSQL için).
 
 ## Üyelik akışı
 
