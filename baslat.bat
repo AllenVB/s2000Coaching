@@ -64,6 +64,31 @@ if errorlevel 1 (
 
 echo       Java, Node ve Docker hazir.
 
+rem --- Portlar bos mu
+rem 5173 mesgulse Vite normalde sessizce 5174'e kayar; backend'in CORS listesinde
+rem yalnizca 5173 oldugu icin sayfa acilir ama hicbir veri gelmez. vite.config.ts
+rem artik strictPort ile buna izin vermiyor, burada da pesinen sebebini soyluyoruz.
+netstat -ano | findstr /r /c:":5173 .*LISTENING" >nul 2>&1
+if not errorlevel 1 (
+    echo.
+    echo   HATA: 5173 portu kullanimda. Frontend baska bir porta kayamaz,
+    echo         cunku backend yalnizca 5173'e izin veriyor.
+    echo.
+    echo         Kullanani bulmak icin:   netstat -ano ^| findstr :5173
+    echo         Sonra o PID'i kapatin:   taskkill /PID ^<numara^> /F
+    echo         Genelde sebebi: onceden acik kalmis bir frontend penceresi.
+    goto :hata
+)
+netstat -ano | findstr /r /c:":8080 .*LISTENING" >nul 2>&1
+if not errorlevel 1 (
+    echo.
+    echo   HATA: 8080 portu kullanimda; backend baslayamaz.
+    echo         Kullanani bulmak icin:   netstat -ano ^| findstr :8080
+    echo         Sonra o PID'i kapatin:   taskkill /PID ^<numara^> /F
+    goto :hata
+)
+echo       5173 ve 8080 portlari bos.
+
 rem ---------------------------------------------------------------
 rem  2) PostgreSQL
 rem ---------------------------------------------------------------

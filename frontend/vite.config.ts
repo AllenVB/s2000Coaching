@@ -13,5 +13,9 @@ export default defineConfig({
   },
   server: {
     port: 5173,
+    // Without this Vite silently moves to 5174 when 5173 is busy, and the backend's CORS
+    // list only names 5173 — so the page loads but every API call is blocked, which looks
+    // like a broken app rather than a busy port. Fail loudly instead.
+    strictPort: true,
   },
 })
