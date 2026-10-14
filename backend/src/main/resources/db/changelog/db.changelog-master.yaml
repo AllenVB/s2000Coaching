@@ -1,5 +1,5 @@
 # Changelog file names are numbered by creation order only. ChangeSet `id`s inside
-# them are a separate, repo-wide monotonic counter (currently at 033) — always
+# them are a separate, repo-wide monotonic counter (currently at 034) — always
 # continue that counter for a new changeSet id, never reuse a file's own ordinal.
 #
 # Superseded experience tables are left orphaned in place (dropping needs explicit
@@ -42,3 +42,5 @@ databaseChangeLog:
       file: db/changelog/017-create-coach-account-tables.yaml
   - include:
       file: db/changelog/018-create-progress-photo-table.yaml
+  - include:
+      file: db/changelog/019-create-case-study-tables.yaml

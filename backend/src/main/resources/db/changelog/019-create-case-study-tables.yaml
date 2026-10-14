@@ -1,0 +1,116 @@
+databaseChangeLog:
+  - changeSet:
+      id: 034-create-case-study-tables
+      author: s2000coaching
+      comment: >
+        Body-data case studies: the coach's own figures, analysed and published publicly.
+        Deliberately separate from member/measurement rather than reusing them — the analysis
+        is served from a public endpoint, and a public endpoint reading the member tables is
+        one forgotten filter away from publishing someone's health record. Separate tables
+        make that impossible by structure. `published` defaults to false: an import is not a
+        publication.
+      changes:
+        - createTable:
+            tableName: case_study
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints: { primaryKey: true, nullable: false }
+              - column:
+                  name: slug
+                  type: varchar(120)
+                  constraints:
+                    nullable: false
+                    unique: true
+                    uniqueConstraintName: uk_case_study_slug
+              - column:
+                  name: title
+                  type: varchar(200)
+                  constraints: { nullable: false }
+              - column:
+                  name: summary
+                  type: varchar(2000)
+              # Height, sex and birth year exist only to feed the body-fat formulas.
+              - column: { name: height_cm, type: int }
+              - column: { name: sex, type: varchar(10) }
+              - column: { name: birth_year, type: int }
+              - column:
+                  name: published
+                  type: boolean
+                  defaultValueBoolean: false
+                  constraints: { nullable: false }
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+                  constraints: { nullable: false }
+              - column:
+                  name: updated_at
+                  type: timestamp with time zone
+                  constraints: { nullable: false }
+
+        - createTable:
+            tableName: case_study_measurement
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints: { primaryKey: true, nullable: false }
+              - column:
+                  name: case_study_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_case_measurement_study
+                    references: case_study(id)
+              - column:
+                  name: measured_on
+                  type: date
+                  constraints: { nullable: false }
+              - column:
+                  name: weight_kg
+                  type: numeric(5, 2)
+                  constraints: { nullable: false }
+              # Only weight is required: an export may carry nothing else, and the analysis
+              # should degrade to what it has rather than refuse the import.
+              - column: { name: neck_cm, type: 'numeric(5, 1)' }
+              - column: { name: waist_cm, type: 'numeric(5, 1)' }
+              - column: { name: chest_cm, type: 'numeric(5, 1)' }
+              - column: { name: hip_cm, type: 'numeric(5, 1)' }
+              - column: { name: arm_cm, type: 'numeric(5, 1)' }
+              - column: { name: thigh_cm, type: 'numeric(5, 1)' }
+        - addUniqueConstraint:
+            tableName: case_study_measurement
+            columnNames: case_study_id, measured_on
+            constraintName: uk_case_measurement_date
+
+        - createTable:
+            tableName: case_study_intake
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints: { primaryKey: true, nullable: false }
+              - column:
+                  name: case_study_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_case_intake_study
+                    references: case_study(id)
+              - column:
+                  name: consumed_on
+                  type: date
+                  constraints: { nullable: false }
+              - column:
+                  name: calories
+                  type: int
+                  constraints: { nullable: false }
+              - column: { name: protein_g, type: int }
+              - column: { name: carbs_g, type: int }
+              - column: { name: fat_g, type: int }
+              - column: { name: sodium_mg, type: int }
+        - addUniqueConstraint:
+            tableName: case_study_intake
+            columnNames: case_study_id, consumed_on
+            constraintName: uk_case_intake_date
