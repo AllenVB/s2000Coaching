@@ -6,6 +6,7 @@ import { PortalSidebarNav, PortalTabBar, type PortalNavItem } from '@/components
 import { AdminAuthProvider, useAdminAuth } from '@/context/AdminAuthContext'
 import { useAdminSignOut } from '@/hooks/useAdminSession'
 import {
+  ChartIcon,
   ClipboardIcon,
   DumbbellIcon,
   HomeIcon,
@@ -19,6 +20,7 @@ const navItems: PortalNavItem[] = [
   { to: '/yonetim/uyeler', label: 'Üyeler', icon: UsersIcon },
   { to: '/yonetim/sablonlar', label: 'Şablonlar', icon: ClipboardIcon },
   { to: '/yonetim/hareketler', label: 'Hareketler', icon: DumbbellIcon },
+  { to: '/yonetim/vaka-calismalari', label: 'Vakalar', icon: ChartIcon },
   { to: '/yonetim/siparisler', label: 'Siparişler', icon: ReceiptIcon },
   { to: '/yonetim/ayarlar', label: 'Ayarlar', icon: SettingsIcon },
 ]

@@ -5,6 +5,7 @@ import { MemberAreaLayout } from '@/components/layout/MemberAreaLayout'
 import { AdminDashboardPage } from '@/pages/admin/AdminDashboardPage'
 import { AdminOrdersPage } from '@/pages/admin/AdminOrdersPage'
 import { AdminSettingsPage } from '@/pages/admin/AdminSettingsPage'
+import { CaseStudiesPage } from '@/pages/admin/CaseStudiesPage'
 import { ExerciseCatalogPage } from '@/pages/admin/ExerciseCatalogPage'
 import { MemberDetailPage } from '@/pages/admin/MemberDetailPage'
 import { MemberListPage } from '@/pages/admin/MemberListPage'
@@ -61,6 +62,7 @@ export default function App() {
         </Route>
         <Route path="hareketler" element={<ExerciseCatalogPage />} />
         <Route path="sablonlar" element={<PlanTemplatesPage />} />
+        <Route path="vaka-calismalari" element={<CaseStudiesPage />} />
         <Route path="siparisler" element={<AdminOrdersPage />} />
         <Route path="ayarlar" element={<AdminSettingsPage />} />
       </Route>
