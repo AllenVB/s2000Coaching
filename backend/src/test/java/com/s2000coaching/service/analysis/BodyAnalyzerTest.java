@@ -584,6 +584,48 @@ class BodyAnalyzerTest {
 			assertThat(periods.get(0).waistChangeCm()).isPositive();
 			assertThat(periods.get(0).waistPerKg()).isNotNull().isPositive();
 		}
+
+		/**
+		 * Someone who weighs in daily but reaches for the tape once a month ends nearly every
+		 * period on a weight-only day. Reading the waist from the period's own last day would
+		 * drop the figure for a record that plainly holds it.
+		 */
+		@Test
+		void shouldReportWaistChangeWhenTheLastDaysCarryWeightOnly() {
+			List<CaseStudyMeasurement> measurements = new ArrayList<>();
+			double weight = 86.0;
+			double waist = 92.0;
+			for (int week = 0; week < 40; week++) {
+				measurements.add(weigh(MONDAY.plusWeeks(week), weight, week % 4 == 0 ? waist : null));
+				weight -= 0.3;
+				waist -= 0.2;
+			}
+
+			List<Period> periods = BodyAnalyzer.analyze(study, measurements, List.of(), CURRENT_YEAR)
+					.longTermPeriods();
+
+			assertThat(periods).isNotEmpty();
+			assertThat(periods.get(0).waistChangeCm()).isNotNull().isNegative();
+			assertThat(periods.get(0).waistPerKg()).isNotNull().isPositive();
+		}
+
+		/** One tape reading in the whole period says nothing about a change. */
+		@Test
+		void shouldReportNoWaistChangeWhenOnlyOneDayCarriesTheTape() {
+			List<CaseStudyMeasurement> measurements = new ArrayList<>();
+			double weight = 86.0;
+			for (int week = 0; week < 40; week++) {
+				measurements.add(weigh(MONDAY.plusWeeks(week), weight, week == 10 ? 92.0 : null));
+				weight -= 0.3;
+			}
+
+			List<Period> periods = BodyAnalyzer.analyze(study, measurements, List.of(), CURRENT_YEAR)
+					.longTermPeriods();
+
+			assertThat(periods).isNotEmpty();
+			assertThat(periods.get(0).waistChangeCm()).isNull();
+			assertThat(periods.get(0).waistPerKg()).isNull();
+		}
 	}
 
 	@Nested

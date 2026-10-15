@@ -583,8 +583,14 @@ public final class BodyAnalyzer {
 		CaseStudyMeasurement to = sorted.get(toIndex);
 		double weightChange = trendByDate.get(to.getMeasuredOn()) - trendByDate.get(from.getMeasuredOn());
 
-		Double waistChange = from.getWaistCm() != null && to.getWaistCm() != null
-				? to.getWaistCm().subtract(from.getWaistCm()).doubleValue()
+		// The nearest waist measurement inside the period at each end, rather than the period's
+		// own first and last day: someone who weighs in daily but reaches for the tape once a
+		// month ends almost every period on a weight-only day, and insisting on waist there
+		// dropped the figure even though the tape reading sat a few days earlier.
+		Integer waistFrom = firstWaistIndex(sorted, fromIndex, toIndex);
+		Integer waistTo = lastWaistIndex(sorted, fromIndex, toIndex);
+		Double waistChange = waistFrom != null && waistTo != null && !waistFrom.equals(waistTo)
+				? sorted.get(waistTo).getWaistCm().subtract(sorted.get(waistFrom).getWaistCm()).doubleValue()
 				: null;
 		// Waist centimetres gained per kilogram: a rough read on what the weight was made of.
 		Double waistPerKg = waistChange != null && Math.abs(weightChange) > 0.5
@@ -593,6 +599,24 @@ public final class BodyAnalyzer {
 
 		return new Period(from.getMeasuredOn(), to.getMeasuredOn(), label,
 				TrendCalculator.round(weightChange, 1), round(waistChange), waistPerKg);
+	}
+
+	private static Integer firstWaistIndex(List<CaseStudyMeasurement> sorted, int fromIndex, int toIndex) {
+		for (int i = fromIndex; i <= toIndex; i++) {
+			if (sorted.get(i).getWaistCm() != null) {
+				return i;
+			}
+		}
+		return null;
+	}
+
+	private static Integer lastWaistIndex(List<CaseStudyMeasurement> sorted, int fromIndex, int toIndex) {
+		for (int i = toIndex; i >= fromIndex; i--) {
+			if (sorted.get(i).getWaistCm() != null) {
+				return i;
+			}
+		}
+		return null;
 	}
 
 	private static BodyAnalysis.BodyComposition estimateComposition(CaseStudy study,
