@@ -22,6 +22,15 @@ Thumbs.db
 # Claude
 .claude/launch.json
 
+# Local start-up settings: the coach account's own e-mail and password live here,
+# never in the tracked baslat.bat.
+yerel-ayarlar.bat
+
+# Personal body data used to fill the case study locally: weigh-ins, tape readings and
+# the screenshots they came from. Health data about a named person stays off the remote.
+/veri/
+/Süleyman Emre ARLI/
+
 # Uploaded progress photos (app.photos.storage-path default). Members' body photos must
 # never reach the repository.
 backend/data/

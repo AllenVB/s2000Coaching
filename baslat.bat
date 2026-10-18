@@ -12,11 +12,21 @@ rem ===================================================================
 setlocal EnableDelayedExpansion
 cd /d "%~dp0"
 
-rem --- Ilk kurulumda degistirilecek yer: ilk koc hesabinin bilgileri.
-rem     Bunlar tanimli degilse yonetim paneline giris yapilamaz.
+rem --- Ilk koc hesabinin bilgileri. Bunlar tanimli degilse yonetim paneline
+rem     giris yapilamaz.
+rem
+rem     Gercek bir sifre bu dosyaya YAZILMAZ: bu dosya git'te takip ediliyor ve
+rem     uzak depoya gidiyor. Kendi bilgilerinizi yanindaki yerel-ayarlar.bat
+rem     dosyasina yazin; o dosya .gitignore'da, depoya hic cikmaz. Ornek icin
+rem     yerel-ayarlar.ornek.bat dosyasina bakin.
 set "ADMIN_EMAIL=koc@s2000coaching.com"
 set "ADMIN_PASSWORD=Demo1234Parola"
 set "ADMIN_NAME=S2000 Koc"
+
+if exist "%~dp0yerel-ayarlar.bat" (
+    call "%~dp0yerel-ayarlar.bat"
+    echo       Yerel ayarlar okundu: yerel-ayarlar.bat
+)
 
 echo.
 echo ====================================================
