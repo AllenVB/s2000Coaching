@@ -4,7 +4,7 @@ import { testimonials } from '@/data/content'
 
 export function Testimonials() {
   return (
-    <section className="py-20 sm:py-24">
+    <section className="section-light border-b border-border py-20 sm:py-24">
       <div className="mx-auto max-w-[1280px] px-4 sm:px-6 lg:px-8">
         <div className="mb-16 mx-auto">
           <SectionHeading eyebrow="Gerçek Deneyimler" title="Öğrencilerimiz Ne Diyor?" />
@@ -12,14 +12,17 @@ export function Testimonials() {
 
         <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
           {testimonials.map((item) => (
-            <div key={item.name} className="flex flex-col justify-between rounded-2xl border border-border bg-surface p-6">
+            <div
+              key={item.name}
+              className="flex flex-col justify-between rounded-2xl border border-border bg-surface p-6 shadow-[0_18px_40px_-32px_rgba(23,17,15,0.7)]"
+            >
               <div>
                 <div className="mb-3 flex gap-0.5 text-primary">
                   {Array.from({ length: 5 }).map((_, i) => (
                     <StarIcon key={i} className="h-3.5 w-3.5" />
                   ))}
                 </div>
-                <p className="mb-6 text-xs leading-relaxed text-text-secondary">&ldquo;{item.quote}&rdquo;</p>
+                <p className="mb-6 text-sm leading-relaxed text-text-secondary">&ldquo;{item.quote}&rdquo;</p>
               </div>
               <div className="flex items-center justify-between border-t border-border pt-4">
                 <div>
