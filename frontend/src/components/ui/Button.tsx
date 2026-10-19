@@ -9,12 +9,14 @@ interface ButtonProps extends ComponentPropsWithRef<'button'> {
   children: ReactNode
 }
 
+// The ember glow is written out rather than taken from the token, because a colour token
+// cannot be used inside a shadow's alpha; the two are kept in step by hand.
 const variantClasses: Record<Variant, string> = {
   primary:
-    'bg-primary text-canvas hover:bg-primary-hover shadow-[0_0_24px_rgba(199,240,0,0.25)] hover:shadow-[0_0_32px_rgba(199,240,0,0.4)]',
+    'bg-primary text-canvas hover:bg-primary-hover shadow-[0_6px_20px_-6px_rgba(255,107,44,0.65)] hover:shadow-[0_10px_28px_-6px_rgba(255,107,44,0.8)]',
   secondary:
-    'bg-surface-elevated text-text-primary border border-border-strong hover:border-white/30 hover:bg-surface-high',
-  ghost: 'bg-transparent text-text-secondary hover:text-text-primary hover:bg-white/5',
+    'bg-surface-elevated text-text-primary border border-border-strong hover:border-primary/60 hover:bg-surface-high',
+  ghost: 'bg-transparent text-text-secondary hover:text-text-primary hover:bg-text-primary/5',
   danger: 'bg-error text-white hover:bg-error/85',
 }
 
@@ -27,7 +29,7 @@ const sizeClasses: Record<Size, string> = {
 export function Button({ variant = 'primary', size = 'md', className = '', children, ...props }: ButtonProps) {
   return (
     <button
-      className={`inline-flex items-center justify-center gap-2 rounded-xl font-semibold uppercase tracking-wide transition-all active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100 ${variantClasses[variant]} ${sizeClasses[size]} ${className}`}
+      className={`inline-flex items-center justify-center gap-2 rounded-full font-semibold uppercase tracking-wide transition-all active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:active:scale-100 ${variantClasses[variant]} ${sizeClasses[size]} ${className}`}
       {...props}
     >
       {children}
