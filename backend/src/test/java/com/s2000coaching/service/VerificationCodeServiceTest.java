@@ -13,6 +13,7 @@ import com.s2000coaching.domain.MemberStatus;
 import com.s2000coaching.domain.MemberVerificationCode;
 import com.s2000coaching.domain.VerificationPurpose;
 import com.s2000coaching.exception.BadRequestException;
+import com.s2000coaching.exception.TooManyRequestsException;
 import com.s2000coaching.mail.VerificationMailSender;
 import com.s2000coaching.repository.MemberVerificationCodeRepository;
 import java.math.BigDecimal;
@@ -33,6 +34,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 class VerificationCodeServiceTest {
 
 	private static final Duration TTL = Duration.ofMinutes(15);
+	private static final Duration COOLDOWN = Duration.ofSeconds(60);
+	private static final int HOURLY_LIMIT = 5;
 
 	@Mock
 	private MemberVerificationCodeRepository codeRepository;
@@ -45,7 +48,8 @@ class VerificationCodeServiceTest {
 
 	@BeforeEach
 	void setUp() {
-		verificationCodeService = new VerificationCodeService(codeRepository, mailSender, TTL);
+		verificationCodeService = new VerificationCodeService(codeRepository, mailSender, TTL, COOLDOWN,
+				HOURLY_LIMIT);
 		member = newMember();
 	}
 
@@ -92,6 +96,51 @@ class VerificationCodeServiceTest {
 
 			assertThat(samePurpose.isConsumed()).isTrue();
 			assertThat(otherPurpose.isConsumed()).isFalse();
+		}
+
+		@Test
+		void shouldRefuseASecondCodeWithinTheCooldown() {
+			when(codeRepository.findFirstByMemberIdOrderByCreatedAtDesc(member.getId()))
+					.thenReturn(Optional.of(codeIssuedSecondsAgo(10)));
+
+			assertThatThrownBy(() -> verificationCodeService.issueAndSend(member, VerificationPurpose.LOGIN))
+					.isInstanceOf(TooManyRequestsException.class)
+					.hasMessageContaining("saniye bekleyin");
+
+			verify(mailSender, never()).sendVerificationCode(any(), any(), any());
+			verify(codeRepository, never()).save(any());
+		}
+
+		@Test
+		void shouldAllowANewCodeOnceTheCooldownHasPassed() {
+			when(codeRepository.findFirstByMemberIdOrderByCreatedAtDesc(member.getId()))
+					.thenReturn(Optional.of(codeIssuedSecondsAgo(90)));
+			when(codeRepository.findAllByMemberIdAndConsumedAtIsNull(member.getId())).thenReturn(List.of());
+
+			verificationCodeService.issueAndSend(member, VerificationPurpose.LOGIN);
+
+			verify(mailSender).sendVerificationCode(eq(member), any(), eq(VerificationPurpose.LOGIN));
+		}
+
+		/** The cooldown alone would still allow a code a minute, all night. */
+		@Test
+		void shouldRefuseWhenTheHourlyLimitIsReached() {
+			when(codeRepository.findFirstByMemberIdOrderByCreatedAtDesc(member.getId()))
+					.thenReturn(Optional.of(codeIssuedSecondsAgo(300)));
+			when(codeRepository.countByMemberIdAndCreatedAtAfter(eq(member.getId()), any()))
+					.thenReturn((long) HOURLY_LIMIT);
+
+			assertThatThrownBy(() -> verificationCodeService.issueAndSend(member, VerificationPurpose.LOGIN))
+					.isInstanceOf(TooManyRequestsException.class)
+					.hasMessageContaining("saatlik kod sınırına");
+
+			verify(mailSender, never()).sendVerificationCode(any(), any(), any());
+		}
+
+		private MemberVerificationCode codeIssuedSecondsAgo(long seconds) {
+			Instant createdAt = Instant.now().minusSeconds(seconds);
+			return new MemberVerificationCode(UUID.randomUUID(), member, VerificationPurpose.LOGIN,
+					Sha256.hex("123456"), createdAt, createdAt.plus(TTL));
 		}
 	}
 

@@ -2,6 +2,7 @@ package com.s2000coaching.repository;
 
 import com.s2000coaching.domain.MemberVerificationCode;
 import com.s2000coaching.domain.VerificationPurpose;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -13,6 +14,11 @@ public interface MemberVerificationCodeRepository extends JpaRepository<MemberVe
 			UUID memberId, VerificationPurpose purpose);
 
 	List<MemberVerificationCode> findAllByMemberIdAndConsumedAtIsNull(UUID memberId);
+
+	/** The member's last code of any purpose, consumed or not: what the cooldown measures from. */
+	Optional<MemberVerificationCode> findFirstByMemberIdOrderByCreatedAtDesc(UUID memberId);
+
+	long countByMemberIdAndCreatedAtAfter(UUID memberId, Instant createdAfter);
 
 	void deleteAllByMemberId(UUID memberId);
 }

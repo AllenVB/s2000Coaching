@@ -18,6 +18,26 @@ spring:
     hibernate:
       ddl-auto: validate
     open-in-view: false
+  # Leave MAIL_HOST unset and verification codes are written to the log instead of being
+  # mailed, which is what a development machine wants. Set it and MailConfig switches to
+  # the SMTP sender; the provider decides which of the two TLS settings below applies, so
+  # both are exposed rather than guessed.
+  mail:
+    host: ${MAIL_HOST:}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: ${MAIL_AUTH:true}
+          starttls:
+            enable: ${MAIL_STARTTLS:true}
+          ssl:
+            enable: ${MAIL_SSL:false}
+          connectiontimeout: 10000
+          timeout: 10000
+          writetimeout: 10000
 
 server:
   port: ${SERVER_PORT:8080}
@@ -35,6 +55,11 @@ app:
     lockout-duration: ${ADMIN_LOCKOUT_DURATION:15m}
   verification:
     code-ttl: ${VERIFICATION_CODE_TTL:15m}
+    # Anyone who knows a member's address can ask for a code, so the limits are per member:
+    # a wait between codes, and a ceiling per hour. Both count codes already issued, the
+    # coach's "resend" included.
+    resend-cooldown: ${VERIFICATION_RESEND_COOLDOWN:60s}
+    hourly-limit: ${VERIFICATION_HOURLY_LIMIT:5}
   member-session:
     ttl: ${MEMBER_SESSION_TTL:14d}
   photos:

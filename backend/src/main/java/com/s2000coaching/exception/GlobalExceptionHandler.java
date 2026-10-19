@@ -37,6 +37,12 @@ public class GlobalExceptionHandler {
 				.body(new ApiError(Instant.now(), 400, "Bad Request", List.of(ex.getMessage())));
 	}
 
+	@ExceptionHandler(TooManyRequestsException.class)
+	public ResponseEntity<ApiError> handleTooManyRequests(TooManyRequestsException ex) {
+		return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+				.body(new ApiError(Instant.now(), 429, "Too Many Requests", List.of(ex.getMessage())));
+	}
+
 	@ExceptionHandler(UnauthorizedException.class)
 	public ResponseEntity<ApiError> handleUnauthorized(UnauthorizedException ex) {
 		return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
