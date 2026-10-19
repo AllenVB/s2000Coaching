@@ -32,7 +32,7 @@ export function Footer() {
   const { setCategory } = usePricingCategory()
 
   return (
-    <footer className="w-full border-t border-border bg-surface py-16">
+    <footer className="ember-wash w-full border-t border-border bg-canvas py-16">
       <div className="mx-auto max-w-[1280px] px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 gap-10 border-b border-border pb-12 md:grid-cols-2 lg:grid-cols-4">
           <div className="flex flex-col">

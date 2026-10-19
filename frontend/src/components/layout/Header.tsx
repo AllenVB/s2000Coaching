@@ -64,22 +64,28 @@ export function Header() {
           </div>
         </a>
 
-        <nav className="hidden items-center gap-7 md:flex">
+        {/* The full bar needs xl: nine destinations beside the logo, the cart and the
+            call to action overflow 1024px, and at md they wrapped onto two lines. Below
+            that the same links live in the menu. */}
+        <nav className="hidden items-center gap-6 xl:flex">
           {navLinks.map((link) => (
             <a
               key={link.label}
               href={link.href}
               onClick={(event) => handleNavLinkClick(event, link)}
-              className="text-sm font-medium text-text-secondary transition-colors hover:text-text-primary"
+              className="relative whitespace-nowrap py-2 text-sm font-medium text-text-secondary transition-colors after:absolute after:inset-x-0 after:bottom-0 after:h-px after:origin-left after:scale-x-0 after:bg-primary after:transition-transform hover:text-text-primary hover:after:scale-x-100"
             >
               {link.label}
             </a>
           ))}
+          {/* The two portal links are a different kind of destination from the marketing
+              anchors, so they sit behind a divider instead of among them. */}
+          <span className="h-5 w-px bg-border-strong" aria-hidden />
           {portalLinks.map((link) => (
             <Link
               key={link.to}
               to={link.to}
-              className="text-sm font-medium text-primary transition-colors hover:text-primary-hover"
+              className="whitespace-nowrap text-sm font-medium text-text-secondary transition-colors hover:text-primary"
             >
               {link.label}
             </Link>
@@ -90,7 +96,7 @@ export function Header() {
           <button
             aria-label="Sepeti Görüntüle"
             onClick={openDrawer}
-            className="relative flex h-11 w-11 items-center justify-center rounded-lg border border-border bg-surface text-text-secondary transition-colors hover:border-white/25 hover:text-text-primary"
+            className="relative flex h-11 w-11 items-center justify-center rounded-xl border border-border bg-surface text-text-secondary transition-colors hover:border-primary/50 hover:text-text-primary"
           >
             <CartIcon className="h-5 w-5" />
             {cartCount > 0 ? (
@@ -102,7 +108,7 @@ export function Header() {
 
           <Button
             size="md"
-            className="hidden sm:inline-flex"
+            className="hidden whitespace-nowrap sm:inline-flex"
             onClick={() => navigateToSection('#paketler', 'paketler')}
           >
             Koçluğa Başla
@@ -111,7 +117,7 @@ export function Header() {
           <button
             aria-label="Menü"
             onClick={() => setMobileMenuOpen((open) => !open)}
-            className="flex h-11 w-11 items-center justify-center rounded-lg border border-border bg-surface text-text-secondary hover:text-text-primary md:hidden"
+            className="flex h-11 w-11 items-center justify-center rounded-xl border border-border bg-surface text-text-secondary hover:text-text-primary xl:hidden"
           >
             {isMobileMenuOpen ? <CloseIcon className="h-5 w-5" /> : <MenuIcon className="h-5 w-5" />}
           </button>
@@ -119,7 +125,7 @@ export function Header() {
       </div>
 
       {isMobileMenuOpen ? (
-        <div className="space-y-4 border-b border-border bg-surface px-4 py-6 md:hidden">
+        <div className="space-y-4 border-b border-border bg-surface px-4 py-6 xl:hidden">
           <div className="flex flex-col space-y-3">
             {navLinks.map((link) => (
               <a
@@ -151,7 +157,7 @@ export function Header() {
               handleCtaClick(event)
               setMobileMenuOpen(false)
             }}
-            className="flex h-11 w-full items-center justify-center rounded-xl bg-primary text-sm font-semibold uppercase tracking-wide text-canvas transition-colors hover:bg-primary-hover"
+            className="flex h-11 w-full items-center justify-center rounded-full bg-primary text-sm font-semibold uppercase tracking-wide text-canvas transition-colors hover:bg-primary-hover"
           >
             Koçluğa Başla
           </a>
