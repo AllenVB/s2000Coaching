@@ -1,33 +1,43 @@
 @import 'tailwindcss';
 
 @theme {
-  /* Surfaces — merged from both Stitch concepts: obsidian base + elevated glass layers */
-  --color-canvas: #0b0d0f;
-  --color-surface: #12141a;
-  --color-surface-elevated: #171a1f;
-  --color-surface-high: #1e222a;
-  --color-border: rgba(255, 255, 255, 0.08);
-  --color-border-strong: rgba(255, 255, 255, 0.16);
+  /* Surfaces — warm ink rather than the neutral near-black every fitness template uses.
+     Each step keeps a trace of red in it, so a page of stacked panels reads as one
+     material lit from above instead of grey boxes on black. */
+  --color-canvas: #0a0807;
+  --color-surface: #141010;
+  --color-surface-elevated: #1b1615;
+  --color-surface-high: #241d1b;
+  --color-border: rgba(255, 237, 226, 0.09);
+  --color-border-strong: rgba(255, 237, 226, 0.2);
 
-  /* Brand accents — s2000's lime as primary CTA color, emerald borrowed from the
-     FITCOACH concept for gradients/glows so featured elements read as premium */
-  --color-primary: #c7f000;
-  --color-primary-hover: #b3dd00;
-  --color-accent: #10b981;
-  --color-accent-hover: #34d399;
-  --color-accent-orange: #f97316;
-  --color-accent-orange-hover: #fb923c;
+  /* A light band for sections that break the dark run; see .section-light below. */
+  --color-paper: #f7f2ec;
+  --color-paper-soft: #ece4da;
+  --color-ink: #17110f;
+  --color-ink-soft: #4a3c36;
 
-  --color-text-primary: #f5f5f5;
-  --color-text-secondary: #9ca3af;
-  --color-text-muted: #6b7280;
+  /* Brand — ember as the single call-to-action colour, azure for anything the reader
+     should measure or trust (data, links), gold reserved for marks of distinction.
+     Three jobs, three colours: nothing is decorative twice. */
+  --color-primary: #ff6b2c;
+  --color-primary-hover: #ff8750;
+  --color-primary-deep: #d4441a;
+  --color-accent: #45a8ff;
+  --color-accent-hover: #74c0ff;
+  --color-accent-orange: #f6b63c;
+  --color-accent-orange-hover: #ffc961;
 
-  --color-success: #22c55e;
-  --color-error: #ef4444;
-  --color-warning: #f59e0b;
+  --color-text-primary: #faf4ee;
+  --color-text-secondary: #b9a99e;
+  --color-text-muted: #8a7a70;
 
-  --font-display: 'Montserrat', system-ui, sans-serif;
-  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  --color-success: #3ddc84;
+  --color-error: #ff5a5a;
+  --color-warning: #f6b63c;
+
+  --font-display: 'Bricolage Grotesque', 'Montserrat', system-ui, sans-serif;
+  --font-sans: 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, sans-serif;
 
   --animate-pulse-slow: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
@@ -45,9 +55,17 @@
     overflow-x: hidden;
   }
 
+  /* The display face carries the page, so it gets tightened once here rather than with a
+     tracking utility repeated on every heading. */
+  h1,
+  h2,
+  h3 {
+    letter-spacing: -0.02em;
+  }
+
   ::selection {
     background-color: var(--color-primary);
-    color: var(--color-canvas);
+    color: var(--color-text-primary);
   }
 
   ::-webkit-scrollbar {
@@ -74,5 +92,51 @@
 @layer utilities {
   .text-balance {
     text-wrap: balance;
+  }
+
+  /* A section printed on paper instead of ink. Used to break the long dark scroll into
+     chapters: the eye rests, and what follows the break reads as a new subject rather
+     than more of the same page. Children keep using the text tokens, so the band
+     redefines them instead of asking every child for a light variant. */
+  .section-light {
+    background-color: var(--color-paper);
+    --color-text-primary: var(--color-ink);
+    --color-text-secondary: var(--color-ink-soft);
+    --color-text-muted: #6f5d55;
+    --color-surface: #ffffff;
+    --color-surface-elevated: var(--color-paper-soft);
+    --color-surface-high: #e2d8cc;
+    --color-border: rgba(23, 17, 15, 0.12);
+    --color-border-strong: rgba(23, 17, 15, 0.26);
+    --color-canvas: var(--color-paper);
+    color: var(--color-ink);
+  }
+
+  /* The ember wash behind hero and feature panels. Two stops of the same hue at low
+     alpha: a glow that survives on an OLED black without banding. */
+  .ember-wash {
+    background-image:
+      radial-gradient(60% 50% at 15% 0%, rgba(255, 107, 44, 0.16), transparent 70%),
+      radial-gradient(45% 45% at 90% 10%, rgba(69, 168, 255, 0.1), transparent 70%);
+  }
+
+  /* Hairline above a panel, bright where the light falls. Cheaper than a border and it
+     reads as an edge catching light rather than a drawn line. */
+  .edge-lit {
+    position: relative;
+  }
+
+  .edge-lit::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 1px;
+    background-image: linear-gradient(
+      90deg,
+      transparent,
+      var(--color-border-strong) 20%,
+      var(--color-border-strong) 80%,
+      transparent
+    );
   }
 }
