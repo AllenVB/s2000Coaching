@@ -1,6 +1,7 @@
 package com.s2000coaching.web;
 
 import com.s2000coaching.service.CoachAuthService;
+import com.s2000coaching.web.dto.ChangeCoachPasswordRequest;
 import com.s2000coaching.web.dto.CoachLoginRequest;
 import com.s2000coaching.web.dto.CoachResponse;
 import com.s2000coaching.web.dto.CoachSessionResponse;
@@ -32,6 +33,16 @@ public class CoachAuthController {
 	public CoachResponse me(
 			@RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
 		return CoachResponse.from(coachAuthService.requireCoach(authorization));
+	}
+
+	/** Every session of this account ends here, so the caller signs in again afterwards. */
+	@PostMapping("/api/admin/auth/password")
+	public ResponseEntity<Void> changePassword(
+			@RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization,
+			@Valid @RequestBody ChangeCoachPasswordRequest request) {
+		var coach = coachAuthService.requireCoach(authorization);
+		coachAuthService.changePassword(coach, request.currentPassword(), request.newPassword());
+		return ResponseEntity.noContent().build();
 	}
 
 	@PostMapping("/api/admin/auth/logout")

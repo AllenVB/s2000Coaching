@@ -9,6 +9,7 @@ import static org.mockito.Mockito.when;
 
 import com.s2000coaching.domain.CoachAccount;
 import com.s2000coaching.domain.CoachSession;
+import com.s2000coaching.exception.BadRequestException;
 import com.s2000coaching.exception.UnauthorizedException;
 import com.s2000coaching.repository.CoachAccountRepository;
 import com.s2000coaching.repository.CoachSessionRepository;
@@ -173,6 +174,45 @@ class CoachAuthServiceTest {
 			coachAuthService.logout("Bearer tok");
 
 			verify(sessionRepository).delete(session);
+		}
+	}
+
+	@Nested
+	class ChangingThePassword {
+
+		@Test
+		void shouldStoreTheNewHashAndEndEverySession() {
+			String oldHash = coach.getPasswordHash();
+
+			coachAuthService.changePassword(coach, PASSWORD, "yeni-uzun-sifre");
+
+			assertThat(coach.getPasswordHash()).isNotEqualTo(oldHash);
+			assertThat(passwordEncoder.matches("yeni-uzun-sifre", coach.getPasswordHash())).isTrue();
+			verify(coachRepository).save(coach);
+			verify(sessionRepository).deleteAllByCoachId(coach.getId());
+		}
+
+		@Test
+		void shouldRefuseAWrongCurrentPassword() {
+			String oldHash = coach.getPasswordHash();
+
+			assertThatThrownBy(() -> coachAuthService.changePassword(coach, "yanlis", "yeni-uzun-sifre"))
+					.isInstanceOf(UnauthorizedException.class)
+					.hasMessageContaining("Mevcut şifre");
+
+			assertThat(coach.getPasswordHash()).isEqualTo(oldHash);
+			verify(sessionRepository, never()).deleteAllByCoachId(any());
+		}
+
+		/** Otherwise the coach believes the password changed while the old one still works. */
+		@Test
+		void shouldRefuseTheSamePasswordAgain() {
+			assertThatThrownBy(() -> coachAuthService.changePassword(coach, PASSWORD, PASSWORD))
+					.isInstanceOf(BadRequestException.class)
+					.hasMessageContaining("eskisiyle aynı");
+
+			verify(coachRepository, never()).save(any());
+			verify(sessionRepository, never()).deleteAllByCoachId(any());
 		}
 	}
 }

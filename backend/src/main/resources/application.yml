@@ -62,6 +62,11 @@ app:
     hourly-limit: ${VERIFICATION_HOURLY_LIMIT:5}
   member-session:
     ttl: ${MEMBER_SESSION_TTL:14d}
+  cleanup:
+    # Nightly at 03:30. Codes are kept past their 15-minute life because the verification
+    # rate limit counts rows from the last hour; anything under two hours is refused.
+    cron: ${CLEANUP_CRON:0 30 3 * * *}
+    code-retention: ${CLEANUP_CODE_RETENTION:7d}
   photos:
     # Only the key lives in the database; the bytes live here. A deployment on more than one
     # machine needs a shared volume or an object-storage PhotoStorage implementation.

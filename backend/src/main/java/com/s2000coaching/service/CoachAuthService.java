@@ -2,6 +2,7 @@ package com.s2000coaching.service;
 
 import com.s2000coaching.domain.CoachAccount;
 import com.s2000coaching.domain.CoachSession;
+import com.s2000coaching.exception.BadRequestException;
 import com.s2000coaching.exception.UnauthorizedException;
 import com.s2000coaching.repository.CoachAccountRepository;
 import com.s2000coaching.repository.CoachSessionRepository;
@@ -97,6 +98,26 @@ public class CoachAuthService {
 			throw new UnauthorizedException("Oturum süresi doldu. Tekrar giriş yapın.");
 		}
 		return session.getCoach();
+	}
+
+	/**
+	 * Changes the signed-in coach's password and drops every session of that account, this
+	 * caller's own included. A password is usually changed because someone else may have had
+	 * it; leaving the other sessions alive would keep exactly the access the change is meant
+	 * to end, so the coach signs in again afterwards.
+	 */
+	@Transactional
+	public void changePassword(CoachAccount coach, String currentPassword, String newPassword) {
+		if (!passwordEncoder.matches(currentPassword, coach.getPasswordHash())) {
+			throw new UnauthorizedException("Mevcut şifre hatalı.");
+		}
+		if (passwordEncoder.matches(newPassword, coach.getPasswordHash())) {
+			throw new BadRequestException("Yeni şifre eskisiyle aynı olamaz.");
+		}
+
+		coach.setPasswordHash(passwordEncoder.encode(newPassword));
+		coachRepository.save(coach);
+		sessionRepository.deleteAllByCoachId(coach.getId());
 	}
 
 	@Transactional

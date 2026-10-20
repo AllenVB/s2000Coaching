@@ -18,6 +18,29 @@ export function useCoachLogin() {
   })
 }
 
+/**
+ * The server ends every session of the account, this tab's included, so the caller signs out
+ * locally on success rather than keeping a token the server has already forgotten.
+ */
+export function useChangeCoachPassword() {
+  return useMutation({
+    mutationFn: ({
+      token,
+      currentPassword,
+      newPassword,
+    }: {
+      token: string
+      currentPassword: string
+      newPassword: string
+    }) =>
+      apiFetch<void>('/api/admin/auth/password', {
+        method: 'POST',
+        headers: adminHeaders(token),
+        body: JSON.stringify({ currentPassword, newPassword }),
+      }),
+  })
+}
+
 export function useCoachLogout() {
   return useMutation({
     mutationFn: ({ token }: { token: string }) =>

@@ -21,4 +21,6 @@ public interface MemberVerificationCodeRepository extends JpaRepository<MemberVe
 	long countByMemberIdAndCreatedAtAfter(UUID memberId, Instant createdAfter);
 
 	void deleteAllByMemberId(UUID memberId);
+
+	int deleteByCreatedAtBefore(Instant cutoff);
 }
