@@ -1,4 +1,7 @@
+import { useMemo } from 'react'
 import { Outlet } from 'react-router-dom'
+
+import { useCoachUnreadMessages } from '@/api/messagesApi'
 
 import { AdminTokenGate } from '@/components/admin/AdminTokenGate'
 import { PortalHeader } from '@/components/layout/PortalHeader'
@@ -7,6 +10,7 @@ import { AdminAuthProvider, useAdminAuth } from '@/context/AdminAuthContext'
 import { useAdminSignOut } from '@/hooks/useAdminSession'
 import {
   ChartIcon,
+  ChatIcon,
   ClipboardIcon,
   DumbbellIcon,
   HomeIcon,
@@ -18,9 +22,10 @@ import {
 const navItems: PortalNavItem[] = [
   { to: '/yonetim', label: 'Panel', icon: HomeIcon, end: true },
   { to: '/yonetim/uyeler', label: 'Üyeler', icon: UsersIcon },
+  { to: '/yonetim/mesajlar', label: 'Mesajlar', icon: ChatIcon },
   { to: '/yonetim/sablonlar', label: 'Şablonlar', icon: ClipboardIcon },
-  { to: '/yonetim/hareketler', label: 'Hareketler', icon: DumbbellIcon },
-  { to: '/yonetim/vaka-calismalari', label: 'Vakalar', icon: ChartIcon },
+  { to: '/yonetim/hareketler', label: 'Hareketler', icon: DumbbellIcon, desktopOnly: true },
+  { to: '/yonetim/vaka-calismalari', label: 'Vakalar', icon: ChartIcon, desktopOnly: true },
   { to: '/yonetim/siparisler', label: 'Siparişler', icon: ReceiptIcon },
   { to: '/yonetim/ayarlar', label: 'Ayarlar', icon: SettingsIcon },
 ]
@@ -37,6 +42,15 @@ export function AdminAreaLayout() {
 function AdminAreaShell() {
   const { session, token } = useAdminAuth()
   const handleSignOut = useAdminSignOut()
+  const { data: unread } = useCoachUnreadMessages()
+
+  const items = useMemo(
+    () =>
+      navItems.map((item) =>
+        item.to === '/yonetim/mesajlar' ? { ...item, badge: unread?.unread ?? 0 } : item,
+      ),
+    [unread],
+  )
 
   if (!token) {
     return (
@@ -68,7 +82,7 @@ function AdminAreaShell() {
       <div className="mx-auto flex w-full max-w-[1280px] gap-8 px-4 pb-24 pt-8 sm:px-6 lg:px-8 lg:pb-14">
         <aside className="hidden w-56 shrink-0 lg:block">
           <div className="sticky top-24 rounded-2xl border border-border bg-surface p-3">
-            <PortalSidebarNav items={navItems} />
+            <PortalSidebarNav items={items} />
           </div>
         </aside>
         <main className="min-w-0 flex-1">
@@ -76,7 +90,7 @@ function AdminAreaShell() {
         </main>
       </div>
 
-      <PortalTabBar items={navItems} />
+      <PortalTabBar items={items} />
     </>
   )
 }

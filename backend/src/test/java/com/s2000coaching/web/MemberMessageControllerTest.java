@@ -15,6 +15,7 @@ import com.s2000coaching.service.MemberAuthService;
 import com.s2000coaching.service.MessageService;
 import com.s2000coaching.web.dto.MessageResponse;
 import com.s2000coaching.web.dto.SendMessageRequest;
+import com.s2000coaching.web.dto.UnreadSummaryResponse;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
@@ -104,5 +105,20 @@ class MemberMessageControllerTest {
 				.content(jsonMapper.writeValueAsString(new SendMessageRequest("   "))))
 				.hasStatus(HttpStatus.BAD_REQUEST);
 		verify(messageService, never()).sendAsMember(any(), any());
+	}
+
+	@Test
+	void shouldReportTheUnreadCountWithoutOpeningTheThread() {
+		Member member = member();
+		when(memberAuthService.requireMember(BEARER)).thenReturn(member);
+		when(messageService.unreadForMember(member.getId()))
+				.thenReturn(new UnreadSummaryResponse(2, Instant.now()));
+
+		assertThat(mvc.get().uri("/api/member/messages/unread").header(HttpHeaders.AUTHORIZATION, BEARER))
+				.hasStatus(HttpStatus.OK)
+				.bodyJson()
+				.extractingPath("$.unread").isEqualTo(2);
+
+		verify(messageService, never()).readThreadAsMember(any());
 	}
 }
