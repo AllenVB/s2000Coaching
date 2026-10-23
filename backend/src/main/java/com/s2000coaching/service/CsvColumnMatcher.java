@@ -27,6 +27,11 @@ public final class CsvColumnMatcher {
 		MEASUREMENT_ALIASES.put("hipCm", List.of("kalca", "hip", "hips"));
 		MEASUREMENT_ALIASES.put("armCm", List.of("kol", "arm", "biceps", "pazu"));
 		MEASUREMENT_ALIASES.put("thighCm", List.of("bacak", "thigh", "uyluk", "leg"));
+		MEASUREMENT_ALIASES.put("shoulderCm", List.of("omuz", "shoulder", "shoulders"));
+		// "yagorani" before "yag": a measurement export with both a fat percentage and a fat
+		// mass column would otherwise match whichever came first in the row.
+		MEASUREMENT_ALIASES.put("bodyFatPercent",
+				List.of("yagorani", "yagyuzdesi", "bodyfat", "bodyfatpercent", "bf", "yagoran"));
 
 		INTAKE_ALIASES.put("consumedOn", List.of("tarih", "date", "gun", "day"));
 		INTAKE_ALIASES.put("calories", List.of("kalori", "calories", "kcal", "energy", "enerji", "kalorialimi"));

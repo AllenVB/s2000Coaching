@@ -3,7 +3,7 @@ import { transformations } from '@/data/content'
 
 export function Transformations() {
   return (
-    <section id="basari-hikayeleri" className="scroll-mt-24 border-b border-border bg-surface/40 py-20 sm:py-24">
+    <section id="basari-hikayeleri" className="scroll-mt-24 border-b border-border py-20 sm:py-24">
       <div className="mx-auto max-w-[1280px] px-4 sm:px-6 lg:px-8">
         <div className="mb-16 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <SectionHeading
@@ -18,7 +18,7 @@ export function Transformations() {
 
         <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
           {transformations.map((item) => (
-            <div key={item.name} className="flex flex-col overflow-hidden rounded-2xl border border-border bg-surface">
+            <div key={item.name} className="flex flex-col overflow-hidden rounded-3xl border border-border bg-surface transition-colors hover:border-primary/40">
               <div className="relative aspect-[4/5] overflow-hidden">
                 <img src={item.image} alt={`${item.name} dönüşümü`} className="h-full w-full object-cover" loading="lazy" />
                 <div className="absolute bottom-3 left-3 rounded-md bg-canvas/90 px-2.5 py-1 text-[11px] font-semibold text-text-primary">

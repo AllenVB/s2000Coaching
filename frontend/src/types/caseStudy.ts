@@ -178,6 +178,8 @@ export const FIELD_LABELS: Record<string, string> = {
   hipCm: 'Kalça (cm)',
   armCm: 'Kol (cm)',
   thighCm: 'Bacak (cm)',
+  shoulderCm: 'Omuz (cm)',
+  bodyFatPercent: 'Yağ oranı (%)',
   consumedOn: 'Kayıt tarihi',
   calories: 'Kalori (kcal)',
   proteinG: 'Protein (g)',

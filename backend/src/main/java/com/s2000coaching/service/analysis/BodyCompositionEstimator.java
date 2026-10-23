@@ -31,6 +31,23 @@ public final class BodyCompositionEstimator {
 	 * Picks the best formula the data supports, or returns a result with a null percentage
 	 * naming what is missing. Guessing from fewer inputs would be worse than saying nothing.
 	 */
+	/**
+	 * A reading taken with a scale or a caliper. Narrower than the formulas but not exact:
+	 * a bioimpedance scale moves with hydration, a caliper with whoever is holding it, so it
+	 * carries an uncertainty like everything else here.
+	 */
+	private static final double MEASURED_UNCERTAINTY_POINTS = 2.5;
+
+	/**
+	 * What was measured, rather than what a formula infers. The caller passes this only when
+	 * the record carries a body-fat reading of its own.
+	 */
+	public static BodyComposition fromMeasurement(LocalDate asOf, double weightKg, double percent) {
+		return build("Ölçüm kaydı", percent, weightKg, MEASURED_UNCERTAINTY_POINTS, asOf,
+				"Kaydın kendi yağ oranı ölçümünden alındı, formülle tahmin edilmedi. Tartı ya da "
+						+ "kaliper ölçümü su tutulumundan ve ölçen kişiden etkilenir.");
+	}
+
 	public static BodyComposition estimate(LocalDate asOf, Double weightKg, Integer heightCm, Sex sex,
 			Integer birthYear, Double neckCm, Double waistCm, Double hipCm, int currentYear) {
 		if (weightKg == null) {

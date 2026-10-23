@@ -1,0 +1,21 @@
+databaseChangeLog:
+  - changeSet:
+      id: 020-add-case-study-measurement-columns
+      author: s2000
+      comment: >-
+        Body fat the coach actually measured, and the shoulder tape reading. Both are
+        optional: a record that has neither behaves exactly as before, and a measured body
+        fat is preferred over the formula's estimate when it is there.
+      changes:
+        - addColumn:
+            tableName: case_study_measurement
+            columns:
+              - column: { name: body_fat_percent, type: 'numeric(4, 1)' }
+              - column: { name: shoulder_cm, type: 'numeric(5, 1)' }
+      rollback:
+        - dropColumn:
+            tableName: case_study_measurement
+            columnName: body_fat_percent
+        - dropColumn:
+            tableName: case_study_measurement
+            columnName: shoulder_cm

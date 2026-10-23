@@ -626,6 +626,17 @@ public final class BodyAnalyzer {
 					study.getBirthYear(), null, null, null, currentYear);
 		}
 
+		// A reading beats a formula: when the record carries its own body-fat figure, the
+		// estimate would only be a second opinion on a number the coach already took.
+		for (int i = measurements.size() - 1; i >= 0; i--) {
+			CaseStudyMeasurement candidate = measurements.get(i);
+			if (candidate.getBodyFatPercent() != null) {
+				return BodyCompositionEstimator.fromMeasurement(candidate.getMeasuredOn(),
+						candidate.getWeightKg().doubleValue(),
+						candidate.getBodyFatPercent().doubleValue());
+			}
+		}
+
 		// The most recent row that carries the measurements the formula needs — the latest
 		// weigh-in may have no tape numbers at all.
 		CaseStudyMeasurement best = measurements.get(measurements.size() - 1);

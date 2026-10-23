@@ -5,10 +5,10 @@ import { navigateToSection } from '@/lib/scroll'
 
 export function AppEcosystem() {
   return (
-    <section className="border-b border-border bg-surface/40 py-20 sm:py-24">
+    <section className="ember-wash border-b border-border py-20 sm:py-24">
       <div className="mx-auto grid max-w-[1280px] grid-cols-1 items-center gap-12 px-4 sm:px-6 lg:grid-cols-12 lg:gap-16 lg:px-8">
         <div className="lg:col-span-6">
-          <div className="aspect-[4/3] overflow-hidden rounded-2xl border border-border bg-surface shadow-2xl">
+          <div className="aspect-[4/3] overflow-hidden rounded-3xl border border-border-strong bg-surface shadow-[0_30px_70px_-40px_rgba(0,0,0,0.95)]">
             <img
               src="https://images.unsplash.com/photo-1552674605-db6ffd4facb5?auto=format&fit=crop&w=900&q=80"
               alt="S2000 Coaching dijital performans takip kokpiti"

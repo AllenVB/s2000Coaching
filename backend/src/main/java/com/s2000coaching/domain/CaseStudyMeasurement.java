@@ -53,6 +53,13 @@ public class CaseStudyMeasurement {
 	@Column(name = "thigh_cm", precision = 5, scale = 1)
 	private BigDecimal thighCm;
 
+	@Column(name = "shoulder_cm", precision = 5, scale = 1)
+	private BigDecimal shoulderCm;
+
+	/** What a scale or a caliper actually read, as opposed to what the formulas estimate. */
+	@Column(name = "body_fat_percent", precision = 4, scale = 1)
+	private BigDecimal bodyFatPercent;
+
 	protected CaseStudyMeasurement() {
 	}
 
@@ -125,5 +132,21 @@ public class CaseStudyMeasurement {
 
 	public void setThighCm(BigDecimal thighCm) {
 		this.thighCm = thighCm;
+	}
+
+	public BigDecimal getShoulderCm() {
+		return shoulderCm;
+	}
+
+	public void setShoulderCm(BigDecimal shoulderCm) {
+		this.shoulderCm = shoulderCm;
+	}
+
+	public BigDecimal getBodyFatPercent() {
+		return bodyFatPercent;
+	}
+
+	public void setBodyFatPercent(BigDecimal bodyFatPercent) {
+		this.bodyFatPercent = bodyFatPercent;
 	}
 }

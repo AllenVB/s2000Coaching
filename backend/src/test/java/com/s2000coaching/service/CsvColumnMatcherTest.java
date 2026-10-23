@@ -27,6 +27,26 @@ class CsvColumnMatcherTest {
 					.containsEntry("thighCm", 7);
 		}
 
+		/** The header spellings in the coach's own export, which is what gets imported. */
+		@Test
+		void shouldMatchShoulderAndBodyFatHeaders() {
+			var mapping = CsvColumnMatcher.guessMeasurementColumns(
+					List.of("tarih", "kilo", "omuz", "yag_orani"));
+
+			assertThat(mapping)
+					.containsEntry("shoulderCm", 2)
+					.containsEntry("bodyFatPercent", 3);
+		}
+
+		/** "yagsiz_kutle" is lean mass, not a fat percentage, and nothing imports it. */
+		@Test
+		void shouldNotReadLeanMassAsBodyFat() {
+			var mapping = CsvColumnMatcher.guessMeasurementColumns(
+					List.of("tarih", "kilo", "yagsiz_kutle"));
+
+			assertThat(mapping).doesNotContainKey("bodyFatPercent");
+		}
+
 		@Test
 		void shouldMatchEnglishHeaders() {
 			var mapping = CsvColumnMatcher.guessMeasurementColumns(

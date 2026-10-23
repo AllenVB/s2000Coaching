@@ -70,7 +70,28 @@ export function CheckoutModal() {
         </div>
 
         <div className="flex-1 overflow-y-auto p-6">
-          {createOrder.isSuccess ? (
+          {createOrder.isSuccess && createOrder.data.redirectUrl ? (
+            // The provider wants the buyer on its own 3D Secure page. Saying "order complete"
+            // here would be a lie: nothing has been charged until they come back.
+            <div className="flex flex-col items-center px-4 py-12 text-center">
+              <h3 className="mb-2 text-2xl font-bold text-text-primary">Ödeme Adımına Geçiliyor</h3>
+              <p className="mb-2 max-w-md text-sm leading-relaxed text-text-secondary">
+                Sipariş numaranız: <span className="font-mono font-semibold text-text-primary">
+                  {createOrder.data.orderNumber}
+                </span>
+              </p>
+              <p className="mb-6 max-w-md text-xs leading-relaxed text-text-secondary">
+                Ödemeyi bankanızın güvenli 3D Secure sayfasında tamamlayacaksınız. Sayfa açılmazsa aşağıdaki
+                düğmeye basın.
+              </p>
+              <a
+                href={createOrder.data.redirectUrl}
+                className="inline-flex h-12 items-center justify-center rounded-full bg-primary px-7 text-sm font-semibold uppercase tracking-wide text-canvas transition-colors hover:bg-primary-hover"
+              >
+                Ödemeye Devam Et
+              </a>
+            </div>
+          ) : createOrder.isSuccess ? (
             <div className="flex flex-col items-center px-4 py-12 text-center">
               <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-success/15 text-success">
                 <CheckIcon className="h-7 w-7" />

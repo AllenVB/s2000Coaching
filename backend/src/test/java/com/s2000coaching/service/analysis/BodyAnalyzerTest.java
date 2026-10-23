@@ -631,6 +631,39 @@ class BodyAnalyzerTest {
 	@Nested
 	class Composition {
 
+		/** A reading the coach took outranks anything the formulas infer from a tape. */
+		@Test
+		void shouldPreferAMeasuredBodyFatOverTheFormulas() {
+			study = studyWithBody(180, Sex.ERKEK, 1995);
+			CaseStudyMeasurement latest = weigh(MONDAY, 80.0, 85.0);
+			latest.setNeckCm(BigDecimal.valueOf(38.0));
+			latest.setBodyFatPercent(BigDecimal.valueOf(12.4));
+
+			var composition = BodyAnalyzer.analyze(study, List.of(latest), List.of(), CURRENT_YEAR)
+					.bodyComposition();
+
+			assertThat(composition.method()).isEqualTo("Ölçüm kaydı");
+			assertThat(composition.bodyFatPercent()).isEqualTo(12.4);
+			assertThat(composition.fatMassKg()).isCloseTo(9.9, within(0.2));
+			assertThat(composition.leanMassKg()).isCloseTo(70.1, within(0.2));
+		}
+
+		/** The newest reading, not the newest row: the last weigh-in is often weight alone. */
+		@Test
+		void shouldTakeTheLatestMeasuredBodyFatWhenTheLastRowHasNone() {
+			study = studyWithBody(180, Sex.ERKEK, 1995);
+			CaseStudyMeasurement measured = weigh(MONDAY, 82.0, 86.0);
+			measured.setBodyFatPercent(BigDecimal.valueOf(15.0));
+			CaseStudyMeasurement weightOnly = weigh(MONDAY.plusDays(3), 81.5, null);
+
+			var composition = BodyAnalyzer.analyze(study, List.of(measured, weightOnly), List.of(),
+					CURRENT_YEAR).bodyComposition();
+
+			assertThat(composition.method()).isEqualTo("Ölçüm kaydı");
+			assertThat(composition.bodyFatPercent()).isEqualTo(15.0);
+			assertThat(composition.asOf()).isEqualTo(MONDAY);
+		}
+
 		@Test
 		void shouldUseNavyWhenNeckAndWaistExist() {
 			study = studyWithBody(180, Sex.ERKEK, 1995);

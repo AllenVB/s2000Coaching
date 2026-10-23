@@ -2,12 +2,12 @@ import { trustStats } from '@/data/content'
 
 export function TrustStats() {
   return (
-    <section className="border-b border-border bg-surface/40 py-16 sm:py-20">
+    <section className="border-b border-border py-16 sm:py-20">
       <div className="mx-auto grid max-w-[1280px] grid-cols-1 gap-6 px-4 sm:grid-cols-2 sm:px-6 lg:grid-cols-4 lg:px-8">
         {trustStats.map((stat) => (
           <div
             key={stat.label}
-            className="flex flex-col justify-between rounded-2xl border border-border bg-surface p-6"
+            className="flex flex-col justify-between rounded-3xl border border-border bg-surface p-6 transition-colors hover:border-primary/40"
           >
             <div className="mb-4 text-xs font-semibold uppercase tracking-wider text-text-muted">{stat.label}</div>
             <div>

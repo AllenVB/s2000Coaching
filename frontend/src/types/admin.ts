@@ -7,7 +7,7 @@ export interface CoachNote {
   updatedAt: string
 }
 
-export type OrderStatus = 'PENDING' | 'MOCK_PAID' | 'FAILED'
+export type OrderStatus = 'PENDING' | 'AWAITING_PAYMENT' | 'PAID' | 'FAILED'
 
 export interface OrderSummary {
   orderNumber: string

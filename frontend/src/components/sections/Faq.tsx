@@ -8,7 +8,7 @@ export function Faq() {
   const [openIndex, setOpenIndex] = useState<number | null>(0)
 
   return (
-    <section id="sss" className="scroll-mt-24 border-b border-border bg-surface/40 py-20 sm:py-24">
+    <section id="sss" className="scroll-mt-24 border-b border-border py-20 sm:py-24">
       <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
         <div className="mb-12 mx-auto">
           <SectionHeading eyebrow="Merak Edilenler" title="Sıkça Sorulan Sorular" />
@@ -18,7 +18,7 @@ export function Faq() {
           {faqs.map((item, index) => {
             const isOpen = openIndex === index
             return (
-              <div key={item.question} className="overflow-hidden rounded-xl border border-border bg-surface">
+              <div key={item.question} className="overflow-hidden rounded-2xl border border-border bg-surface transition-colors hover:border-primary/30">
                 <button
                   type="button"
                   onClick={() => setOpenIndex(isOpen ? null : index)}

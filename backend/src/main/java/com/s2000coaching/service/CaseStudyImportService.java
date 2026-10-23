@@ -98,6 +98,9 @@ public class CaseStudyImportService {
 			measurement.setHipCm(decimal(row, mapping.get("hipCm"), rowNumber, "kalça"));
 			measurement.setArmCm(decimal(row, mapping.get("armCm"), rowNumber, "kol"));
 			measurement.setThighCm(decimal(row, mapping.get("thighCm"), rowNumber, "bacak"));
+			measurement.setShoulderCm(decimal(row, mapping.get("shoulderCm"), rowNumber, "omuz"));
+			measurement.setBodyFatPercent(
+					decimal(row, mapping.get("bodyFatPercent"), rowNumber, "yağ oranı"));
 
 			first = first == null || date.isBefore(first) ? date : first;
 			last = last == null || date.isAfter(last) ? date : last;

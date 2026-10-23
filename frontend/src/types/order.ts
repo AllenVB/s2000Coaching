@@ -7,7 +7,7 @@ export interface CreateOrderInput {
   kvkkConsent: boolean
 }
 
-export type OrderStatus = 'PENDING' | 'MOCK_PAID' | 'FAILED'
+export type OrderStatus = 'PENDING' | 'AWAITING_PAYMENT' | 'PAID' | 'FAILED'
 
 export interface OrderResponse {
   orderNumber: string
@@ -15,4 +15,9 @@ export interface OrderResponse {
   priceMinor: number
   status: OrderStatus
   createdAt: string
+  /**
+   * Where to send the buyer to pay, when the provider needs its own 3D Secure page. Null
+   * with the development gateway, which settles the order inside the same request.
+   */
+  redirectUrl: string | null
 }
