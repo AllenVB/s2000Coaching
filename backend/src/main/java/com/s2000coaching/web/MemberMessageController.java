@@ -5,6 +5,7 @@ import com.s2000coaching.service.MemberAuthService;
 import com.s2000coaching.service.MessageService;
 import com.s2000coaching.web.dto.MessageResponse;
 import com.s2000coaching.web.dto.SendMessageRequest;
+import com.s2000coaching.web.dto.UnreadSummaryResponse;
 import jakarta.validation.Valid;
 import java.util.List;
 import org.springframework.http.HttpHeaders;
@@ -32,6 +33,14 @@ public class MemberMessageController {
 			@RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
 		Member member = memberAuthService.requireMember(authorization);
 		return messageService.readThreadAsMember(member.getId());
+	}
+
+	/** Polled for the nav badge; unlike reading the thread it leaves messages unread. */
+	@GetMapping("/api/member/messages/unread")
+	public UnreadSummaryResponse unread(
+			@RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
+		Member member = memberAuthService.requireMember(authorization);
+		return messageService.unreadForMember(member.getId());
 	}
 
 	@PostMapping("/api/member/messages")

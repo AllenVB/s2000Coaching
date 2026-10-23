@@ -141,6 +141,29 @@ yazar.
 Yönetim paneli, **son mesajı okunmamış** (yani cevap bekleyen) üyeleri ayrı bir blokta listeler; koç
 diziyi açtığı anda üye bu kuyruktan düşer.
 
+### Mesaj merkezi (`/yonetim/mesajlar`)
+
+Koç tüm yazışmaları tek listede görür: cevap bekleyenler en üstte, sonra en son hareket eden dizi.
+Liste her üyeyi içerir, böylece hiç yazışmamış bir üyeyle de dizi başlatılabilir. Listeyi ve rozetleri
+besleyen uçlar (`/api/admin/messages/threads`, `/api/admin/messages/unread`,
+`/api/member/messages/unread`) hiçbir mesajı okundu işaretlemez — aksi hâlde düzenli yoklanan rozet
+kendi kendini temizlerdi.
+
+### Hazır yanıtlar
+
+Koçun sık yazdığı mesajlar `message_template` tablosunda durur ve yazma alanının üstünde çip olarak
+çıkar. Çip metni taslağın **sonuna eklenir**, üzerine yazmaz; koç yazdığı bir mesajı "Yazdığını kaydet"
+ile yeni bir hazır yanıta çevirebilir. Başlıklar benzersizdir.
+
+### Kolay iletişim
+
+- Üye ve yönetim menülerindeki **Mesajlar** girdisi okunmamış sayısını rozet olarak gösterir (60 sn'de
+  bir yoklanır); açık bir dizi 15 sn'de bir yenilenir.
+- Üyenin **Bugün** ekranındaki *Koçuna Sor* kartı, sık sorulan soruları tek dokunuşla hazır mesaj
+  olarak açar (`/uye/mesajlar?soru=…`).
+- Yazma alanı **Ctrl + Enter** ile gönderir; Enter satır atlar (üyeler telefondan yazıyor). Dizide gün
+  ayraçları (Bugün / Dün / tarih) ve gönderenin kendi balonunda okundu/okunmadı bilgisi vardır.
+
 ## Sipariş ↔ üyelik
 
 Checkout ad, e-posta ve telefon topluyor ama üye oluşturmuyordu; aynı kişiyi bir de yönetim panelinden

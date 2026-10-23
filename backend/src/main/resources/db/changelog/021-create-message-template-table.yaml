@@ -1,0 +1,73 @@
+databaseChangeLog:
+  - changeSet:
+      id: 035-create-message-template-table
+      author: s2000coaching
+      comment: >
+        The coach's reusable replies, offered as chips above the message composer. They belong
+        to the coach rather than to a member — there is one coach.
+      changes:
+        - createTable:
+            tableName: message_template
+            columns:
+              - column: { name: id, type: uuid, constraints: { primaryKey: true, nullable: false } }
+              - column:
+                  name: title
+                  type: varchar(80)
+                  constraints: { nullable: false, unique: true, uniqueConstraintName: uq_message_template_title }
+              - column: { name: body, type: text, constraints: { nullable: false } }
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+                  constraints: { nullable: false }
+              - column:
+                  name: updated_at
+                  type: timestamp with time zone
+                  constraints: { nullable: false }
+
+  - changeSet:
+      id: 036-seed-message-templates
+      author: s2000coaching
+      comment: >
+        A starting set so the chips are useful before the coach has saved anything. They are
+        ordinary rows: the coach can edit or delete them from the panel.
+      changes:
+        - insert:
+            tableName: message_template
+            columns:
+              - column: { name: id, value: "b1f1c2d0-0001-4a00-9000-000000000001" }
+              - column: { name: title, value: "Haftalık kontrol" }
+              - column:
+                  name: body
+                  value: "Merhaba! Bu haftayı nasıl geçirdin? Ölçümlerini ve antrenman notlarını paylaşabilir misin?"
+              - column: { name: created_at, valueComputed: "CURRENT_TIMESTAMP" }
+              - column: { name: updated_at, valueComputed: "CURRENT_TIMESTAMP" }
+        - insert:
+            tableName: message_template
+            columns:
+              - column: { name: id, value: "b1f1c2d0-0001-4a00-9000-000000000002" }
+              - column: { name: title, value: "Ölçüm hatırlatması" }
+              - column:
+                  name: body
+                  value: "Ölçümlerini bir süredir göremedim. Uygun olduğunda kilo ve çevre ölçülerini girer misin?"
+              - column: { name: created_at, valueComputed: "CURRENT_TIMESTAMP" }
+              - column: { name: updated_at, valueComputed: "CURRENT_TIMESTAMP" }
+        - insert:
+            tableName: message_template
+            columns:
+              - column: { name: id, value: "b1f1c2d0-0001-4a00-9000-000000000003" }
+              - column: { name: title, value: "Plan güncellendi" }
+              - column:
+                  name: body
+                  value: "Antrenman planını güncelledim. Yeni programı üye alanından görebilirsin, takıldığın yer olursa yaz."
+              - column: { name: created_at, valueComputed: "CURRENT_TIMESTAMP" }
+              - column: { name: updated_at, valueComputed: "CURRENT_TIMESTAMP" }
+        - insert:
+            tableName: message_template
+            columns:
+              - column: { name: id, value: "b1f1c2d0-0001-4a00-9000-000000000004" }
+              - column: { name: title, value: "Tebrikler" }
+              - column:
+                  name: body
+                  value: "Bu haftaki ilerlemen çok iyi, eline sağlık. Aynı disiplinle devam edelim."
+              - column: { name: created_at, valueComputed: "CURRENT_TIMESTAMP" }
+              - column: { name: updated_at, valueComputed: "CURRENT_TIMESTAMP" }

@@ -13,7 +13,10 @@ import com.s2000coaching.domain.MessageSender;
 import com.s2000coaching.service.MessageService;
 import com.s2000coaching.exception.UnauthorizedException;
 import com.s2000coaching.service.CoachAuthService;
+import com.s2000coaching.domain.MemberStatus;
+import com.s2000coaching.web.dto.ConversationSummaryResponse;
 import com.s2000coaching.web.dto.MessageResponse;
+import com.s2000coaching.web.dto.UnreadSummaryResponse;
 import com.s2000coaching.web.dto.SendMessageRequest;
 import java.time.Instant;
 import java.util.List;
@@ -96,5 +99,36 @@ class AdminMessageControllerTest {
 				.hasStatus(HttpStatus.OK)
 				.bodyJson()
 				.extractingPath("$.sender").isEqualTo("COACH");
+	}
+
+	@Test
+	void shouldListTheInboxWithoutTouchingAnyThread() {
+		UUID memberId = UUID.randomUUID();
+		when(messageService.conversations()).thenReturn(List.of(new ConversationSummaryResponse(memberId,
+				"Ahmet Yılmaz", "sporcu@example.com", MemberStatus.ACTIVE, 2, true, MessageSender.MEMBER,
+				"dizim ağrıyor", Instant.now())));
+
+		assertThat(mvc.get().uri("/api/admin/messages/threads").header(HttpHeaders.AUTHORIZATION, BEARER))
+				.hasStatus(HttpStatus.OK)
+				.bodyJson()
+				.extractingPath("$[0].unreadFromMember").isEqualTo(2);
+
+		verify(messageService, never()).readThreadAsCoach(any());
+	}
+
+	@Test
+	void shouldReportTheCoachUnreadCount() {
+		when(messageService.unreadForCoach()).thenReturn(new UnreadSummaryResponse(3, null));
+
+		assertThat(mvc.get().uri("/api/admin/messages/unread").header(HttpHeaders.AUTHORIZATION, BEARER))
+				.hasStatus(HttpStatus.OK)
+				.bodyJson()
+				.extractingPath("$.unread").isEqualTo(3);
+	}
+
+	@Test
+	void shouldRejectTheInboxWithoutTheAdminToken() {
+		assertThat(mvc.get().uri("/api/admin/messages/threads")).hasStatus(HttpStatus.UNAUTHORIZED);
+		verify(messageService, never()).conversations();
 	}
 }
