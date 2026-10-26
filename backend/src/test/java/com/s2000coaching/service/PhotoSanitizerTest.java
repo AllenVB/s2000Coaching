@@ -110,7 +110,9 @@ class PhotoSanitizerTest {
 	void shouldRejectBytesThatAreNotAnImage() {
 		byte[] text = "<script>alert(1)</script>".getBytes(StandardCharsets.UTF_8);
 
-		assertThatThrownBy(() -> PhotoSanitizer.sanitize(text)).isInstanceOf(BadRequestException.class);
+		assertThatThrownBy(() -> PhotoSanitizer.sanitize(text))
+				.isInstanceOf(BadRequestException.class)
+				.hasMessageContaining("JPEG ya da PNG");
 	}
 
 	@Test

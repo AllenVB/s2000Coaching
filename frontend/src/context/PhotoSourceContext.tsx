@@ -50,6 +50,43 @@ export function CoachPhotoSourceProvider({ children }: { children: ReactNode }) 
   return <PhotoSourceContext.Provider value={value}>{children}</PhotoSourceContext.Provider>
 }
 
+/**
+ * Case-study photos on the coach side. A separate endpoint from member photos on purpose:
+ * these belong to a case study, and the member routes must never serve them.
+ */
+export function CaseStudyCoachPhotoSourceProvider({ children }: { children: ReactNode }) {
+  const { token } = useAdminAuth()
+
+  const value = useMemo<PhotoSource>(
+    () => ({
+      contentPath: (photoId) => `/api/admin/case-study-photos/${photoId}/content`,
+      headers: token ? adminHeaders(token) : null,
+    }),
+    [token],
+  )
+
+  return <PhotoSourceContext.Provider value={value}>{children}</PhotoSourceContext.Provider>
+}
+
+/** The public page: no credentials, and the server decides whether a photo is shown. */
+export function PublicCaseStudyPhotoSourceProvider({
+  slug,
+  children,
+}: {
+  slug: string
+  children: ReactNode
+}) {
+  const value = useMemo<PhotoSource>(
+    () => ({
+      contentPath: (photoId) => `/api/case-studies/${slug}/photos/${photoId}/content`,
+      headers: {},
+    }),
+    [slug],
+  )
+
+  return <PhotoSourceContext.Provider value={value}>{children}</PhotoSourceContext.Provider>
+}
+
 export function usePhotoSource(): PhotoSource {
   const value = useContext(PhotoSourceContext)
   if (!value) {

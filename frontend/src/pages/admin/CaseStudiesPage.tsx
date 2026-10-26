@@ -8,6 +8,7 @@ import {
   useSetCaseStudyPublished,
   useUpdateCaseStudy,
 } from '@/api/caseStudyApi'
+import { CaseStudyPhotosPanel } from '@/components/admin/CaseStudyPhotosPanel'
 import { CsvImportPanel } from '@/components/admin/CsvImportPanel'
 import { AnalysisReport } from '@/components/caseStudy/AnalysisReport'
 import { Button } from '@/components/ui/Button'
@@ -237,10 +238,12 @@ function StudyDetail({ study, onBack }: { study: CaseStudy; onBack: () => void }
         )}
       </section>
 
+      <CaseStudyPhotosPanel study={study} />
+
       {confirmingDelete ? (
         <ConfirmDialog
           title="Vaka çalışması silinsin mi?"
-          description={`"${study.title}" ve içe aktarılmış ${study.measurementCount} ölçüm, ${study.intakeCount} beslenme kaydı kalıcı olarak silinecek.`}
+          description={`"${study.title}" ve içe aktarılmış ${study.measurementCount} ölçüm, ${study.intakeCount} beslenme kaydı ve ${study.photoCount} fotoğraf kalıcı olarak silinecek.`}
           confirmLabel="Sil"
           tone="danger"
           isPending={deleteStudy.isPending}

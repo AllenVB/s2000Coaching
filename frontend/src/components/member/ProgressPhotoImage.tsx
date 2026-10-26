@@ -11,7 +11,7 @@ export function ProgressPhotoImage({
   photo,
   className = '',
 }: {
-  photo: ProgressPhoto
+  photo: Pick<ProgressPhoto, 'id' | 'takenOn'>
   className?: string
 }) {
   const { url, error } = usePhotoObjectUrl(photo.id)

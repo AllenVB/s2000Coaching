@@ -63,8 +63,11 @@ public final class PhotoSanitizer {
 				&& bytes[3] == 'G') {
 			return "png";
 		}
-		throw new BadRequestException(
-				"Vaka fotoğrafı yalnızca JPEG veya PNG olabilir; WebP temizlenemediği için kabul edilmez.");
+		boolean webp = bytes.length > 12 && bytes[0] == 'R' && bytes[1] == 'I' && bytes[2] == 'F'
+				&& bytes[3] == 'F' && bytes[8] == 'W' && bytes[9] == 'E' && bytes[10] == 'B' && bytes[11] == 'P';
+		throw new BadRequestException(webp
+				? "WebP kabul edilmez: bu biçim temizlenemediği için gizli verisi silinemez. JPEG veya PNG yükleyin."
+				: "Dosya bir JPEG ya da PNG fotoğraf değil.");
 	}
 
 	private static BufferedImage decode(byte[] bytes, String format) {
