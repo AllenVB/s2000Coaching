@@ -8,6 +8,7 @@ import { memberHeaders } from '@/lib/memberSession'
 import type {
   Exercise,
   SaveWorkoutLogInput,
+  TrainingStats,
   TrainingPlan,
   UpsertExerciseInput,
   UpsertPlanExerciseInput,
@@ -306,6 +307,30 @@ export function useSaveWorkoutLog() {
       // The plan carries "last performed", so it has to be refetched alongside the logs.
       queryClient.invalidateQueries({ queryKey: ['member-training-plan'] })
       queryClient.invalidateQueries({ queryKey: ['member-workout-logs'] })
+      queryClient.invalidateQueries({ queryKey: ['member-training-stats'] })
     },
+  })
+}
+
+/** Records, weekly volume and next-session suggestions for the signed-in member. */
+export function useMyTrainingStats() {
+  const { session } = useMemberAuth()
+
+  return useQuery({
+    queryKey: ['member-training-stats'],
+    queryFn: () =>
+      apiFetch<TrainingStats>('/api/member/training-stats', { headers: memberHeaders(session!.token) }),
+    enabled: Boolean(session),
+  })
+}
+
+export function useMemberTrainingStats(memberId: string) {
+  const { token } = useAdminAuth()
+
+  return useQuery({
+    queryKey: ['admin-member-training-stats', memberId],
+    queryFn: () =>
+      apiFetch<TrainingStats>(`/api/admin/members/${memberId}/training-stats`, { headers: adminHeaders(token!) }),
+    enabled: Boolean(token),
   })
 }

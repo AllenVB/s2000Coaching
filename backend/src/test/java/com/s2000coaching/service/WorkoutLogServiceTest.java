@@ -68,7 +68,7 @@ class WorkoutLogServiceTest {
 
 	private SaveWorkoutLogRequest request(int reps, String weight) {
 		return new SaveWorkoutLogRequest(day.getId(), TODAY, "  iyi  ", List.of(
-				new SaveWorkoutLogRequest.SetEntry(planExercise.getId(), 1, reps, new BigDecimal(weight))));
+				new SaveWorkoutLogRequest.SetEntry(planExercise.getId(), 1, reps, new BigDecimal(weight), null)));
 	}
 
 	@Test
@@ -127,7 +127,7 @@ class WorkoutLogServiceTest {
 		when(workoutLogRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
 		var request = new SaveWorkoutLogRequest(day.getId(), TODAY, null, List.of(
-				new SaveWorkoutLogRequest.SetEntry(UUID.randomUUID(), 1, 10, new BigDecimal("60.0"))));
+				new SaveWorkoutLogRequest.SetEntry(UUID.randomUUID(), 1, 10, new BigDecimal("60.0"), null)));
 
 		assertThatThrownBy(() -> workoutLogService.save(member, request))
 				.isInstanceOf(BadRequestException.class)
@@ -157,5 +157,22 @@ class WorkoutLogServiceTest {
 		when(planRepository.findByMemberIdAndActiveTrue(member.getId())).thenReturn(Optional.empty());
 
 		assertThat(workoutLogService.findActivePlan(member.getId())).isEmpty();
+	}
+
+	/** A member who leaves the effort blank stays unrated; it must not be stored as "easy". */
+	@Test
+	void shouldStoreTheEffortRatingOnlyWhenGiven() {
+		when(trainingPlanService.getDayOrThrow(day.getId())).thenReturn(day);
+		when(workoutLogRepository.findByMemberIdAndDayIdAndPerformedOn(member.getId(), day.getId(), TODAY))
+				.thenReturn(Optional.empty());
+		when(workoutLogRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+		var response = workoutLogService.save(member, new SaveWorkoutLogRequest(day.getId(), TODAY, null, List.of(
+				new SaveWorkoutLogRequest.SetEntry(planExercise.getId(), 1, 8, new BigDecimal("60.0"),
+						new BigDecimal("8.5")),
+				new SaveWorkoutLogRequest.SetEntry(planExercise.getId(), 2, 8, new BigDecimal("60.0"), null))));
+
+		assertThat(response.sets().get(0).rpe()).isEqualByComparingTo("8.5");
+		assertThat(response.sets().get(1).rpe()).isNull();
 	}
 }

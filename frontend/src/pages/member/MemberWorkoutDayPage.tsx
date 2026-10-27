@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 
-import { useMyTrainingPlan, useSaveWorkoutLog } from '@/api/trainingApi'
+import { useMyTrainingPlan, useMyTrainingStats, useSaveWorkoutLog } from '@/api/trainingApi'
+import { RestTimer } from '@/components/training/RestTimer'
 import { ExerciseVideo } from '@/components/training/ExerciseVideo'
 import { Button } from '@/components/ui/Button'
 import { inputClasses, textareaClasses } from '@/components/ui/FormField'
@@ -12,6 +13,7 @@ import type { PlanExercise } from '@/types/training'
 interface SetEntry {
   reps: string
   weightKg: string
+  rpe: string
 }
 
 const today = () => new Date().toISOString().slice(0, 10)
@@ -24,6 +26,7 @@ export function MemberWorkoutDayPage() {
   const { dayId } = useParams<{ dayId: string }>()
   const { data: plan, isLoading } = useMyTrainingPlan()
   const saveLog = useSaveWorkoutLog()
+  const { data: stats } = useMyTrainingStats()
 
   const day = plan?.days.find((candidate) => candidate.id === dayId)
 
@@ -43,6 +46,9 @@ export function MemberWorkoutDayPage() {
         return {
           reps: previous ? String(previous.reps) : '',
           weightKg: previous?.weightKg != null ? String(previous.weightKg) : targetAsText(planExercise),
+          // Effort is a fresh judgement each session; carrying last time's number over would
+          // record a rating the member never gave.
+          rpe: '',
         }
       })
     })
@@ -87,6 +93,7 @@ export function MemberWorkoutDayPage() {
           setNumber,
           reps: Number(entry.reps),
           weightKg: entry.weightKg.trim() === '' ? null : Number(entry.weightKg),
+          rpe: entry.rpe.trim() === '' ? null : Number(entry.rpe),
         })),
     )
 
@@ -123,6 +130,8 @@ export function MemberWorkoutDayPage() {
               <p className="mb-3 text-xs leading-relaxed text-text-secondary">{planExercise.note}</p>
             ) : null}
 
+            <SuggestionLine suggestion={stats?.exercises.find((s) => s.exerciseId === planExercise.exercise.id)?.suggestion} />
+
             <div className="mb-3">
               <ExerciseVideo exercise={planExercise.exercise} />
             </div>
@@ -154,9 +163,27 @@ export function MemberWorkoutDayPage() {
                     aria-label={`${planExercise.exercise.name} ${index + 1}. set kilo`}
                     className={`${inputClasses} flex-1`}
                   />
+                  <input
+                    value={entry.rpe}
+                    onChange={(event) => setValue(planExercise.id, index, 'rpe', event.target.value)}
+                    type="number"
+                    inputMode="decimal"
+                    step="0.5"
+                    min={1}
+                    max={10}
+                    placeholder="RPE"
+                    aria-label={`${planExercise.exercise.name} ${index + 1}. set zorluk (1-10)`}
+                    className={`${inputClasses} w-20 shrink-0`}
+                  />
                 </li>
               ))}
             </ul>
+
+            {planExercise.restSeconds ? (
+              <div className="mt-3">
+                <RestTimer seconds={planExercise.restSeconds} />
+              </div>
+            ) : null}
           </section>
         ))}
 
@@ -195,6 +222,26 @@ export function MemberWorkoutDayPage() {
         </Button>
       </form>
     </>
+  )
+}
+
+/** What to do next time, with the reasoning; silent when there is nothing to base it on. */
+function SuggestionLine({
+  suggestion,
+}: {
+  suggestion: { kind: 'INCREASE' | 'HOLD' | 'INSUFFICIENT'; text: string } | undefined
+}) {
+  if (!suggestion || suggestion.kind === 'INSUFFICIENT') {
+    return null
+  }
+  return (
+    <p
+      className={`mb-3 rounded-lg px-3 py-2 text-xs leading-relaxed ${
+        suggestion.kind === 'INCREASE' ? 'bg-success/10 text-success' : 'bg-surface-elevated text-text-secondary'
+      }`}
+    >
+      {suggestion.text}
+    </p>
   )
 }
 

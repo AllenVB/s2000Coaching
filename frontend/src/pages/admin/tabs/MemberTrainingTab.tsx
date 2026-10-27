@@ -5,9 +5,11 @@ import {
   useCreateMemberPlan,
   useDeletePlan,
   useMemberPlans,
+  useMemberTrainingStats,
   useMemberWorkoutLogs,
   usePlanTemplates,
 } from '@/api/trainingApi'
+import { TrainingStatsView } from '@/components/training/TrainingStatsView'
 import { PlanEditor } from '@/components/training/PlanEditor'
 import { Button } from '@/components/ui/Button'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
@@ -21,6 +23,7 @@ export function MemberTrainingTab() {
   const { data: plans, isLoading, isError, error } = useMemberPlans(member.id)
   const { data: templates } = usePlanTemplates()
   const { data: logs } = useMemberWorkoutLogs(member.id)
+  const { data: stats } = useMemberTrainingStats(member.id)
 
   const createPlan = useCreateMemberPlan(member.id)
   const activatePlan = useActivatePlan()
@@ -193,6 +196,8 @@ export function MemberTrainingTab() {
           <p className="text-sm italic text-text-muted">Üye henüz antrenman kaydı girmedi.</p>
         )}
       </section>
+
+      {stats ? <TrainingStatsView stats={stats} /> : null}
 
       {deletingPlan ? (
         <ConfirmDialog

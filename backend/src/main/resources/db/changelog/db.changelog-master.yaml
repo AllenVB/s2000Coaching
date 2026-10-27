@@ -52,3 +52,5 @@ databaseChangeLog:
       file: db/changelog/023-create-member-intake-table.yaml
   - include:
       file: db/changelog/024-add-payment-and-membership.yaml
+  - include:
+      file: db/changelog/025-add-set-log-rpe.yaml

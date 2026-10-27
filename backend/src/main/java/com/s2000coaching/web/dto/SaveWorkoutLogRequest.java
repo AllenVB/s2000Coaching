@@ -24,6 +24,7 @@ public record SaveWorkoutLogRequest(
 			@NotNull UUID planExerciseId,
 			@NotNull @Min(1) @Max(50) Integer setNumber,
 			@NotNull @Min(0) @Max(1000) Integer reps,
-			@DecimalMin("0.0") @DecimalMax("999.0") BigDecimal weightKg) {
+			@DecimalMin("0.0") @DecimalMax("999.0") BigDecimal weightKg,
+			@DecimalMin("1.0") @DecimalMax("10.0") BigDecimal rpe) {
 	}
 }

@@ -81,6 +81,6 @@ final class TrainingPlanMapper {
 
 	static SetLogResponse toSetResponse(SetLog setLog) {
 		return new SetLogResponse(setLog.getPlanExercise().getId(), setLog.getSetNumber(), setLog.getReps(),
-				setLog.getWeightKg());
+				setLog.getWeightKg(), setLog.getRpe());
 	}
 }

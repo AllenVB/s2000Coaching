@@ -34,6 +34,10 @@ public class SetLog {
 	@Column(name = "weight_kg", precision = 6, scale = 2)
 	private BigDecimal weightKg;
 
+	/** Perceived effort, 1 to 10; null when the member did not say. */
+	@Column(precision = 3, scale = 1)
+	private BigDecimal rpe;
+
 	protected SetLog() {
 	}
 
@@ -45,6 +49,14 @@ public class SetLog {
 		this.setNumber = setNumber;
 		this.reps = reps;
 		this.weightKg = weightKg;
+	}
+
+	public BigDecimal getRpe() {
+		return rpe;
+	}
+
+	public void setRpe(BigDecimal rpe) {
+		this.rpe = rpe;
 	}
 
 	public UUID getId() {
