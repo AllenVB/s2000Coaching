@@ -16,4 +16,8 @@ public interface TrainingPlanRepository extends JpaRepository<TrainingPlan, UUID
 	Optional<TrainingPlan> findByMemberIdAndActiveTrue(UUID memberId);
 
 	void deleteAllByMemberId(UUID memberId);
+
+	/** Members who currently have a plan to follow. */
+	@org.springframework.data.jpa.repository.Query("select p.member.id from TrainingPlan p where p.active = true and p.member is not null")
+	List<UUID> findMemberIdsWithActivePlan();
 }

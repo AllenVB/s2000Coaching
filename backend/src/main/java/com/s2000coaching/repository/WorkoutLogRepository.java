@@ -20,4 +20,8 @@ public interface WorkoutLogRepository extends JpaRepository<WorkoutLog, UUID> {
 
 	/** Logs point at plan days, so they must go before the days that own them. */
 	void deleteAllByDayIdIn(List<UUID> dayIds);
+
+	/** Newest session per member, in one pass: the attention panel must not query per member. */
+	@org.springframework.data.jpa.repository.Query("select w.member.id, max(w.performedOn) from WorkoutLog w group by w.member.id")
+	List<Object[]> latestPerformedOnPerMember();
 }

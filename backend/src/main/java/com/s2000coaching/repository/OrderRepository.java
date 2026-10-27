@@ -18,4 +18,6 @@ public interface OrderRepository extends JpaRepository<Order, UUID> {
 
 	/** Orders placed with this address that are not attached to a member yet. */
 	List<Order> findAllByEmailIgnoreCaseAndMemberIsNull(String email);
+
+	List<Order> findAllByStatusOrderByCreatedAtAsc(com.s2000coaching.domain.OrderStatus status);
 }

@@ -26,4 +26,7 @@ public interface MeasurementRepository extends JpaRepository<Measurement, UUID> 
 			  )
 			""")
 	List<UUID> findActiveMemberIdsWithoutMeasurementSince(LocalDate cutoff);
+
+	@Query("select m.member.id, max(m.measuredOn) from Measurement m group by m.member.id")
+	List<Object[]> latestMeasuredOnPerMember();
 }
