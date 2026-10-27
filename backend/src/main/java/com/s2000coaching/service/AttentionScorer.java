@@ -34,7 +34,7 @@ public final class AttentionScorer {
 	/** What is known about one member. Dates are null when nothing has ever been recorded. */
 	public record Signals(UUID memberId, String fullName, LocalDate joinedOn, boolean hasTrainingPlan,
 			boolean hasNutritionPlan, LocalDate lastWorkout, LocalDate lastMeasurement, LocalDate lastIntake,
-			boolean unreadMessage, LocalDate membershipEnd) {
+			boolean unreadMessage, LocalDate membershipEnd, boolean unansweredCheckIn) {
 	}
 
 	/** {@code code} is stable for the UI; {@code label} is what the coach reads. */
@@ -50,6 +50,10 @@ public final class AttentionScorer {
 
 		if (s.unreadMessage()) {
 			reasons.add(new Reason("MESSAGE", "Cevap bekleyen mesajı var", 4));
+		}
+
+		if (s.unansweredCheckIn()) {
+			reasons.add(new Reason("CHECK_IN", "Yanıt bekleyen haftalık değerlendirmesi var", 3));
 		}
 
 		if (s.membershipEnd() != null) {

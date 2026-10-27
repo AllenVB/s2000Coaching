@@ -15,7 +15,7 @@ class AttentionScorerTest {
 	private static Signals base() {
 		// Active for months, plans of both kinds, everything logged yesterday: nothing to flag.
 		return new Signals(UUID.randomUUID(), "Ahmet", LONG_AGO, true, true, TODAY.minusDays(1),
-				TODAY.minusDays(3), TODAY.minusDays(1), false, TODAY.plusMonths(2));
+				TODAY.minusDays(3), TODAY.minusDays(1), false, TODAY.plusMonths(2), false);
 	}
 
 	private static Signals with(java.util.function.UnaryOperator<Builder> change) {
@@ -26,37 +26,37 @@ class AttentionScorerTest {
 	private record Builder(Signals s) {
 		Builder workout(LocalDate d) {
 			return new Builder(new Signals(s.memberId(), s.fullName(), s.joinedOn(), s.hasTrainingPlan(),
-					s.hasNutritionPlan(), d, s.lastMeasurement(), s.lastIntake(), s.unreadMessage(), s.membershipEnd()));
+					s.hasNutritionPlan(), d, s.lastMeasurement(), s.lastIntake(), s.unreadMessage(), s.membershipEnd(), false));
 		}
 
 		Builder measurement(LocalDate d) {
 			return new Builder(new Signals(s.memberId(), s.fullName(), s.joinedOn(), s.hasTrainingPlan(),
-					s.hasNutritionPlan(), s.lastWorkout(), d, s.lastIntake(), s.unreadMessage(), s.membershipEnd()));
+					s.hasNutritionPlan(), s.lastWorkout(), d, s.lastIntake(), s.unreadMessage(), s.membershipEnd(), false));
 		}
 
 		Builder intake(LocalDate d) {
 			return new Builder(new Signals(s.memberId(), s.fullName(), s.joinedOn(), s.hasTrainingPlan(),
-					s.hasNutritionPlan(), s.lastWorkout(), s.lastMeasurement(), d, s.unreadMessage(), s.membershipEnd()));
+					s.hasNutritionPlan(), s.lastWorkout(), s.lastMeasurement(), d, s.unreadMessage(), s.membershipEnd(), false));
 		}
 
 		Builder joined(LocalDate d) {
 			return new Builder(new Signals(s.memberId(), s.fullName(), d, s.hasTrainingPlan(), s.hasNutritionPlan(),
-					null, null, null, s.unreadMessage(), s.membershipEnd()));
+					null, null, null, s.unreadMessage(), s.membershipEnd(), false));
 		}
 
 		Builder plans(boolean training, boolean nutrition) {
 			return new Builder(new Signals(s.memberId(), s.fullName(), s.joinedOn(), training, nutrition,
-					s.lastWorkout(), s.lastMeasurement(), s.lastIntake(), s.unreadMessage(), s.membershipEnd()));
+					s.lastWorkout(), s.lastMeasurement(), s.lastIntake(), s.unreadMessage(), s.membershipEnd(), false));
 		}
 
 		Builder unread() {
 			return new Builder(new Signals(s.memberId(), s.fullName(), s.joinedOn(), s.hasTrainingPlan(),
-					s.hasNutritionPlan(), s.lastWorkout(), s.lastMeasurement(), s.lastIntake(), true, s.membershipEnd()));
+					s.hasNutritionPlan(), s.lastWorkout(), s.lastMeasurement(), s.lastIntake(), true, s.membershipEnd(), false));
 		}
 
 		Builder membershipEnd(LocalDate d) {
 			return new Builder(new Signals(s.memberId(), s.fullName(), s.joinedOn(), s.hasTrainingPlan(),
-					s.hasNutritionPlan(), s.lastWorkout(), s.lastMeasurement(), s.lastIntake(), s.unreadMessage(), d));
+					s.hasNutritionPlan(), s.lastWorkout(), s.lastMeasurement(), s.lastIntake(), s.unreadMessage(), d, false));
 		}
 
 		Signals build() {
@@ -123,6 +123,15 @@ class AttentionScorerTest {
 		assertThat(codes(item)).contains("NO_WORKOUT", "NO_MEASUREMENT", "NO_INTAKE");
 		assertThat(item.reasons().stream().filter(r -> r.code().equals("NO_WORKOUT")).findFirst().orElseThrow().label())
 				.contains("30 gündür");
+	}
+
+	@Test
+	void shouldFlagACheckInTheCoachHasNotAnsweredYet() {
+		var s = base();
+		var waiting = new Signals(s.memberId(), s.fullName(), s.joinedOn(), true, true, s.lastWorkout(),
+				s.lastMeasurement(), s.lastIntake(), false, s.membershipEnd(), true);
+
+		assertThat(codes(AttentionScorer.score(waiting, TODAY))).containsExactly("CHECK_IN");
 	}
 
 	@Test
