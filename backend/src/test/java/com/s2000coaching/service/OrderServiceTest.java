@@ -64,7 +64,7 @@ class OrderServiceTest {
 			when(packageService.getActiveOrThrow(sixMonthPackage.getId())).thenReturn(sixMonthPackage);
 			when(orderRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
-			OrderResponse response = service("").createOrder(request(null));
+			OrderResponse response = service("").createOrder(request(null), "203.0.113.9");
 
 			assertThat(response.status()).isEqualTo(OrderStatus.MOCK_PAID);
 			assertThat(response.paymentMethod()).isEqualTo(PaymentMethod.MOCK);
@@ -82,7 +82,7 @@ class OrderServiceTest {
 			when(packageService.getActiveOrThrow(sixMonthPackage.getId())).thenReturn(sixMonthPackage);
 			when(orderRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
-			OrderResponse response = service("TR33 0006 1005 1978 6457 8413 26").createOrder(request(null));
+			OrderResponse response = service("TR33 0006 1005 1978 6457 8413 26").createOrder(request(null), "203.0.113.9");
 
 			assertThat(response.status()).isEqualTo(OrderStatus.AWAITING_TRANSFER);
 			assertThat(response.paymentMethod()).isEqualTo(PaymentMethod.IBAN);
@@ -96,7 +96,7 @@ class OrderServiceTest {
 		void shouldRefuseTheMockMethodWhenARealOneIsConfigured() {
 			when(packageService.getActiveOrThrow(sixMonthPackage.getId())).thenReturn(sixMonthPackage);
 
-			assertThatThrownBy(() -> service("TR330006100519786457841326").createOrder(request(PaymentMethod.MOCK)))
+			assertThatThrownBy(() -> service("TR330006100519786457841326").createOrder(request(PaymentMethod.MOCK), "203.0.113.9"))
 					.isInstanceOf(BadRequestException.class);
 			verify(orderRepository, never()).save(any());
 		}
@@ -106,7 +106,7 @@ class OrderServiceTest {
 			when(packageService.getActiveOrThrow(sixMonthPackage.getId())).thenReturn(sixMonthPackage);
 			when(orderRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
-			service("TR330006100519786457841326").createOrder(request(PaymentMethod.IBAN));
+			service("TR330006100519786457841326").createOrder(request(PaymentMethod.IBAN), "203.0.113.9");
 
 			ArgumentCaptor<com.s2000coaching.domain.Order> captor = ArgumentCaptor
 					.forClass(com.s2000coaching.domain.Order.class);

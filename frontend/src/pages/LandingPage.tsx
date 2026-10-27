@@ -2,6 +2,7 @@ import { CartDrawer } from '@/components/cart/CartDrawer'
 import { CheckoutModal } from '@/components/cart/CheckoutModal'
 import { Footer } from '@/components/layout/Footer'
 import { Header } from '@/components/layout/Header'
+import { PaymentResultBanner } from '@/components/layout/PaymentResultBanner'
 import { AppEcosystem } from '@/components/sections/AppEcosystem'
 import { Experience } from '@/components/sections/Experience'
 import { Faq } from '@/components/sections/Faq'
@@ -20,6 +21,7 @@ export function LandingPage() {
     <CartProvider>
       <PricingCategoryProvider>
         <Header />
+        <PaymentResultBanner />
         <main>
           <Hero />
           <TrustStats />

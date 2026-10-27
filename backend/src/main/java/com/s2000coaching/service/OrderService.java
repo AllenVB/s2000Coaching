@@ -6,6 +6,7 @@ import com.s2000coaching.domain.OrderStatus;
 import com.s2000coaching.domain.PaymentMethod;
 import com.s2000coaching.exception.NotFoundException;
 import com.s2000coaching.payment.BankDetails;
+import com.s2000coaching.payment.PaymentContext;
 import com.s2000coaching.payment.PaymentGateway;
 import com.s2000coaching.payment.PaymentInitiation;
 import com.s2000coaching.payment.PaymentMethods;
@@ -36,7 +37,7 @@ public class OrderService {
 	}
 
 	@Transactional
-	public OrderResponse createOrder(CreateOrderRequest request) {
+	public OrderResponse createOrder(CreateOrderRequest request, String clientIp) {
 		CoachingPackage coachingPackage = packageService.getActiveOrThrow(request.packageId());
 
 		Order order = new Order(
@@ -54,7 +55,7 @@ public class OrderService {
 
 		// Resolved before anything is saved: an unavailable method must not leave an order behind.
 		PaymentGateway gateway = paymentMethods.resolve(request.paymentMethod());
-		PaymentInitiation initiation = gateway.initiate(order);
+		PaymentInitiation initiation = gateway.initiate(order, new PaymentContext(clientIp));
 		order.setPaymentMethod(gateway.method());
 		order.setStatus(initiation.status());
 		order.setPaymentReference(initiation.reference());

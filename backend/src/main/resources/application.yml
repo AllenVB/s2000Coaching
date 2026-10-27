@@ -81,6 +81,21 @@ app:
       number: ${PAYMENT_IBAN:}
       account-holder: ${PAYMENT_IBAN_HOLDER:}
       bank-name: ${PAYMENT_IBAN_BANK:}
+    # Card payments through iyzico's hosted page. All three of api-key, secret-key and
+    # callback-url must be set or the card option is not offered. callback-url is where iyzico
+    # sends the buyer's browser afterwards: the PUBLIC address of THIS backend plus
+    # /api/payments/iyzico/callback. base-url stays on the sandbox until a payment has been
+    # tried there; production is https://api.iyzipay.com.
+    iyzico:
+      api-key: ${PAYMENT_IYZICO_API_KEY:}
+      secret-key: ${PAYMENT_IYZICO_SECRET_KEY:}
+      base-url: ${PAYMENT_IYZICO_BASE_URL:https://sandbox-api.iyzipay.com}
+      callback-url: ${PAYMENT_IYZICO_CALLBACK_URL:}
+      # iyzico insists on an identity number and an address for the buyer; checkout collects
+      # neither, so these are placeholders unless the shop needs real ones for invoicing.
+      buyer-identity-number: ${PAYMENT_IYZICO_BUYER_IDENTITY:11111111111}
+      buyer-address: ${PAYMENT_IYZICO_BUYER_ADDRESS:Dijital hizmet - adres belirtilmedi}
+      buyer-city: ${PAYMENT_IYZICO_BUYER_CITY:Istanbul}
   photos:
     # Only the key lives in the database; the bytes live here. A deployment on more than one
     # machine needs a shared volume or an object-storage PhotoStorage implementation.

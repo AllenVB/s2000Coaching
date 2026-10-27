@@ -39,7 +39,7 @@ public class BankTransferPaymentGateway implements PaymentGateway {
 	}
 
 	@Override
-	public PaymentInitiation initiate(Order order) {
+	public PaymentInitiation initiate(Order order, PaymentContext context) {
 		return new PaymentInitiation(OrderStatus.AWAITING_TRANSFER, order.getOrderNumber(), null);
 	}
 

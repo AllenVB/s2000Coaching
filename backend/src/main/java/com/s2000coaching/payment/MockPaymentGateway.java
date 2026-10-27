@@ -25,7 +25,7 @@ public class MockPaymentGateway implements PaymentGateway {
 	}
 
 	@Override
-	public PaymentInitiation initiate(Order order) {
+	public PaymentInitiation initiate(Order order, PaymentContext context) {
 		return new PaymentInitiation(OrderStatus.MOCK_PAID, "MOCK-" + UUID.randomUUID(), null);
 	}
 }

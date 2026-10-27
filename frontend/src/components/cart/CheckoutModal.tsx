@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 import { useCreateOrder, usePaymentMethods } from '@/api/ordersApi'
 import { Button } from '@/components/ui/Button'
@@ -20,6 +20,14 @@ export function CheckoutModal() {
   // The first offered method until the buyer picks another.
   const method = chosenMethod ?? methods?.[0]?.method ?? null
   const selected = methods?.find((option) => option.method === method) ?? null
+
+  // The card provider's own page takes over: send the buyer there as soon as the order exists.
+  const redirectUrl = createOrder.isSuccess ? createOrder.data.redirectUrl : null
+  useEffect(() => {
+    if (redirectUrl) {
+      window.location.assign(redirectUrl)
+    }
+  }, [redirectUrl])
 
   const {
     register,

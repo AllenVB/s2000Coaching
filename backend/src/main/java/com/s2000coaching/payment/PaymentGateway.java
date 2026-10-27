@@ -16,5 +16,5 @@ public interface PaymentGateway {
 	boolean enabled();
 
 	/** Starts payment for the order and says what state it is now in. */
-	PaymentInitiation initiate(Order order);
+	PaymentInitiation initiate(Order order, PaymentContext context);
 }

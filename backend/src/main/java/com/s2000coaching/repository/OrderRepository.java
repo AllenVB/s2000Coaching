@@ -20,4 +20,7 @@ public interface OrderRepository extends JpaRepository<Order, UUID> {
 	List<Order> findAllByEmailIgnoreCaseAndMemberIsNull(String email);
 
 	List<Order> findAllByStatusOrderByCreatedAtAsc(com.s2000coaching.domain.OrderStatus status);
+
+	/** The order a card provider's token was issued for. */
+	Optional<Order> findByPaymentReference(String paymentReference);
 }

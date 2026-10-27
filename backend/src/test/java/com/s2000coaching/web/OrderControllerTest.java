@@ -38,7 +38,7 @@ class OrderControllerTest {
 				packageId, true, null);
 		var response = new OrderResponse("S2K-ABCD1234", "6 Aylık Koçluk", 690000L, OrderStatus.MOCK_PAID,
 				Instant.parse("2026-09-15T10:00:00Z"), com.s2000coaching.domain.PaymentMethod.MOCK, null, null);
-		when(orderService.createOrder(any())).thenReturn(response);
+		when(orderService.createOrder(any(), org.mockito.ArgumentMatchers.anyString())).thenReturn(response);
 
 		assertThat(mvc.post().uri("/api/orders")
 				.contentType(MediaType.APPLICATION_JSON)
