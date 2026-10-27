@@ -15,4 +15,7 @@ public interface NutritionPlanRepository extends JpaRepository<NutritionPlan, UU
 	Optional<NutritionPlan> findByMemberIdAndActiveTrue(UUID memberId);
 
 	void deleteAllByMemberId(UUID memberId);
+
+	@org.springframework.data.jpa.repository.Query("select p.member.id from NutritionPlan p where p.active = true and p.member is not null")
+	List<UUID> findMemberIdsWithActivePlan();
 }

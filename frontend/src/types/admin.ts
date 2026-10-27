@@ -7,7 +7,9 @@ export interface CoachNote {
   updatedAt: string
 }
 
-export type OrderStatus = 'PENDING' | 'AWAITING_PAYMENT' | 'PAID' | 'FAILED'
+import type { OrderStatus, PaymentMethod } from '@/types/order'
+
+export type { OrderStatus }
 
 export interface OrderSummary {
   orderNumber: string
@@ -21,6 +23,9 @@ export interface OrderSummary {
   createdAt: string
   /** The member this order belongs to, or null if the buyer is not one yet. */
   memberId: string | null
+  paymentMethod: PaymentMethod
+  /** When the money was confirmed; null until then (and always null for the development gateway). */
+  paidAt: string | null
 }
 
 export interface AdminDashboard {
@@ -42,4 +47,25 @@ export interface UpdateMemberInput {
   heightCm: number
   weightKg: number
   sportsBackground: string
+}
+
+export interface AttentionReason {
+  /** Stable code for the UI: MESSAGE, NO_WORKOUT, NO_MEASUREMENT, NO_INTAKE, MEMBERSHIP_ENDING, MEMBERSHIP_ENDED. */
+  code: string
+  label: string
+  /** 1 (worth a glance) to 5 (act today). */
+  severity: number
+}
+
+export interface AttentionItem {
+  memberId: string
+  fullName: string
+  score: number
+  reasons: AttentionReason[]
+}
+
+export interface Attention {
+  items: AttentionItem[]
+  /** Bank transfers waiting for the coach to confirm the money arrived. */
+  pendingTransfers: OrderSummary[]
 }

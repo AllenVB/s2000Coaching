@@ -34,3 +34,6 @@ yerel-ayarlar.bat
 # Uploaded progress photos (app.photos.storage-path default). Members' body photos must
 # never reach the repository.
 backend/data/
+
+# Backups (health data and body photos - never commit)
+yedekler/

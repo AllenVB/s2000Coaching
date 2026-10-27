@@ -86,8 +86,10 @@ public class WorkoutLogService {
 			if (planExercise == null) {
 				throw new BadRequestException("Bu harekete ait set bu antrenman gününde yok.");
 			}
-			log.getSets().add(new SetLog(UUID.randomUUID(), log, planExercise, entry.setNumber(),
-					entry.reps(), entry.weightKg()));
+			SetLog set = new SetLog(UUID.randomUUID(), log, planExercise, entry.setNumber(), entry.reps(),
+					entry.weightKg());
+			set.setRpe(entry.rpe());
+			log.getSets().add(set);
 		}
 
 		return WorkoutLogResponse.from(log);

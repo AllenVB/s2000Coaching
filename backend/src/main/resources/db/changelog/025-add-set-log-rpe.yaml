@@ -1,0 +1,14 @@
+databaseChangeLog:
+  - changeSet:
+      id: 040-add-set-log-rpe
+      author: s2000
+      comment: >-
+        How hard a set felt, 1 to 10 (RPE). Optional: a member who does not fill it in is not
+        treated as having said it was easy — the weight suggestion simply ignores it.
+      changes:
+        - addColumn:
+            tableName: set_log
+            columns:
+              - column:
+                  name: rpe
+                  type: numeric(3,1)

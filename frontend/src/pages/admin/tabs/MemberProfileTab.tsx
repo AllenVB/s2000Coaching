@@ -10,12 +10,15 @@ import {
   useUpdateMember,
 } from '@/api/adminMembersApi'
 import { useMemberOrders } from '@/api/ordersAdminApi'
+import { MemberQuestionnaireCard } from '@/components/admin/MemberQuestionnaireCard'
+import { MemberMembershipsCard } from '@/components/admin/MemberMembershipsCard'
 import { Button } from '@/components/ui/Button'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { Field, inputClasses, textareaClasses } from '@/components/ui/FormField'
 import { CheckIcon, TrashIcon } from '@/components/ui/icons'
 import { formatDate } from '@/lib/date'
 import { formatMinor } from '@/lib/money'
+import { ORDER_STATUS, TONE_CLASSES } from '@/lib/orderStatus'
 import { useMemberDetail } from '@/pages/admin/MemberDetailPage'
 import { updateMemberSchema, type UpdateMemberFormValues } from '@/schemas/memberSchema'
 
@@ -117,6 +120,10 @@ export function MemberProfileTab() {
         </form>
       </section>
 
+      <MemberQuestionnaireCard memberId={member.id} />
+
+      <MemberMembershipsCard memberId={member.id} />
+
       <MemberOrdersCard memberId={member.id} />
 
       <section className="rounded-2xl border border-error/30 bg-surface p-6">
@@ -183,7 +190,14 @@ function MemberOrdersCard({ memberId }: { memberId: string }) {
                 {formatDate(order.createdAt)} · <span className="font-mono">{order.orderNumber}</span>
               </span>
             </span>
-            <span className="font-semibold text-primary">{formatMinor(order.priceMinor)}</span>
+            <span className="flex items-center gap-3">
+              <span
+                className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-semibold ${TONE_CLASSES[ORDER_STATUS[order.status].tone]}`}
+              >
+                {ORDER_STATUS[order.status].label}
+              </span>
+              <span className="font-semibold text-primary">{formatMinor(order.priceMinor)}</span>
+            </span>
           </li>
         ))}
       </ul>

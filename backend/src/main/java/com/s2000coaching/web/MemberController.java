@@ -8,6 +8,7 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -38,6 +39,17 @@ public class MemberController {
 			@Valid @RequestBody UpdateOwnProfileRequest request) {
 		return memberService.updateOwnProfile(
 				memberAuthService.requireMember(authorization).getId(), request);
+	}
+
+	@PutMapping("/api/member/reminders")
+	public MemberResponse setReminders(
+			@RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization,
+			@RequestBody RemindersRequest request) {
+		return memberService.setRemindersEnabled(memberAuthService.requireMember(authorization).getId(),
+				request.enabled());
+	}
+
+	public record RemindersRequest(boolean enabled) {
 	}
 
 	/**

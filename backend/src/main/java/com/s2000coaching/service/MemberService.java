@@ -42,6 +42,7 @@ public class MemberService {
 	private final AdminOrderService adminOrderService;
 	private final VerificationCodeService verificationCodeService;
 	private final ProgressPhotoService progressPhotoService;
+	private final List<MemberDataEraser> erasers;
 
 	public MemberService(MemberRepository memberRepository,
 			MemberVerificationCodeRepository codeRepository,
@@ -57,7 +58,9 @@ public class MemberService {
 			// Photos need a member to hang off, so ProgressPhotoService depends on this class;
 			// deleting a member has to delete their photos, so this class depends back. @Lazy
 			// breaks the cycle at startup rather than duplicating the photo-deletion logic here.
-			@Lazy ProgressPhotoService progressPhotoService) {
+			@Lazy ProgressPhotoService progressPhotoService,
+			// Erasers depend on this class (to look members up), so they are resolved lazily too.
+			@Lazy List<MemberDataEraser> erasers) {
 		this.memberRepository = memberRepository;
 		this.codeRepository = codeRepository;
 		this.sessionRepository = sessionRepository;
@@ -70,6 +73,7 @@ public class MemberService {
 		this.adminOrderService = adminOrderService;
 		this.verificationCodeService = verificationCodeService;
 		this.progressPhotoService = progressPhotoService;
+		this.erasers = erasers;
 	}
 
 	static String normalizeEmail(String email) {
@@ -165,6 +169,14 @@ public class MemberService {
 		return MemberResponse.from(member);
 	}
 
+	/** The member switching reminder e-mails on or off for themselves. */
+	@Transactional
+	public MemberResponse setRemindersEnabled(UUID memberId, boolean enabled) {
+		Member member = getOrThrow(memberId);
+		member.setRemindersEnabled(enabled);
+		return MemberResponse.from(member);
+	}
+
 	@Transactional
 	public void deleteMember(UUID memberId) {
 		Member member = getOrThrow(memberId);
@@ -180,6 +192,8 @@ public class MemberService {
 		// Photos carry their files with them: dropping only the rows would leave body photos
 		// on disk after the member asked to be removed.
 		progressPhotoService.deleteAllOfMember(memberId);
+		// Everything else member-owned that registered itself (food log, check-ins, ...).
+		erasers.forEach(eraser -> eraser.eraseAllOf(memberId));
 		// Orders are financial records: detach them rather than deleting them with the member.
 		adminOrderService.unlinkOrdersOf(memberId);
 		memberRepository.delete(member);

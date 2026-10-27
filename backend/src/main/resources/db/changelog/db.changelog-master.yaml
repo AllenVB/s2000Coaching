@@ -48,3 +48,19 @@ databaseChangeLog:
       file: db/changelog/020-add-case-study-measurement-columns.yaml
   - include:
       file: db/changelog/022-create-case-study-photo-table.yaml
+  - include:
+      file: db/changelog/023-create-member-intake-table.yaml
+  - include:
+      file: db/changelog/024-add-payment-and-membership.yaml
+  - include:
+      file: db/changelog/025-add-set-log-rpe.yaml
+  - include:
+      file: db/changelog/026-create-check-in-table.yaml
+  - include:
+      file: db/changelog/027-create-member-questionnaire.yaml
+  - include:
+      file: db/changelog/028-add-reminders.yaml
+  - include:
+      file: db/changelog/029-create-form-check-table.yaml
+  - include:
+      file: db/changelog/030-create-success-story-tables.yaml

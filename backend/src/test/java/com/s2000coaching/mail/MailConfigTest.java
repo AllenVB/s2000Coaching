@@ -37,4 +37,17 @@ class MailConfigTest {
 				assertThat(context.getBean(VerificationMailSender.class))
 						.isInstanceOf(SmtpVerificationMailSender.class));
 	}
+
+	/** Reminders must never be recorded as sent while mail is only being logged. */
+	@Test
+	void shouldNotClaimToDeliverNotificationsWithoutAHost() {
+		runner.withPropertyValues("spring.mail.host=").run(context ->
+				assertThat(context.getBean(NotificationMailSender.class).delivers()).isFalse());
+	}
+
+	@Test
+	void shouldDeliverNotificationsWhenAHostIsConfigured() {
+		runner.withPropertyValues("spring.mail.host=smtp.example.com").run(context ->
+				assertThat(context.getBean(NotificationMailSender.class).delivers()).isTrue());
+	}
 }

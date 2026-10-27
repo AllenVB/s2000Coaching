@@ -1,0 +1,55 @@
+databaseChangeLog:
+  - changeSet:
+      id: 037-create-member-intake-table
+      author: s2000
+      comment: >-
+        What a member actually ate, one row per day (daily totals, not item by item — the
+        analysis works on days and a member who has to weigh every gram stops logging).
+        Re-submitting a date replaces that day. Health data under KVKK like measurements: the
+        service refuses to write without the member's health-data consent.
+      changes:
+        - createTable:
+            tableName: member_intake
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: member_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_member_intake_member
+                    references: member(id)
+              - column:
+                  name: consumed_on
+                  type: date
+                  constraints:
+                    nullable: false
+              - column:
+                  name: calories
+                  type: int
+                  constraints:
+                    nullable: false
+              - column: { name: protein_g, type: int }
+              - column: { name: carbs_g, type: int }
+              - column: { name: fat_g, type: int }
+              - column: { name: sodium_mg, type: int }
+              - column: { name: note, type: text }
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false
+        - addUniqueConstraint:
+            tableName: member_intake
+            columnNames: member_id, consumed_on
+            constraintName: uk_member_intake_member_day

@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.UUID;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -26,6 +27,17 @@ public class AdminOrderController {
 	@GetMapping("/api/admin/orders/{orderNumber}")
 	public OrderSummaryResponse get(@PathVariable String orderNumber) {
 		return adminOrderService.getByOrderNumber(orderNumber);
+	}
+
+	/** The money arrived: marks the order paid and grants the membership it bought. */
+	@PostMapping("/api/admin/orders/{orderNumber}/confirm-payment")
+	public OrderSummaryResponse confirmPayment(@PathVariable String orderNumber) {
+		return adminOrderService.confirmPayment(orderNumber);
+	}
+
+	@PostMapping("/api/admin/orders/{orderNumber}/cancel")
+	public OrderSummaryResponse cancel(@PathVariable String orderNumber) {
+		return adminOrderService.cancel(orderNumber);
 	}
 
 	@GetMapping("/api/admin/members/{memberId}/orders")

@@ -1,0 +1,83 @@
+databaseChangeLog:
+  - changeSet:
+      id: 038-add-order-payment-columns
+      author: s2000
+      comment: >-
+        How an order is paid and when it was confirmed. Existing orders were settled by the
+        development gateway, so they keep MOCK as their method; they are not backfilled with a
+        paid_at, because nothing was ever actually paid.
+      changes:
+        - addColumn:
+            tableName: customer_order
+            columns:
+              - column:
+                  name: payment_method
+                  type: varchar(20)
+                  defaultValue: MOCK
+                  constraints:
+                    nullable: false
+              - column:
+                  name: paid_at
+                  type: timestamp with time zone
+              - column:
+                  name: payment_reference
+                  type: varchar(200)
+
+  - changeSet:
+      id: 039-create-membership-table
+      author: s2000
+      comment: >-
+        The period a member has paid for. A new membership starts when the previous one ends
+        (or today if it already has), so renewing early never loses days. order_id is unique:
+        one paid order grants at most one membership, which is what makes granting idempotent.
+      changes:
+        - createTable:
+            tableName: membership
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: member_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_membership_member
+                    references: member(id)
+              - column:
+                  name: order_id
+                  type: uuid
+                  constraints:
+                    unique: true
+                    uniqueConstraintName: uk_membership_order
+                    foreignKeyName: fk_membership_order
+                    references: customer_order(id)
+              - column:
+                  name: label
+                  type: varchar(200)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: starts_on
+                  type: date
+                  constraints:
+                    nullable: false
+              - column:
+                  name: ends_on
+                  type: date
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false
+        - createIndex:
+            indexName: idx_membership_member_end
+            tableName: membership
+            columns:
+              - column: { name: member_id }
+              - column: { name: ends_on }

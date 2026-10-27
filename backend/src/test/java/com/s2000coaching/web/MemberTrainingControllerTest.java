@@ -125,7 +125,7 @@ class MemberTrainingControllerTest {
 				UUID.randomUUID(), dayId, "Gün 1", LocalDate.now(), null, List.of()));
 
 		var request = new SaveWorkoutLogRequest(dayId, LocalDate.now(), null, List.of(
-				new SaveWorkoutLogRequest.SetEntry(UUID.randomUUID(), 1, 10, new BigDecimal("60.0"))));
+				new SaveWorkoutLogRequest.SetEntry(UUID.randomUUID(), 1, 10, new BigDecimal("60.0"), null)));
 
 		assertThat(mvc.post().uri("/api/member/workout-logs")
 				.header(HttpHeaders.AUTHORIZATION, BEARER)

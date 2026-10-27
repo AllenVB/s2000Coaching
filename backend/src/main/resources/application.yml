@@ -67,6 +67,35 @@ app:
     # rate limit counts rows from the last hour; anything under two hours is refused.
     cron: ${CLEANUP_CRON:0 30 3 * * *}
     code-retention: ${CLEANUP_CODE_RETENTION:7d}
+  # Used in the links inside e-mails to members.
+  public-url: ${PUBLIC_URL:http://localhost:10001}
+  reminders:
+    # Daily at 09:00 Istanbul time. Does nothing while spring.mail.host is not set.
+    enabled: ${REMINDERS_ENABLED:true}
+    cron: ${REMINDERS_CRON:0 0 9 * * *}
+  payment:
+    # With an IBAN and account holder set, checkout offers bank transfer and the development
+    # mock disappears: an order then waits as AWAITING_TRANSFER until the coach confirms the
+    # money arrived. With neither set the mock settles orders at once (development only).
+    iban:
+      number: ${PAYMENT_IBAN:}
+      account-holder: ${PAYMENT_IBAN_HOLDER:}
+      bank-name: ${PAYMENT_IBAN_BANK:}
+    # Card payments through iyzico's hosted page. All three of api-key, secret-key and
+    # callback-url must be set or the card option is not offered. callback-url is where iyzico
+    # sends the buyer's browser afterwards: the PUBLIC address of THIS backend plus
+    # /api/payments/iyzico/callback. base-url stays on the sandbox until a payment has been
+    # tried there; production is https://api.iyzipay.com.
+    iyzico:
+      api-key: ${PAYMENT_IYZICO_API_KEY:}
+      secret-key: ${PAYMENT_IYZICO_SECRET_KEY:}
+      base-url: ${PAYMENT_IYZICO_BASE_URL:https://sandbox-api.iyzipay.com}
+      callback-url: ${PAYMENT_IYZICO_CALLBACK_URL:}
+      # iyzico insists on an identity number and an address for the buyer; checkout collects
+      # neither, so these are placeholders unless the shop needs real ones for invoicing.
+      buyer-identity-number: ${PAYMENT_IYZICO_BUYER_IDENTITY:11111111111}
+      buyer-address: ${PAYMENT_IYZICO_BUYER_ADDRESS:Dijital hizmet - adres belirtilmedi}
+      buyer-city: ${PAYMENT_IYZICO_BUYER_CITY:Istanbul}
   photos:
     # Only the key lives in the database; the bytes live here. A deployment on more than one
     # machine needs a shared volume or an object-storage PhotoStorage implementation.

@@ -12,6 +12,7 @@ import {
   HomeIcon,
   ReceiptIcon,
   SettingsIcon,
+  StarIcon,
   UsersIcon,
 } from '@/components/ui/icons'
 
@@ -21,6 +22,7 @@ const navItems: PortalNavItem[] = [
   { to: '/yonetim/sablonlar', label: 'Şablonlar', icon: ClipboardIcon },
   { to: '/yonetim/hareketler', label: 'Hareketler', icon: DumbbellIcon },
   { to: '/yonetim/vaka-calismalari', label: 'Vakalar', icon: ChartIcon },
+  { to: '/yonetim/hikayeler', label: 'Hikâyeler', icon: StarIcon },
   { to: '/yonetim/siparisler', label: 'Siparişler', icon: ReceiptIcon },
   { to: '/yonetim/ayarlar', label: 'Ayarlar', icon: SettingsIcon },
 ]

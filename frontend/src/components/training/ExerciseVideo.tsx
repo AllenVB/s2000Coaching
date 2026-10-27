@@ -32,12 +32,6 @@ export function ExerciseVideo({ exercise }: { exercise: Pick<Exercise, 'name' | 
     ) : null
   }
 
-  const { id, startSeconds } = exercise.video
-  const params = new URLSearchParams({ autoplay: '1', rel: '0', playsinline: '1', modestbranding: '1' })
-  if (startSeconds > 0) {
-    params.set('start', String(startSeconds))
-  }
-
   return (
     <div className="mt-2">
       <button
@@ -50,18 +44,42 @@ export function ExerciseVideo({ exercise }: { exercise: Pick<Exercise, 'name' | 
         {open ? 'Videoyu kapat' : 'Nasıl yapılır? Videoyu izle'}
       </button>
 
-      {open ? (
-        <div className="mt-3 aspect-video w-full max-w-xl overflow-hidden rounded-xl border border-border bg-black">
-          <iframe
-            src={`https://www.youtube-nocookie.com/embed/${id}?${params.toString()}`}
-            title={`${exercise.name} — hareket videosu`}
-            className="h-full w-full"
-            allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
-            allowFullScreen
-            referrerPolicy="strict-origin-when-cross-origin"
-          />
-        </div>
-      ) : null}
+      {open ? <YouTubeEmbed video={exercise.video} title={`${exercise.name} — hareket videosu`} /> : null}
+    </div>
+  )
+}
+
+/**
+ * The player: a YouTube iframe built from the video id alone, on the cookie-less domain, so
+ * whatever was stored with the link can never choose where the iframe points.
+ */
+export function YouTubeEmbed({
+  video,
+  title,
+  autoplay = true,
+}: {
+  video: { id: string; startSeconds: number }
+  title: string
+  autoplay?: boolean
+}) {
+  const params = new URLSearchParams({ rel: '0', playsinline: '1', modestbranding: '1' })
+  if (autoplay) {
+    params.set('autoplay', '1')
+  }
+  if (video.startSeconds > 0) {
+    params.set('start', String(video.startSeconds))
+  }
+
+  return (
+    <div className="mt-3 aspect-video w-full max-w-xl overflow-hidden rounded-xl border border-border bg-black">
+      <iframe
+        src={`https://www.youtube-nocookie.com/embed/${video.id}?${params.toString()}`}
+        title={title}
+        className="h-full w-full"
+        allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
+        allowFullScreen
+        referrerPolicy="strict-origin-when-cross-origin"
+      />
     </div>
   )
 }

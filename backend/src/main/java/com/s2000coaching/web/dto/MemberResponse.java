@@ -17,7 +17,8 @@ public record MemberResponse(
 		MemberStatus status,
 		Instant createdAt,
 		Instant verifiedAt,
-		Instant healthDataConsentAt) {
+		Instant healthDataConsentAt,
+		boolean remindersEnabled) {
 
 	public static MemberResponse from(Member member) {
 		return new MemberResponse(
@@ -31,6 +32,7 @@ public record MemberResponse(
 				member.getStatus(),
 				member.getCreatedAt(),
 				member.getVerifiedAt(),
-				member.getHealthDataConsentAt());
+				member.getHealthDataConsentAt(),
+				member.isRemindersEnabled());
 	}
 }

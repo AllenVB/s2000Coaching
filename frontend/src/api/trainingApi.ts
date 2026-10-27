@@ -1,13 +1,16 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useEffect } from 'react'
 
 import { useAdminAuth } from '@/context/AdminAuthContext'
 import { useMemberAuth } from '@/context/MemberAuthContext'
 import { adminHeaders } from '@/lib/adminSession'
 import { apiFetch } from '@/lib/api'
+import { cachePlan, enqueueWorkoutLog, flushPendingLogs, isNetworkError, readCachedPlan } from '@/lib/offline'
 import { memberHeaders } from '@/lib/memberSession'
 import type {
   Exercise,
   SaveWorkoutLogInput,
+  TrainingStats,
   TrainingPlan,
   UpsertExerciseInput,
   UpsertPlanExerciseInput,
@@ -272,10 +275,25 @@ export function useMyTrainingPlan() {
     queryKey: ['member-training-plan'],
     // 204 means "no plan assigned yet", which is not an error — but react-query rejects
     // `undefined` as data, so it is normalised to null.
-    queryFn: () =>
-      apiFetch<TrainingPlan | null>('/api/member/training-plan', {
-        headers: memberHeaders(session!.token),
-      }).then((plan) => plan ?? null),
+    // react-query would pause this while the browser reports offline, never reaching the
+    // fallback below; 'always' lets the request run and fail, which is how offline is detected.
+    networkMode: 'always',
+    queryFn: async () => {
+      try {
+        const plan = (await apiFetch<TrainingPlan | null>('/api/member/training-plan', {
+          headers: memberHeaders(session!.token),
+        })) ?? null
+        cachePlan(session!.member.id, plan)
+        return plan
+      } catch (error) {
+        // No connection: the last plan this phone loaded is better than a blank screen.
+        const cached = isNetworkError(error) ? readCachedPlan(session!.member.id) : null
+        if (cached) {
+          return cached
+        }
+        throw error
+      }
+    },
     enabled: Boolean(session),
   })
 }
@@ -296,16 +314,93 @@ export function useSaveWorkoutLog() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (input: SaveWorkoutLogInput) =>
-      apiFetch<WorkoutLog>('/api/member/workout-logs', {
-        method: 'POST',
-        headers: memberHeaders(session!.token),
-        body: JSON.stringify(input),
-      }),
+    // Must run while offline: the failure is what sends the workout to the on-phone queue.
+    networkMode: 'always',
+    mutationFn: async (input: SaveWorkoutLogInput): Promise<WorkoutLog | { queued: true }> => {
+      try {
+        return await apiFetch<WorkoutLog>('/api/member/workout-logs', {
+          method: 'POST',
+          headers: memberHeaders(session!.token),
+          body: JSON.stringify(input),
+        })
+      } catch (error) {
+        if (isNetworkError(error)) {
+          enqueueWorkoutLog(session!.member.id, input)
+          return { queued: true }
+        }
+        throw error
+      }
+    },
     onSuccess: () => {
       // The plan carries "last performed", so it has to be refetched alongside the logs.
       queryClient.invalidateQueries({ queryKey: ['member-training-plan'] })
       queryClient.invalidateQueries({ queryKey: ['member-workout-logs'] })
+      queryClient.invalidateQueries({ queryKey: ['member-training-stats'] })
     },
   })
+}
+
+/** Records, weekly volume and next-session suggestions for the signed-in member. */
+export function useMyTrainingStats() {
+  const { session } = useMemberAuth()
+
+  return useQuery({
+    queryKey: ['member-training-stats'],
+    queryFn: () =>
+      apiFetch<TrainingStats>('/api/member/training-stats', { headers: memberHeaders(session!.token) }),
+    enabled: Boolean(session),
+  })
+}
+
+export function useMemberTrainingStats(memberId: string) {
+  const { token } = useAdminAuth()
+
+  return useQuery({
+    queryKey: ['admin-member-training-stats', memberId],
+    queryFn: () =>
+      apiFetch<TrainingStats>(`/api/admin/members/${memberId}/training-stats`, { headers: adminHeaders(token!) }),
+    enabled: Boolean(token),
+  })
+}
+
+/** Sends workouts saved while offline as soon as there is a connection again. */
+export function useFlushPendingWorkouts() {
+  const { session } = useMemberAuth()
+  const queryClient = useQueryClient()
+
+  useEffect(() => {
+    if (!session) {
+      return
+    }
+    const memberId = session.member.id
+    const token = session.token
+    let running = false
+
+    const flush = async () => {
+      if (running) {
+        return
+      }
+      running = true
+      try {
+        const delivered = await flushPendingLogs(memberId, (input) =>
+          apiFetch<WorkoutLog>('/api/member/workout-logs', {
+            method: 'POST',
+            headers: memberHeaders(token),
+            body: JSON.stringify(input),
+          }),
+        )
+        if (delivered > 0) {
+          queryClient.invalidateQueries({ queryKey: ['member-training-plan'] })
+          queryClient.invalidateQueries({ queryKey: ['member-workout-logs'] })
+          queryClient.invalidateQueries({ queryKey: ['member-training-stats'] })
+        }
+      } finally {
+        running = false
+      }
+    }
+
+    void flush()
+    window.addEventListener('online', flush)
+    return () => window.removeEventListener('online', flush)
+  }, [session, queryClient])
 }

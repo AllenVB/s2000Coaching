@@ -1,7 +1,9 @@
 import { Button } from '@/components/ui/Button'
+import { usePaymentCopy } from '@/hooks/usePaymentCopy'
 import { navigateToSection } from '@/lib/scroll'
 
 export function FinalCta() {
+  const payment = usePaymentCopy()
   return (
     <section className="py-20 sm:py-24">
       <div className="mx-auto max-w-[1280px] px-4 sm:px-6 lg:px-8">
@@ -30,7 +32,7 @@ export function FinalCta() {
             </div>
             <div className="mt-9 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-xs text-text-muted">
               <span className="flex items-center gap-1.5">
-                <span className="h-1.5 w-1.5 rounded-full bg-success" /> Test Modu — Simülasyon Ödeme
+                <span className="h-1.5 w-1.5 rounded-full bg-success" /> {payment.title}
               </span>
               <span className="flex items-center gap-1.5">
                 <span className="h-1.5 w-1.5 rounded-full bg-primary" /> 48 Saatte Program Teslimi

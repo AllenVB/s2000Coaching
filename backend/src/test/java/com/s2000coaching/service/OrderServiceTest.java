@@ -1,18 +1,24 @@
 package com.s2000coaching.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.s2000coaching.domain.CoachingPackage;
 import com.s2000coaching.domain.OrderStatus;
 import com.s2000coaching.domain.PackageCategory;
-import com.s2000coaching.payment.PaymentGateway;
-import com.s2000coaching.payment.PaymentResult;
+import com.s2000coaching.domain.PaymentMethod;
+import com.s2000coaching.exception.BadRequestException;
+import com.s2000coaching.payment.BankTransferPaymentGateway;
+import com.s2000coaching.payment.MockPaymentGateway;
+import com.s2000coaching.payment.PaymentMethods;
 import com.s2000coaching.repository.OrderRepository;
 import com.s2000coaching.web.dto.CreateOrderRequest;
 import com.s2000coaching.web.dto.OrderResponse;
+import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -31,54 +37,82 @@ class OrderServiceTest {
 	@Mock
 	private PackageService packageService;
 
-	@Mock
-	private PaymentGateway paymentGateway;
-
-	private OrderService orderService;
-
 	private CoachingPackage sixMonthPackage;
 
 	@BeforeEach
 	void setUp() {
-		orderService = new OrderService(orderRepository, packageService, paymentGateway);
 		sixMonthPackage = new CoachingPackage(UUID.randomUUID(), "kocluk-6-ay", PackageCategory.KOCLUK,
 				"6 Aylık Koçluk", "tagline", 6, 690000L, 890000L, "EN ÇOK TERCİH EDİLEN", true, 2, true);
 	}
 
+	private OrderService service(String iban) {
+		var bank = new BankTransferPaymentGateway(iban, iban.isBlank() ? "" : "Süleyman Arlı", "Banka");
+		return new OrderService(orderRepository, packageService,
+				new PaymentMethods(List.of(new MockPaymentGateway(), bank)));
+	}
+
+	private CreateOrderRequest request(PaymentMethod method) {
+		return new CreateOrderRequest("Ayşe Yılmaz", "ayse@example.com", "+905551112233", "34, İstanbul",
+				sixMonthPackage.getId(), true, method);
+	}
+
 	@Nested
-	class CreateOrder {
+	class WithNothingConfigured {
 
 		@Test
-		void shouldCreateOrderWithServerSidePriceWhenPaymentSucceeds() {
-			var request = new CreateOrderRequest("Ayşe Yılmaz", "ayse@example.com", "+905551112233", "34, İstanbul",
-					sixMonthPackage.getId(), true);
+		void shouldSettleWithTheDevelopmentGatewayAtTheServerSidePrice() {
 			when(packageService.getActiveOrThrow(sixMonthPackage.getId())).thenReturn(sixMonthPackage);
-			when(paymentGateway.charge(any())).thenReturn(new PaymentResult(true, "MOCK-ref"));
 			when(orderRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
-			OrderResponse response = orderService.createOrder(request);
+			OrderResponse response = service("").createOrder(request(null), "203.0.113.9");
 
 			assertThat(response.status()).isEqualTo(OrderStatus.MOCK_PAID);
-			assertThat(response.priceMinor()).isEqualTo(sixMonthPackage.getPriceMinor());
+			assertThat(response.paymentMethod()).isEqualTo(PaymentMethod.MOCK);
+			assertThat(response.priceMinor()).isEqualTo(690000L);
 			assertThat(response.orderNumber()).startsWith("S2K-");
+			assertThat(response.bankTransfer()).isNull();
+		}
+	}
+
+	@Nested
+	class WithAnIbanConfigured {
+
+		@Test
+		void shouldWaitForTheTransferAndTellTheBuyerWhereToSendIt() {
+			when(packageService.getActiveOrThrow(sixMonthPackage.getId())).thenReturn(sixMonthPackage);
+			when(orderRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+			OrderResponse response = service("TR33 0006 1005 1978 6457 8413 26").createOrder(request(null), "203.0.113.9");
+
+			assertThat(response.status()).isEqualTo(OrderStatus.AWAITING_TRANSFER);
+			assertThat(response.paymentMethod()).isEqualTo(PaymentMethod.IBAN);
+			assertThat(response.bankTransfer().iban()).isEqualTo("TR330006100519786457841326");
+			// The order number is the reference, so each transfer can be matched to an order.
+			assertThat(response.bankTransfer().reference()).isEqualTo(response.orderNumber());
+		}
+
+		/** A configured site must never be talked into the mock that marks orders paid. */
+		@Test
+		void shouldRefuseTheMockMethodWhenARealOneIsConfigured() {
+			when(packageService.getActiveOrThrow(sixMonthPackage.getId())).thenReturn(sixMonthPackage);
+
+			assertThatThrownBy(() -> service("TR330006100519786457841326").createOrder(request(PaymentMethod.MOCK), "203.0.113.9"))
+					.isInstanceOf(BadRequestException.class);
+			verify(orderRepository, never()).save(any());
+		}
+
+		@Test
+		void shouldRecordTheMethodAndReferenceOnTheOrder() {
+			when(packageService.getActiveOrThrow(sixMonthPackage.getId())).thenReturn(sixMonthPackage);
+			when(orderRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+			service("TR330006100519786457841326").createOrder(request(PaymentMethod.IBAN), "203.0.113.9");
 
 			ArgumentCaptor<com.s2000coaching.domain.Order> captor = ArgumentCaptor
 					.forClass(com.s2000coaching.domain.Order.class);
 			verify(orderRepository).save(captor.capture());
-			assertThat(captor.getValue().getPriceMinor()).isEqualTo(690000L);
-		}
-
-		@Test
-		void shouldMarkOrderFailedWhenPaymentGatewayDeclines() {
-			var request = new CreateOrderRequest("Ayşe Yılmaz", "ayse@example.com", "+905551112233", null,
-					sixMonthPackage.getId(), true);
-			when(packageService.getActiveOrThrow(sixMonthPackage.getId())).thenReturn(sixMonthPackage);
-			when(paymentGateway.charge(any())).thenReturn(new PaymentResult(false, null));
-			when(orderRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
-
-			OrderResponse response = orderService.createOrder(request);
-
-			assertThat(response.status()).isEqualTo(OrderStatus.FAILED);
+			assertThat(captor.getValue().getPaymentMethod()).isEqualTo(PaymentMethod.IBAN);
+			assertThat(captor.getValue().getPaymentReference()).isEqualTo(captor.getValue().getOrderNumber());
 		}
 	}
 }

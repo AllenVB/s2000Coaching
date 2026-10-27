@@ -1,0 +1,88 @@
+databaseChangeLog:
+  - changeSet:
+      id: 046-create-success-story-tables
+      author: s2000
+      comment: >-
+        Public success stories with real photos. Like case_study, kept apart from the member
+        tables on purpose: a public endpoint that read progress_photo or member would be one
+        forgotten filter from publishing someone's body. A story holds COPIES of the chosen
+        photos (re-encoded, metadata stripped) under its own storage keys.
+
+        A story is only shown after the member's own explicit consent to that exact content,
+        and the wording they agreed to is stored with the consent. The member can withdraw at
+        any time; withdrawing deletes the photo copies. Member rows are removed when the member
+        is deleted.
+      changes:
+        - createTable:
+            tableName: success_story
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: member_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_success_story_member
+                    references: member(id)
+              - column: { name: title, type: varchar(160), constraints: { nullable: false } }
+              - column: { name: quote, type: varchar(400) }
+              - column: { name: body, type: text, constraints: { nullable: false } }
+              - column: { name: display_name, type: varchar(80), constraints: { nullable: false } }
+              - column: { name: status, type: varchar(20), constraints: { nullable: false } }
+              - column: { name: consent_at, type: timestamp with time zone }
+              - column: { name: consent_text, type: text }
+              - column: { name: published_at, type: timestamp with time zone }
+              - column: { name: revoked_at, type: timestamp with time zone }
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false
+        - createTable:
+            tableName: success_story_photo
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: story_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_success_story_photo_story
+                    references: success_story(id)
+              - column: { name: taken_on, type: date, constraints: { nullable: false } }
+              - column: { name: caption, type: varchar(60), constraints: { nullable: false } }
+              - column: { name: display_order, type: int, constraints: { nullable: false } }
+              - column:
+                  name: storage_key
+                  type: varchar(300)
+                  constraints:
+                    nullable: false
+                    unique: true
+                    uniqueConstraintName: uk_success_story_photo_key
+              - column: { name: content_type, type: varchar(100), constraints: { nullable: false } }
+              - column: { name: size_bytes, type: bigint, constraints: { nullable: false } }
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false
+        - createIndex:
+            indexName: idx_success_story_status
+            tableName: success_story
+            columns:
+              - column: { name: status }

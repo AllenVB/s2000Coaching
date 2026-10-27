@@ -43,6 +43,7 @@ export interface SetLog {
   setNumber: number
   reps: number
   weightKg: number | null
+  rpe: number | null
 }
 
 export interface PlanExercise {
@@ -105,5 +106,36 @@ export interface SaveWorkoutLogInput {
   dayId: string
   performedOn: string
   note?: string | null
-  sets: { planExerciseId: string; setNumber: number; reps: number; weightKg?: number | null }[]
+  sets: {
+    planExerciseId: string
+    setNumber: number
+    reps: number
+    weightKg?: number | null
+    /** Perceived effort 1–10; left out when the member did not say. */
+    rpe?: number | null
+  }[]
+}
+
+/** Mirrors the backend's training statistics; every suggestion carries its own reasoning. */
+export interface TrainingStats {
+  exercises: ExerciseStats[]
+  weeklyVolume: WeekVolume[]
+}
+
+export interface ExerciseStats {
+  exerciseId: string
+  name: string
+  sessions: number
+  lastSessionOn: string
+  lastTopWeightKg: number | null
+  /** Null when no set qualified: no weight logged, or only sets above 12 reps. */
+  best: { estimatedOneRepMaxKg: number; weightKg: number; reps: number; on: string } | null
+  newRecordInLastSession: boolean
+  suggestion: { kind: 'INCREASE' | 'HOLD' | 'INSUFFICIENT'; nextWeightKg: number | null; text: string }
+}
+
+export interface WeekVolume {
+  weekStart: string
+  sets: number
+  volumeKg: number
 }

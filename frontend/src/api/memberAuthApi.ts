@@ -59,6 +59,24 @@ export function useUpdateMyProfile() {
   })
 }
 
+export function useSetReminders() {
+  const { session, updateMember } = useMemberAuth()
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (enabled: boolean) =>
+      apiFetch<Member>('/api/member/reminders', {
+        method: 'PUT',
+        headers: memberHeaders(session!.token),
+        body: JSON.stringify({ enabled }),
+      }),
+    onSuccess: (member) => {
+      updateMember(member)
+      queryClient.setQueryData<Member>(['member-profile'], member)
+    },
+  })
+}
+
 export function useMemberLogout() {
   return useMutation({
     mutationFn: ({ token }: { token: string }) =>

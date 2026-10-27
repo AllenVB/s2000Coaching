@@ -4,15 +4,21 @@ import { useMemberLogout } from '@/api/memberAuthApi'
 import { PortalHeader } from '@/components/layout/PortalHeader'
 import { PortalSidebarNav, PortalTabBar, type PortalNavItem } from '@/components/layout/PortalNav'
 import { MemberLogin } from '@/components/member/MemberLogin'
+import { useFlushPendingWorkouts } from '@/api/trainingApi'
+import { clearCachedPlan } from '@/lib/offline'
+import { useOnlineStatus } from '@/hooks/useOnlineStatus'
 import { MemberAuthProvider, useMemberAuth } from '@/context/MemberAuthContext'
 import {
   AppleIcon,
   ChartIcon,
   ChatIcon,
   CameraIcon,
+  ClipboardIcon,
   DumbbellIcon,
   HistoryIcon,
   HomeIcon,
+  PlayIcon,
+  StarIcon,
   UserIcon,
 } from '@/components/ui/icons'
 
@@ -21,6 +27,9 @@ const navItems: PortalNavItem[] = [
   { to: '/uye/antrenman', label: 'Antrenman', icon: DumbbellIcon },
   { to: '/uye/beslenme', label: 'Beslenme', icon: AppleIcon },
   { to: '/uye/olcumler', label: 'Ölçümler', icon: ChartIcon },
+  { to: '/uye/haftalik', label: 'Haftalık', icon: ClipboardIcon, desktopOnly: true },
+  { to: '/uye/form-kontrol', label: 'Form', icon: PlayIcon, desktopOnly: true },
+  { to: '/uye/hikayem', label: 'Hikâyem', icon: StarIcon, desktopOnly: true },
   { to: '/uye/gecmis', label: 'Geçmiş', icon: HistoryIcon, desktopOnly: true },
   { to: '/uye/fotograflar', label: 'Fotoğraflar', icon: CameraIcon, desktopOnly: true },
   { to: '/uye/mesajlar', label: 'Mesajlar', icon: ChatIcon },
@@ -39,6 +48,8 @@ export function MemberAreaLayout() {
 function MemberAreaShell() {
   const { session, signOut } = useMemberAuth()
   const logout = useMemberLogout()
+  useFlushPendingWorkouts()
+  const online = useOnlineStatus()
 
   if (!session) {
     return (
@@ -53,6 +64,7 @@ function MemberAreaShell() {
 
   const handleLogout = () => {
     // Sign out locally regardless of the response: the stored token is useless to us either way.
+    clearCachedPlan(session.member.id)
     logout.mutate({ token: session.token }, { onSettled: () => signOut() })
   }
 
@@ -72,6 +84,12 @@ function MemberAreaShell() {
           </button>
         }
       />
+
+      {online ? null : (
+        <p className="bg-warning/15 px-4 py-2 text-center text-xs font-medium text-warning">
+          Çevrimdışısınız — son yüklenen planınız gösteriliyor; kaydettiğiniz antrenmanlar bağlantı gelince gönderilir.
+        </p>
+      )}
 
       <div className="mx-auto flex w-full max-w-[1280px] gap-8 px-4 pb-24 pt-8 sm:px-6 lg:px-8 lg:pb-14">
         <aside className="hidden w-56 shrink-0 lg:block">

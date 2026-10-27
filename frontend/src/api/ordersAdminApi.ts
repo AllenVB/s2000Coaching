@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 
 import { useAdminAuth } from '@/context/AdminAuthContext'
 import { adminHeaders } from '@/lib/adminSession'
@@ -36,4 +36,32 @@ export function useMemberOrders(memberId: string) {
       apiFetch<OrderSummary[]>(`/api/admin/members/${memberId}/orders`, { headers: adminHeaders(token!) }),
     enabled: Boolean(token),
   })
+}
+
+function useOrderAction(action: 'confirm-payment' | 'cancel') {
+  const { token } = useAdminAuth()
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (orderNumber: string) =>
+      apiFetch<OrderSummary>(`/api/admin/orders/${orderNumber}/${action}`, {
+        method: 'POST',
+        headers: adminHeaders(token!),
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-orders'] })
+      queryClient.invalidateQueries({ queryKey: ['admin-member-orders'] })
+      queryClient.invalidateQueries({ queryKey: ['admin-member-memberships'] })
+      queryClient.invalidateQueries({ queryKey: ['admin-dashboard'] })
+    },
+  })
+}
+
+/** The transfer arrived: marks the order paid and grants the membership it bought. */
+export function useConfirmPayment() {
+  return useOrderAction('confirm-payment')
+}
+
+export function useCancelOrder() {
+  return useOrderAction('cancel')
 }

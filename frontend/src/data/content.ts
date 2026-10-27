@@ -95,69 +95,6 @@ export const ecosystemFeatures = [
   },
 ]
 
-export const transformations = [
-  {
-    name: 'Mert K., 28',
-    role: 'Yazılım Mühendisi',
-    duration: '16 Hafta Dönüşümü',
-    quote:
-      'Masa başı çalıştığım için bel ağrılarım vardı ve yağ oranım %24\'tü. 16 haftada hem ağrılarım bitti hem de hayatımda ilk defa belirgin karın kaslarına kavuştum.',
-    stats: [
-      { label: 'Yağ Kaybı', value: '-14 kg' },
-      { label: 'Kas Kütlesi', value: '+4.2 kg' },
-    ],
-    image:
-      'https://images.unsplash.com/photo-1571019613454-1cb2f99b2d8b?auto=format&fit=crop&w=800&q=80',
-  },
-  {
-    name: 'Caner Y., 34',
-    role: 'Finans Uzmanı',
-    duration: '12 Hafta Dönüşümü',
-    quote:
-      'Haftalık makro düzenlemeleri ve video analizleri sayesinde salonda harcadığım her dakikanın karşılığını aldım. Kuru ve estetik bir forma ulaştım.',
-    stats: [
-      { label: 'Son Yağ Oranı', value: '%11' },
-      { label: 'Squat Artışı', value: '+35 kg' },
-    ],
-    image:
-      'https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?auto=format&fit=crop&w=800&q=80',
-  },
-  {
-    name: 'Selin B., 26',
-    role: 'Mimar',
-    duration: '20 Hafta Dönüşümü',
-    quote:
-      'Katı diyetler olmadan, sosyal hayatımdan kopmadan sıkılaştım. Postürüm tamamen düzeldi ve sporu ilk defa bir yaşam biçimi haline getirdim.',
-    stats: [
-      { label: 'Bel İncelmesi', value: '-8 cm' },
-      { label: 'Hip Thrust', value: '+18 kg' },
-    ],
-    image:
-      'https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=800&q=80',
-  },
-]
-
-export const testimonials = [
-  {
-    name: 'Barış T.',
-    tag: '6 Aylık Öğrenci',
-    quote:
-      "3 yıldır salonda boşa kürek çekiyormuşum. 6 aylık koçlukla aldığım kas kütlesi önceki 3 yılımın toplamından fazla oldu. Hocanın video analizi muazzam.",
-  },
-  {
-    name: 'Derya A.',
-    tag: '3 Aylık Beslenme',
-    quote:
-      'En büyük korkum aç kalmaktı. Esnek beslenme modeliyle hem dışarıda yedim hem de 12 haftada 9 kilo yağ verdim. Sistem tam anlamıyla kusursuz.',
-  },
-  {
-    name: 'Emre Ö.',
-    tag: '12 Aylık VIP Sporcu',
-    quote:
-      'Deadlift formumdaki hatayı video analiziyle fark edip belimi sakatlıktan kurtardılar. Bilimsel yaklaşım ve koçun hızı kesinlikle üst seviye.',
-  },
-]
-
 export const faqs = [
   {
     question: 'Programlar gerçekten kişiye özel mi hazırlanıyor?',
@@ -184,10 +121,4 @@ export const faqs = [
     answer:
       "Kesinlikle. Gelişim hızınıza, kilo değişimine ve ağırlık platosuna göre periyodik check-in'lerde antrenman hacimleriniz ve makrolarınız düzenli olarak güncellenir.",
   },
-]
-
-export const trustBadges = [
-  { icon: 'credit_card', title: 'Peşin Fiyatına 6 Taksit', caption: 'Tüm kredi kartlarına vade farksız' },
-  { icon: 'schedule', title: '48 Saatte Hazır', caption: 'Form doldurduktan 48 saat sonra teslim' },
-  { icon: 'lock', title: 'Test Modu — Güvenli Simülasyon', caption: 'Gerçek ödeme entegrasyonu yakında aktif olacak' },
 ]

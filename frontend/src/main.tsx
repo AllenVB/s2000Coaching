@@ -17,3 +17,13 @@ createRoot(document.getElementById('root')!).render(
     </QueryClientProvider>
   </StrictMode>,
 )
+
+// Lets the member area open without a connection. Production only: in development a cached
+// shell would keep serving old code while the files are being edited.
+if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {
+      // Not fatal: the app simply needs a connection, as it did before.
+    })
+  })
+}

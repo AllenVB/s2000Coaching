@@ -1,0 +1,54 @@
+databaseChangeLog:
+  - changeSet:
+      id: 043-add-member-reminders-enabled
+      author: s2000
+      comment: >-
+        Whether the member wants reminder e-mails (renewal, weekly check-in, measurement). On by
+        default for existing members: these are service messages about their own coaching, and
+        the member can switch them off from their profile at any time.
+      changes:
+        - addColumn:
+            tableName: member
+            columns:
+              - column:
+                  name: reminders_enabled
+                  type: boolean
+                  defaultValueBoolean: true
+                  constraints:
+                    nullable: false
+
+  - changeSet:
+      id: 044-create-reminder-log-table
+      author: s2000
+      comment: >-
+        Which reminders were actually sent, so the daily job never sends the same one twice.
+        (member, kind, key) is unique: the key says which occasion it was for — the week, the
+        membership end date, the last measurement — so a new occasion is a new reminder.
+      changes:
+        - createTable:
+            tableName: reminder_log
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: member_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_reminder_log_member
+                    references: member(id)
+              - column: { name: kind, type: varchar(40), constraints: { nullable: false } }
+              - column: { name: occasion, type: varchar(60), constraints: { nullable: false } }
+              - column:
+                  name: sent_at
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false
+        - addUniqueConstraint:
+            tableName: reminder_log
+            columnNames: member_id, kind, occasion
+            constraintName: uk_reminder_log_occasion

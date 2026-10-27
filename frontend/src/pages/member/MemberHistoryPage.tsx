@@ -1,6 +1,7 @@
 import type { WorkoutLog } from '@/types/training'
 
-import { useMyWorkoutLogs } from '@/api/trainingApi'
+import { useMyTrainingStats, useMyWorkoutLogs } from '@/api/trainingApi'
+import { TrainingStatsView } from '@/components/training/TrainingStatsView'
 import { ComingSoonCard, PageHeading } from '@/components/ui/PageHeading'
 import { formatDate } from '@/lib/date'
 import { formatMonth, groupByMonth, totalReps, totalVolumeKg } from '@/lib/workoutStats'
@@ -8,6 +9,7 @@ import { formatMonth, groupByMonth, totalReps, totalVolumeKg } from '@/lib/worko
 /** Every session the member has recorded, newest first, grouped by month. */
 export function MemberHistoryPage() {
   const { data: logs, isPending, error } = useMyWorkoutLogs()
+  const { data: stats } = useMyTrainingStats()
 
   if (isPending) {
     return (
@@ -51,6 +53,12 @@ export function MemberHistoryPage() {
       />
 
       <SummaryRow logs={logs} />
+
+      {stats ? (
+        <div className="mt-6">
+          <TrainingStatsView stats={stats} />
+        </div>
+      ) : null}
 
       <div className="mt-6 space-y-6">
         {months.map(({ month, logs: monthLogs }) => (
