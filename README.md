@@ -9,7 +9,7 @@ klasörlerdeki `DESIGN.md`).
 - `backend/` — Spring Boot 4 (Java 21, Gradle, PostgreSQL, Liquibase). Paket, sipariş ve üyelik REST API'si.
 - `frontend/` — React 19 + Vite + TypeScript + Tailwind v4 + React Router. Landing sitesi, üye alanı ve
   yönetim paneli.
-- `docker-compose.yml` — yerel geliştirme için yalnızca PostgreSQL.
+- `docker-compose.yml` — yerel geliştirme için yalnızca PostgreSQL (host portu **10003**; frontend 10001, backend 10002 — yaygın 3000/8080/5432 ile çakışmasın diye).
 
 ### Sayfalar
 
@@ -206,6 +206,64 @@ her sorgu planını şişirirdi. Baytlar `PhotoStorage` arayüzünün arkasında
 Satır yazılmadan önce baytlar yazılır: hiçbir şeye işaret etmeyen bir satır arayüzde kırık bir fotoğraf
 demektir, satırı olmayan baytlar ise görünmez ve geri kazanılabilir.
 
+## Koçluk özellikleri
+
+Hepsi `/uye` (üye) ve `/yonetim/uyeler/:id` (koç) altında; sağlık verisi sayılanlar KVKK onayı ister.
+
+- **İlgi bekleyenler** (`/yonetim`): tüm aktif üyeleri tek geçişte (üye başına sorgu yok) şu nedenlerle
+  puanlar — bekleyen mesaj, biten/biten üyelik, antrenman/ölçüm/yemek kaydı yok, yanıt bekleyen
+  değerlendirme ve form videosu, sağlık anketinde dikkat gerektiren yanıt. En acilden sıralı, her
+  neden yazılı. Sessizlik, üyenin katıldığı günden sayılır; plan verilmemiş konuda kimse "kayıt yok"
+  diye işaretlenmez. Havale bekleyen siparişler en üstte.
+- **Yemek kaydı** (`/uye/beslenme`): günlük toplam (kalori zorunlu; makro ve sodyum isteğe bağlı). Aynı
+  güne tekrar girmek o günü günceller. Koç üye detayında okur.
+- **Antrenman gelişimi** (`/uye/gecmis`, üye detayı → Antrenman): set başına **RPE**, hareket başına
+  tahmini 1TM (Epley, yalnızca ≤12 tekrarlık ağırlıklı setlerden), "yeni rekor" (öncesinde yenilecek bir
+  seans gerekir), 12 haftalık hacim. Gün ekranında her harekete **sonraki seans önerisi**: tüm çalışma
+  setleri üst tekrar hedefinde ve RPE ≤ 8,5 ise ağırlık artışı; zor geçtiyse ya da aralığın altında
+  kaldıysa aynı ağırlık. Veri yetmiyorsa (sayısal olmayan hedef, ağırlık yok) öneri verilmez; tek seansa
+  dayanan öneri bunu söyler. Dinlenme sayacı saate göre sayar, arka planda kaymaz.
+- **Haftalık değerlendirme** (`/uye/haftalik`): uyku/stres/enerji/açlık (1–5), beslenmeye uyum ve not;
+  haftanın pazartesisiyle anahtarlanır, koç aynı karttan yanıtlar. Aynı haftayı yeniden göndermek eski
+  yanıtı geçersiz kılar.
+- **Üye analizi** (üye detayı → Analiz, yalnızca koç): vaka çalışmalarındaki motor, üyenin kendi ölçüm
+  ve yemek kayıtlarında çalışır; veri yetmeyen yerde sayı yerine neden yazar. Üye satırları motora
+  kaydedilmeden, bellekte verilir — vaka tablolarına üye verisi kopyalanmaz.
+- **Başlangıç anketi** (`/uye/anket`): standart 7 PAR-Q sorusu + hedef, haftada kaç gün, ortam, sakatlık.
+  "Evet" kimseyi engellemez; koça doktor onayı uyarısı olarak görünür. Plan oluştururken üyenin istediği
+  gün sayısına uyan şablonlar ★ ile işaretlenir.
+- **Form kontrolü** (`/uye/form-kontrol`): üye hareket videosunu YouTube'a **listelenmemiş** yükleyip
+  bağlantıyı gönderir; koç sayfa içinde izler ve yazılı geri bildirim verir. Uygulama video barındırmaz,
+  yalnızca bağlantıyı tutar (YouTube dışı adresler reddedilir).
+- **Egzersiz videoları**: hareket kataloğunda ya da plan editöründe hareket başına YouTube bağlantısı;
+  üye gün ekranında "Nasıl yapılır?" ile sayfa içinde izler. Oynatıcı adresi yalnızca video kimliğinden
+  kurulur (`youtube-nocookie.com`), düğmeye basılana kadar yüklenmez.
+- **Başarı hikâyeleri** (`/yonetim/hikayeler`, `/uye/hikayem`): koç, üyenin kendi gelişim fotoğraflarından
+  hikâye yazar; fotoğraflar **kopyalanır** (yeniden kodlanır, GPS/cihaz bilgisi silinir) ve herkese açık
+  uçlar hiçbir üye tablosuna dokunmaz. Hikâye ancak **üyenin kendi hesabından, o içeriğe açık rıza
+  vermesiyle** yayınlanabilir; rıza metni kayda geçer, metin ya da fotoğraf değişirse rıza düşer, üye
+  istediği an geri çekebilir (yayından kalkar, kopyalar silinir). Hiç yayınlanmış hikâye yokken bölüm bunu
+  açıkça söyler.
+- **Hatırlatma e-postaları**: her sabah 09:00'da üyeye (üyelik bitişi, haftalık değerlendirme, ölçüm) ve koça
+  (ilgi bekleyenlerin özeti). SMTP yoksa **hiçbir şey gönderilmez ve gönderildi diye kaydedilmez**. Üye
+  `/uye/profil`'den kapatabilir.
+- **Çevrimdışı kullanım (PWA)**: üye alanı ana ekrana eklenebilir; internet yokken son yüklenen plan okunur
+  ve kaydedilen antrenman telefonda bekler, bağlantı gelince kendiliğinden gönderilir. Yalnızca uygulamanın
+  kendisi önbelleğe alınır, API yanıtları asla; plan önbelleği çıkışta silinir.
+
+## Yedekleme
+
+`yedekle.bat` (Windows) veritabanını (`pg_dump`) ve yüklenen fotoğrafları `yedekler/` klasörüne yazar;
+klasör git'e girmez. **Yedekler sağlık verisi ve vücut fotoğrafı içerir** — başka bir diske ya da şifreli bir
+yere kopyalayın. Geri yüklemek için (boş bir veritabanına):
+
+```bash
+docker compose exec -T postgres psql -U s2000coaching -d s2000coaching < yedekler/veritabani-TARIH.sql
+```
+
+Fotoğraf zip'ini `backend/data/photos` içine açın. Veritabanı yedeği Linux'ta alınıp ayrı bir veritabanına
+geri yüklenerek denendi; `yedekle.bat`'ın Windows'a özgü kısımları (PowerShell, zip) denenmedi.
+
 ## Yapılandırma
 
 | Ortam değişkeni | Varsayılan | Açıklama |
@@ -221,9 +279,13 @@ demektir, satırı olmayan baytlar ise görünmez ve geri kazanılabilir.
 | `VERIFICATION_CODE_TTL` | `15m` | Onay/giriş kodunun geçerlilik süresi. |
 | `MEMBER_SESSION_TTL` | `14d` | Üye oturumunun geçerlilik süresi. |
 | `MAIL_FROM` | `no-reply@s2000coaching.com` | Gönderen adresi. |
-| `SPRING_MAIL_HOST` (+ `SPRING_MAIL_PORT`, `SPRING_MAIL_USERNAME`, `SPRING_MAIL_PASSWORD`) | — | SMTP sunucusu. |
+| `PUBLIC_URL` | `http://localhost:10001` | E-postalardaki bağlantılar ve ödeme dönüşü için sitenin herkese açık adresi. |
+| `REMINDERS_ENABLED` / `REMINDERS_CRON` | `true` / `0 0 9 * * *` | Günlük hatırlatma işi. SMTP yoksa hiçbir şey yapmaz. |
+| `PAYMENT_IBAN`, `PAYMENT_IBAN_HOLDER`, `PAYMENT_IBAN_BANK` | — | Tanımlıysa havale seçeneği açılır ve test ödemesi kapanır. |
+| `PAYMENT_IYZICO_API_KEY`, `_SECRET_KEY`, `_CALLBACK_URL` | — | Üçü de tanımlıysa kart seçeneği açılır. `_BASE_URL` varsayılanı sandbox'tır. |
+| `MAIL_HOST` (+ `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD`) | — | SMTP sunucusu. Boşsa e-posta gönderilmez, kodlar loga yazılır. |
 
-**Önemli:** `SPRING_MAIL_HOST` tanımlı değilse e-posta gönderilmez; kodlar yalnızca uygulama loguna
+**Önemli:** `MAIL_HOST` tanımlı değilse e-posta gönderilmez; kodlar yalnızca uygulama loguna
 `WARN` seviyesinde yazılır (`LoggingVerificationMailSender`). Bu yalnızca yerel geliştirme içindir —
 prodüksiyonda SMTP ayarları mutlaka verilmelidir.
 
@@ -262,19 +324,49 @@ Panel artık paylaşılan bir anahtarla değil, gerçek koç hesaplarıyla korun
 Birden fazla koç gerektiğinde `coach_account` tablosuna satır eklemek yeterli; panelde hesap
 yönetimi ekranı henüz yok.
 
-## Ödeme durumu
+## Ödemeler ve üyelik süresi
 
-Şu an gerçek bir ödeme sağlayıcısı (iyzico/Stripe) entegre değil. Siparişler `MockPaymentGateway` üzerinden
-anında `MOCK_PAID` durumuyla oluşturulur; checkout formu kart bilgisi toplamaz. Gerçek sağlayıcı eklenmek
-istendiğinde `backend/src/main/java/com/s2000coaching/payment/PaymentGateway.java` arayüzünün yeni bir
-implementasyonu yazılması yeterlidir — controller/service/frontend akışı değişmez.
+Checkout, **yapılandırılmış** ödeme yöntemlerini sunar (`GET /api/payment-methods`):
 
-## Tecrübelerim (dinamik kategoriler)
+| Yöntem | Ne zaman açılır | Sipariş durumu |
+| --- | --- | --- |
+| **IBAN / havale** | `PAYMENT_IBAN` + `PAYMENT_IBAN_HOLDER` tanımlıysa | `AWAITING_TRANSFER` → koç **Ödeme Alındı** der → `PAID` |
+| **Kart (iyzico)** | `PAYMENT_IYZICO_API_KEY`, `_SECRET_KEY`, `_CALLBACK_URL` tanımlıysa | `AWAITING_PAYMENT` → iyzico geri çağırır → `PAID` ya da `FAILED` |
+| Test ödemesi (mock) | **Hiçbiri tanımlı değilse** (yalnızca geliştirme) | `MOCK_PAID` — gerçek para yok |
 
-Herkese açık bir bölüm. Sağdaki **Düzenleme Modu** ile kategoriler (Antrenman, Beslenme, Kardiyo … dilediğiniz
-kadar) ve her kategori altındaki başlık + açıklama şeklindeki tecrübe kartları eklenip düzenlenip silinebilir.
-**Uyarı:** İçerik düzenleme herkese açıktır — siteye giren herkes kategori/tecrübe ekleyip silebilir. Kısıtlamak
-isterseniz bu endpoint'lere kimlik doğrulama eklenmesi gerekir.
+Gerçek bir yöntem tanımlandığı anda **mock kapanır**: yapılandırılmış bir site, siparişi ödenmiş
+gösteren test yöntemine yönlendirilemez.
+
+**IBAN akışı.** Alıcı siparişten sonra IBAN'ı ve **sipariş numarasını** görür (açıklamaya yazması gereken
+referans budur). Para hesaba geçince koç `/yonetim/siparisler` sayfasında **Ödeme Alındı** der; yalnızca
+bu onay siparişi `PAID` yapar ve üyelik süresini başlatır. Aynı siparişi iki kez onaylamak reddedilir.
+
+**Kart akışı.** Alıcı iyzico'nun kendi sayfasına gider — kart bilgisi bu uygulamaya hiç uğramaz. iyzico
+tarayıcıyı `…/api/payments/iyzico/callback` adresine yalnızca bir **token** ile geri gönderir; token ödeme
+kanıtı değildir. Sipariş, iyzico'ya **sunucudan sunucuya** sorularak çözülür ve ancak üçü birden tutarsa
+`PAID` olur: yanıt gerçek (imza doğrulandı), ödeme **bu siparişin numarası** için açılmış, çekilen tutar
+siparişin fiyatına eşit. Sayfa yenilenirse ikinci ziyaret hiçbir şeyi değiştirmez; iyzico'ya ulaşılamazsa
+sipariş tahmin edilmeden beklemede kalır.
+
+> **Canlıya almadan önce:** iyzico entegrasyonu bu depoda iyzico'nun kendisine karşı **denenmedi** (satıcı
+> anahtarı gerekir); sonuç kuralları sahte bir istemciyle birim testlidir. `PAYMENT_IYZICO_BASE_URL`
+> varsayılan olarak **sandbox**'tır (`https://sandbox-api.iyzipay.com`): sandbox anahtarlarıyla bir ödeme
+> yapıp siparişin `PAID` olduğunu görün, sonra `https://api.iyzipay.com`'a geçin. `CALLBACK_URL`,
+> alıcının tarayıcısının erişebildiği **herkese açık** backend adresi olmalıdır. iyzico alıcı için kimlik
+> numarası ve adres ister; checkout ikisini de toplamadığından yer tutucu gönderilir
+> (`PAYMENT_IYZICO_BUYER_*`). Fatura için gerçek bilgi gerekiyorsa checkout'a alan eklenmelidir.
+
+**Üyelik süresi.** Ödenmiş bir sipariş bir `membership` dönemi doğurur (paketin ay sayısı kadar). Yeni
+dönem, önceki bitmemişse **onun bitiminden** başlar — erken yenileme gün kaybettirmez. Dönem üye siparişle
+bağlandığında verilir; önce ödeyip sonra üye olan biri paraladığı süreyi üye olduğu anda alır. Koç, nakit
+gibi dükkân dışı ödemeler için üye detayında elle dönem ekleyebilir. Üye `/uye/profil`'de bitiş tarihini
+görür; son 14 günde "Bugün" ekranında yenileme uyarısı çıkar.
+
+## Tecrübelerim
+
+Herkese açık, salt okunur bir bölüm: kategoriler ve altındaki tecrübe kartları veritabanından
+(`GET /api/experience-categories`) okunur. Düzenleme uçları yoktur; içerik Liquibase seed'leriyle gelir.
+Bölümün sonunda yayındaki **vaka çalışmaları** (koçun kendi verisi) görünür.
 
 ## Testler
 

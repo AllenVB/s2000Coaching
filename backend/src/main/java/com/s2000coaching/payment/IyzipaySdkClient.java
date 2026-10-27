@@ -111,7 +111,15 @@ public class IyzipaySdkClient implements IyzicoClient {
 		item.setPrice(price);
 		request.setBasketItems(List.of(item));
 
-		CheckoutFormInitialize result = CheckoutFormInitialize.create(request, options());
+		CheckoutFormInitialize result;
+		try {
+			result = CheckoutFormInitialize.create(request, options());
+		}
+		catch (RuntimeException e) {
+			// The SDK throws its own unchecked exceptions for a refused connection or a bad key;
+			// callers only know how to handle a PaymentFailedException.
+			throw new PaymentFailedException("iyzico'ya ulaşılamadı", e);
+		}
 		if (!Status.SUCCESS.getValue().equals(result.getStatus()) || result.getPaymentPageUrl() == null) {
 			throw new PaymentFailedException("iyzico ödeme sayfası açılamadı: " + result.getErrorMessage());
 		}
@@ -123,9 +131,22 @@ public class IyzipaySdkClient implements IyzicoClient {
 		RetrieveCheckoutFormRequest request = new RetrieveCheckoutFormRequest();
 		request.setLocale(Locale.TR.getValue());
 		request.setToken(token);
-		CheckoutForm form = CheckoutForm.retrieve(request, options());
+		CheckoutForm form;
+		try {
+			form = CheckoutForm.retrieve(request, options());
+		}
+		catch (RuntimeException e) {
+			throw new PaymentFailedException("iyzico sonucu alınamadı", e);
+		}
 
-		boolean authentic = form.verifySignature(secretKey);
+		boolean authentic;
+		try {
+			authentic = form.verifySignature(secretKey);
+		}
+		catch (RuntimeException e) {
+			// An error answer carries no signature to check; that is simply "not authentic".
+			authentic = false;
+		}
 		boolean paid = Status.SUCCESS.getValue().equals(form.getStatus()) && "SUCCESS".equals(form.getPaymentStatus());
 		return new Result(authentic && paid, form.getBasketId(), form.getPaidPrice(), form.getErrorMessage());
 	}

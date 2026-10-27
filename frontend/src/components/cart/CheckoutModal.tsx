@@ -87,7 +87,16 @@ export function CheckoutModal() {
         </div>
 
         <div className="flex-1 overflow-y-auto p-6">
-          {createOrder.isSuccess && createOrder.data.redirectUrl ? (
+          {createOrder.isSuccess && createOrder.data.status === 'FAILED' ? (
+            <div className="flex flex-col items-center px-4 py-12 text-center">
+              <h3 className="mb-2 text-2xl font-bold text-text-primary">Ödeme Başlatılamadı</h3>
+              <p className="mb-6 max-w-md text-sm leading-relaxed text-text-secondary">
+                Ödeme sayfası şu an açılamadı; kartınızdan herhangi bir çekim yapılmadı. Biraz sonra tekrar deneyin
+                ya da havale / EFT ile ödemeyi seçin.
+              </p>
+              <Button onClick={() => createOrder.reset()}>Geri Dön</Button>
+            </div>
+          ) : createOrder.isSuccess && createOrder.data.redirectUrl ? (
             // The provider wants the buyer on its own 3D Secure page. Saying "order complete"
             // here would be a lie: nothing has been charged until they come back.
             <div className="flex flex-col items-center px-4 py-12 text-center">
