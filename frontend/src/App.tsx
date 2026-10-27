@@ -12,6 +12,7 @@ import { MemberListPage } from '@/pages/admin/MemberListPage'
 import { NewMemberPage } from '@/pages/admin/NewMemberPage'
 import { PlanTemplatesPage } from '@/pages/admin/PlanTemplatesPage'
 import { MemberNotesTab } from '@/pages/admin/tabs/MemberNotesTab'
+import { MemberAnalysisTab } from '@/pages/admin/tabs/MemberAnalysisTab'
 import { MemberCheckInsTab } from '@/pages/admin/tabs/MemberCheckInsTab'
 import { MemberMeasurementsTab } from '@/pages/admin/tabs/MemberMeasurementsTab'
 import { MemberPhotosTab } from '@/pages/admin/tabs/MemberPhotosTab'
@@ -60,6 +61,7 @@ export default function App() {
           <Route path="beslenme" element={<MemberNutritionTab />} />
           <Route path="olcumler" element={<MemberMeasurementsTab />} />
           <Route path="haftalik" element={<MemberCheckInsTab />} />
+          <Route path="analiz" element={<MemberAnalysisTab />} />
           <Route path="fotograflar" element={<MemberPhotosTab />} />
           <Route path="mesajlar" element={<MemberMessagesTab />} />
           <Route path="notlar" element={<MemberNotesTab />} />

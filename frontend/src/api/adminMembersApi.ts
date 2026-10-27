@@ -4,6 +4,7 @@ import { useAdminAuth } from '@/context/AdminAuthContext'
 import { adminHeaders } from '@/lib/adminSession'
 import { apiFetch } from '@/lib/api'
 import type { AdminDashboard, Attention, CoachNote, UpdateMemberInput } from '@/types/admin'
+import type { BodyAnalysis } from '@/types/caseStudy'
 import type { CreateMemberInput, Member } from '@/types/member'
 
 const QUERY_KEY = ['admin-members']
@@ -196,5 +197,18 @@ export function useAttention() {
     enabled: Boolean(token),
     // The coach keeps this open; a few minutes old is fine, but not a day old.
     refetchInterval: 5 * 60 * 1000,
+  })
+}
+
+/** The case-study engine run on one member's check-ins and food log; coach only. */
+export function useMemberAnalysis(memberId: string) {
+  const { token } = useAdminAuth()
+
+  return useQuery({
+    queryKey: ['admin-member-analysis', memberId],
+    queryFn: () =>
+      apiFetch<BodyAnalysis>(`/api/admin/members/${memberId}/analysis`, { headers: adminHeaders(token!) }),
+    enabled: Boolean(token),
+    staleTime: 0,
   })
 }

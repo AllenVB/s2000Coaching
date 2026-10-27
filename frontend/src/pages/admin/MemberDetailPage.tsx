@@ -22,6 +22,7 @@ const tabs = [
   { to: 'beslenme', label: 'Beslenme' },
   { to: 'olcumler', label: 'Ölçümler' },
   { to: 'haftalik', label: 'Haftalık' },
+  { to: 'analiz', label: 'Analiz' },
   { to: 'fotograflar', label: 'Fotoğraflar' },
   { to: 'mesajlar', label: 'Mesajlar' },
   { to: 'notlar', label: 'Notlar' },
