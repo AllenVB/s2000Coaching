@@ -4,6 +4,7 @@ import { Link, useParams } from 'react-router-dom'
 import { useMyTrainingPlan, useMyTrainingStats, useSaveWorkoutLog } from '@/api/trainingApi'
 import { RestTimer } from '@/components/training/RestTimer'
 import { ExerciseVideo } from '@/components/training/ExerciseVideo'
+import { WeightStrip } from '@/components/training/WeightStrip'
 import { Button } from '@/components/ui/Button'
 import { inputClasses, textareaClasses } from '@/components/ui/FormField'
 import { ArrowLeftIcon, CheckIcon } from '@/components/ui/icons'
@@ -130,6 +131,18 @@ export function MemberWorkoutDayPage() {
               <p className="mb-3 text-xs leading-relaxed text-text-secondary">{planExercise.note}</p>
             ) : null}
 
+            <WeightStrip
+              history={planExercise.weightHistory ?? []}
+              performedOn={performedOn}
+              liveWeightKg={
+                // Until the member changes something the fields only echo last session, which is
+                // not a weight they lifted today.
+                isUntouched(values[planExercise.id], initialEntries?.[planExercise.id])
+                  ? null
+                  : liveTopWeight(values[planExercise.id] ?? [])
+              }
+            />
+
             <SuggestionLine suggestion={stats?.exercises.find((s) => s.exerciseId === planExercise.exercise.id)?.suggestion} />
 
             <div className="mb-3">
@@ -148,9 +161,9 @@ export function MemberWorkoutDayPage() {
                     type="number"
                     inputMode="numeric"
                     min={0}
-                    placeholder="tekrar"
+                    placeholder={planExercise.setReps?.[index] ? `hedef ${planExercise.setReps[index]}` : 'tekrar'}
                     aria-label={`${planExercise.exercise.name} ${index + 1}. set tekrar`}
-                    className={`${inputClasses} flex-1`}
+                    className={`${inputClasses} min-w-0 flex-1`}
                   />
                   <input
                     value={entry.weightKg}
@@ -161,7 +174,7 @@ export function MemberWorkoutDayPage() {
                     min={0}
                     placeholder="kg"
                     aria-label={`${planExercise.exercise.name} ${index + 1}. set kilo`}
-                    className={`${inputClasses} flex-1`}
+                    className={`${inputClasses} min-w-0 flex-1`}
                   />
                   <input
                     value={entry.rpe}
@@ -173,7 +186,7 @@ export function MemberWorkoutDayPage() {
                     max={10}
                     placeholder="RPE"
                     aria-label={`${planExercise.exercise.name} ${index + 1}. set zorluk (1-10)`}
-                    className={`${inputClasses} w-20 shrink-0`}
+                    className={`${inputClasses.replace('w-full', 'w-16')} shrink-0`}
                   />
                 </li>
               ))}
@@ -261,6 +274,22 @@ function BackLink() {
       Antrenman
     </Link>
   )
+}
+
+function isUntouched(current: SetEntry[] | undefined, initial: SetEntry[] | undefined): boolean {
+  return JSON.stringify(current ?? []) === JSON.stringify(initial ?? [])
+}
+
+/**
+ * The heaviest weight among the sets that would be saved (the ones with reps), which is what
+ * today's slot in the weight strip shows; null while no such set has a weight.
+ */
+function liveTopWeight(entries: SetEntry[]): number | null {
+  const weights = entries
+    .filter((entry) => entry.reps.trim() !== '' && entry.weightKg.trim() !== '')
+    .map((entry) => Number(entry.weightKg))
+    .filter((weight) => Number.isFinite(weight))
+  return weights.length > 0 ? Math.max(...weights) : null
 }
 
 function targetAsText(planExercise: PlanExercise): string {

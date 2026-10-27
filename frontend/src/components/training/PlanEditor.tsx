@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 
 import {
   useAddPlanDay,
@@ -6,47 +6,69 @@ import {
   useDeletePlanDay,
   useDeletePlanExercise,
   useExercises,
+  useUpdatePlanExercise,
 } from '@/api/trainingApi'
 import { ExerciseVideoEditor } from '@/components/training/ExerciseVideoEditor'
-import { Button } from '@/components/ui/Button'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
-import { inputClasses } from '@/components/ui/FormField'
 import { PlusIcon, TrashIcon } from '@/components/ui/icons'
-import { muscleGroupLabel, type PlanDay, type TrainingPlan } from '@/types/training'
+import { MAX_SET_CELLS, muscleGroupLabel, type PlanDay, type PlanExercise, type TrainingPlan } from '@/types/training'
 
-/** Day-and-exercise editor, shared by the template page and a member's training tab. */
+const SET_NUMBERS = Array.from({ length: MAX_SET_CELLS }, (_unused, index) => index + 1)
+
+// Cells look like plain text until pointed at, so a filled plan reads like the printed one.
+const cellClasses =
+  'h-9 w-full rounded-md border border-transparent bg-transparent px-2 text-center text-sm text-text-primary transition-colors hover:border-border focus:border-primary focus:bg-surface focus:outline-none'
+const smallFieldClasses =
+  'h-8 w-full rounded-md border border-border bg-surface px-2 text-xs text-text-primary focus:border-primary focus:outline-none'
+
+/**
+ * Day-and-exercise editor, shared by the template page and a member's training tab. A day is
+ * a table: the exercise, then the rep target of set 1 to 4 (none beyond the first is
+ * required), saved when a cell loses focus. The "+" row at the foot adds an exercise.
+ */
 export function PlanEditor({ plan }: { plan: TrainingPlan }) {
   const addDay = useAddPlanDay()
   const [dayName, setDayName] = useState('')
 
-  const submitDay = (event: React.FormEvent) => {
-    event.preventDefault()
+  const add = () => {
     const name = dayName.trim()
-    if (name.length > 0) {
+    if (name.length > 0 && !addDay.isPending) {
       addDay.mutate({ planId: plan.id, name }, { onSuccess: () => setDayName('') })
     }
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" data-training-editor>
       {plan.days.map((day) => (
         <DayCard key={day.id} day={day} />
       ))}
 
-      <form className="flex flex-wrap items-center gap-2" onSubmit={submitDay}>
+      <div className="flex flex-wrap items-center gap-2">
         <input
           value={dayName}
           onChange={(event) => setDayName(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter') {
+              event.preventDefault()
+              add()
+            }
+          }}
           type="text"
-          placeholder="Örn: Gün 1 — İtiş"
+          placeholder={`Örn: Gün ${plan.days.length + 1}`}
           aria-label="Yeni gün adı"
-          className={`${inputClasses} max-w-xs`}
+          className="h-9 w-full max-w-xs rounded-lg border border-border bg-surface px-3 text-sm text-text-primary focus:border-primary focus:outline-none"
         />
-        <Button type="submit" variant="secondary" disabled={addDay.isPending || dayName.trim().length === 0}>
+        <button
+          type="button"
+          onClick={add}
+          disabled={addDay.isPending || dayName.trim().length === 0}
+          aria-label="Gün ekle"
+          className="inline-flex h-9 items-center gap-1.5 rounded-full border border-border-strong bg-surface-elevated px-3.5 text-xs font-semibold uppercase tracking-wide text-text-primary transition-colors hover:border-primary/60 disabled:cursor-not-allowed disabled:opacity-50"
+        >
           <PlusIcon className="h-3.5 w-3.5" />
           Gün Ekle
-        </Button>
-      </form>
+        </button>
+      </div>
 
       {addDay.isError ? <p className="text-xs text-error">{addDay.error.message}</p> : null}
     </div>
@@ -55,14 +77,12 @@ export function PlanEditor({ plan }: { plan: TrainingPlan }) {
 
 function DayCard({ day }: { day: PlanDay }) {
   const deleteDay = useDeletePlanDay()
-  const deleteExercise = useDeletePlanExercise()
   const [isConfirmingDelete, setConfirmingDelete] = useState(false)
-  const [isAdding, setAdding] = useState(false)
 
   return (
-    <section className="rounded-2xl border border-border bg-surface-elevated p-5">
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3 border-b border-border pb-3">
-        <h3 className="text-sm font-bold uppercase tracking-wider text-text-primary">{day.name}</h3>
+    <section className="overflow-hidden rounded-2xl border border-border bg-surface">
+      <div className="flex items-center justify-between gap-3 border-b border-border bg-surface-elevated px-5 py-3">
+        <h3 className="text-sm font-bold uppercase tracking-wider text-primary">{day.name}</h3>
         <button
           type="button"
           onClick={() => setConfirmingDelete(true)}
@@ -73,49 +93,31 @@ function DayCard({ day }: { day: PlanDay }) {
         </button>
       </div>
 
-      {day.exercises.length === 0 ? (
-        <p className="text-sm italic text-text-muted">Bu güne henüz hareket eklenmedi.</p>
-      ) : (
-        <ul className="space-y-2">
-          {day.exercises.map((planExercise) => (
-            <li
-              key={planExercise.id}
-              className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-surface px-4 py-3"
-            >
-              <span className="min-w-0">
-                <span className="block font-semibold text-text-primary">{planExercise.exercise.name}</span>
-                <span className="block text-xs text-text-muted">
-                  {muscleGroupLabel(planExercise.exercise.muscleGroup)} · {planExercise.setCount} set ×{' '}
-                  {planExercise.reps}
-                  {planExercise.targetWeightKg !== null ? ` · ${planExercise.targetWeightKg} kg` : ''}
-                  {planExercise.restSeconds !== null ? ` · ${planExercise.restSeconds} sn dinlenme` : ''}
-                </span>
-                {planExercise.note ? (
-                  <span className="mt-0.5 block text-xs text-text-secondary">{planExercise.note}</span>
-                ) : null}
-                <ExerciseVideoEditor exercise={planExercise.exercise} />
-              </span>
-              <button
-                type="button"
-                onClick={() => deleteExercise.mutate({ planExerciseId: planExercise.id })}
-                aria-label={`${planExercise.exercise.name} hareketini çıkar`}
-                className="text-text-muted transition-colors hover:text-error"
-              >
-                <TrashIcon className="h-4 w-4" />
-              </button>
-            </li>
-          ))}
-        </ul>
-      )}
-
-      {isAdding ? (
-        <AddExerciseForm dayId={day.id} onDone={() => setAdding(false)} />
-      ) : (
-        <Button type="button" variant="ghost" size="sm" className="mt-3" onClick={() => setAdding(true)}>
-          <PlusIcon className="h-3.5 w-3.5" />
-          Hareket Ekle
-        </Button>
-      )}
+      <div className="overflow-x-auto">
+        <table className="w-full min-w-[540px] border-collapse">
+          <thead>
+            <tr className="text-[11px] font-semibold uppercase tracking-wider text-text-muted">
+              <th scope="col" className="px-4 py-2 text-left">
+                Hareket
+              </th>
+              {SET_NUMBERS.map((number) => (
+                <th key={number} scope="col" className="w-16 px-1 py-2 text-center">
+                  Set {number}
+                </th>
+              ))}
+              <th scope="col" className="w-10">
+                <span className="sr-only">İşlem</span>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {day.exercises.map((planExercise) => (
+              <ExerciseRows key={planExercise.id} planExercise={planExercise} />
+            ))}
+            <AddExerciseRow dayId={day.id} />
+          </tbody>
+        </table>
+      </div>
 
       {isConfirmingDelete ? (
         <ConfirmDialog
@@ -133,109 +135,243 @@ function DayCard({ day }: { day: PlanDay }) {
   )
 }
 
-function AddExerciseForm({ dayId, onDone }: { dayId: string; onDone: () => void }) {
-  const { data: exercises } = useExercises()
-  const addExercise = useAddPlanExercise()
+/**
+ * What the set cells show for an exercise. One written per set shows as it was; one written the
+ * older way (a count and a single free-text reps) shows that text in each of its sets, which is
+ * what "3 × 8-10" means.
+ */
+function setCellValues(planExercise: PlanExercise): string[] {
+  const perSet = planExercise.setReps ?? []
+  if (perSet.length > 0) {
+    return perSet
+  }
+  return Array.from({ length: Math.min(planExercise.setCount, MAX_SET_CELLS) }, () => planExercise.reps)
+}
 
-  const [exerciseId, setExerciseId] = useState('')
-  const [setCount, setSetCount] = useState('3')
-  const [reps, setReps] = useState('8-10')
-  const [targetWeight, setTargetWeight] = useState('')
-  const [rest, setRest] = useState('')
+function ExerciseRows({ planExercise }: { planExercise: PlanExercise }) {
+  const update = useUpdatePlanExercise()
+  const remove = useDeletePlanExercise()
+  const setRefs = useRef<(HTMLInputElement | null)[]>([])
+  const weightRef = useRef<HTMLInputElement>(null)
+  const restRef = useRef<HTMLInputElement>(null)
+  const noteRef = useRef<HTMLInputElement>(null)
 
-  const submit = (event: React.FormEvent) => {
-    event.preventDefault()
-    if (!exerciseId) {
+  const values = setCellValues(planExercise)
+  // More sets than there are cells can only come from the older format; editing it here would
+  // silently drop the extra sets, so it stays read-only until it is rewritten.
+  const isTooLongForCells = planExercise.setCount > MAX_SET_CELLS && (planExercise.setReps ?? []).length === 0
+
+  // Every field is read from the page each time, never from `planExercise`: the server replaces
+  // the whole prescription, so a save carrying a stale sibling would quietly undo another edit.
+  const save = () => {
+    const setReps = SET_NUMBERS.map((number) => setRefs.current[number - 1]?.value.trim() ?? '')
+    const weight = weightRef.current?.value.trim() ?? ''
+    const rest = restRef.current?.value.trim() ?? ''
+    const note = noteRef.current?.value.trim() ?? ''
+
+    const unchanged =
+      SET_NUMBERS.every((number) => setReps[number - 1] === (values[number - 1] ?? '')) &&
+      weight === (planExercise.targetWeightKg === null ? '' : String(planExercise.targetWeightKg)) &&
+      rest === (planExercise.restSeconds === null ? '' : String(planExercise.restSeconds)) &&
+      note === (planExercise.note ?? '')
+    if (unchanged) {
       return
     }
+
+    update.mutate({
+      planExerciseId: planExercise.id,
+      input: {
+        exerciseId: planExercise.exercise.id,
+        setReps,
+        targetWeightKg: weight === '' ? null : Number(weight),
+        restSeconds: rest === '' ? null : Number(rest),
+        note: note || null,
+      },
+    })
+  }
+
+  return (
+    <>
+      <tr className="border-t border-border/60">
+        <td className="px-4 py-1.5">
+          <span className="block text-sm font-semibold text-text-primary">{planExercise.exercise.name}</span>
+          <span className="block text-[11px] text-text-muted">
+            {muscleGroupLabel(planExercise.exercise.muscleGroup)}
+          </span>
+        </td>
+        {isTooLongForCells ? (
+          <td colSpan={MAX_SET_CELLS} className="px-1 py-1.5 text-center text-xs text-text-secondary">
+            {planExercise.setCount} set × {planExercise.reps} (eski biçim)
+          </td>
+        ) : (
+          SET_NUMBERS.map((number) => (
+            <td key={number} className="px-1 py-1.5">
+              <input
+                ref={(element) => {
+                  setRefs.current[number - 1] = element
+                }}
+                defaultValue={values[number - 1] ?? ''}
+                onBlur={save}
+                onKeyDown={blurOnEnter}
+                maxLength={16}
+                placeholder="—"
+                aria-label={`${planExercise.exercise.name} set ${number} tekrar`}
+                className={cellClasses}
+              />
+            </td>
+          ))
+        )}
+        <td className="px-2 py-1.5 text-right">
+          <button
+            type="button"
+            onClick={() => remove.mutate({ planExerciseId: planExercise.id })}
+            disabled={remove.isPending}
+            aria-label={`${planExercise.exercise.name} hareketini çıkar`}
+            className="text-text-muted transition-colors hover:text-error disabled:opacity-50"
+          >
+            <TrashIcon className="h-4 w-4" />
+          </button>
+        </td>
+      </tr>
+      <tr>
+        <td colSpan={MAX_SET_CELLS + 2} className="px-4 pb-3">
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-[100px_100px_1fr]">
+            <input
+              ref={weightRef}
+              defaultValue={planExercise.targetWeightKg ?? ''}
+              onBlur={save}
+              onKeyDown={blurOnEnter}
+              type="number"
+              step="0.5"
+              min={0}
+              placeholder="Hedef kg"
+              aria-label={`${planExercise.exercise.name} hedef kilo`}
+              className={smallFieldClasses}
+            />
+            <input
+              ref={restRef}
+              defaultValue={planExercise.restSeconds ?? ''}
+              onBlur={save}
+              onKeyDown={blurOnEnter}
+              type="number"
+              step="15"
+              min={0}
+              placeholder="Dinlenme sn"
+              aria-label={`${planExercise.exercise.name} dinlenme saniyesi`}
+              className={smallFieldClasses}
+            />
+            <input
+              ref={noteRef}
+              defaultValue={planExercise.note ?? ''}
+              onBlur={save}
+              onKeyDown={blurOnEnter}
+              maxLength={2000}
+              placeholder="Not (üye görür)"
+              aria-label={`${planExercise.exercise.name} notu`}
+              className={`${smallFieldClasses} col-span-2 sm:col-span-1`}
+            />
+          </div>
+          <ExerciseVideoEditor exercise={planExercise.exercise} />
+          {update.isError || remove.isError ? (
+            <p className="mt-1 text-xs text-error">{(update.error ?? remove.error)?.message}</p>
+          ) : null}
+        </td>
+      </tr>
+    </>
+  )
+}
+
+/** The "+" row at the foot of a day: pick an exercise, type the set targets, "+" or Enter. */
+function AddExerciseRow({ dayId }: { dayId: string }) {
+  const { data: exercises } = useExercises()
+  const addExercise = useAddPlanExercise()
+  const selectRef = useRef<HTMLSelectElement>(null)
+  const setRefs = useRef<(HTMLInputElement | null)[]>([])
+
+  const add = () => {
+    const exerciseId = selectRef.current?.value ?? ''
+    if (!exerciseId || addExercise.isPending) {
+      selectRef.current?.focus()
+      return
+    }
+    const setReps = SET_NUMBERS.map((number) => setRefs.current[number - 1]?.value.trim() ?? '')
     addExercise.mutate(
+      { dayId, input: { exerciseId, setReps } },
       {
-        dayId,
-        input: {
-          exerciseId,
-          setCount: Number(setCount),
-          reps: reps.trim(),
-          targetWeightKg: targetWeight === '' ? null : Number(targetWeight),
-          restSeconds: rest === '' ? null : Number(rest),
+        onSuccess: () => {
+          setRefs.current.forEach((input) => {
+            if (input) input.value = ''
+          })
+          if (selectRef.current) selectRef.current.value = ''
+          selectRef.current?.focus()
         },
       },
-      { onSuccess: onDone },
     )
   }
 
   return (
-    <form className="mt-4 space-y-3 rounded-xl border border-border bg-surface p-4" onSubmit={submit}>
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
-        <label className="col-span-2 sm:col-span-2">
-          <span className="mb-1.5 block text-xs font-medium text-text-secondary">Hareket</span>
+    <>
+      <tr className="border-t border-dashed border-border bg-surface-elevated/40">
+        <td className="px-3 py-1.5">
           <select
-            value={exerciseId}
-            onChange={(event) => setExerciseId(event.target.value)}
-            className={inputClasses}
+            ref={selectRef}
+            defaultValue=""
+            aria-label="Eklenecek hareket"
+            className="h-9 w-full rounded-md border border-border bg-surface px-2 text-sm text-text-primary focus:border-primary focus:outline-none"
           >
-            <option value="">Seçin…</option>
+            <option value="">Hareket seçin…</option>
             {exercises?.map((exercise) => (
               <option key={exercise.id} value={exercise.id}>
                 {exercise.name} ({muscleGroupLabel(exercise.muscleGroup)})
               </option>
             ))}
           </select>
-        </label>
-        <label>
-          <span className="mb-1.5 block text-xs font-medium text-text-secondary">Set</span>
-          <input
-            value={setCount}
-            onChange={(event) => setSetCount(event.target.value)}
-            type="number"
-            min={1}
-            max={20}
-            className={inputClasses}
-          />
-        </label>
-        <label>
-          <span className="mb-1.5 block text-xs font-medium text-text-secondary">Tekrar</span>
-          <input
-            value={reps}
-            onChange={(event) => setReps(event.target.value)}
-            type="text"
-            placeholder="8-10"
-            className={inputClasses}
-          />
-        </label>
-        <label>
-          <span className="mb-1.5 block text-xs font-medium text-text-secondary">Hedef (kg)</span>
-          <input
-            value={targetWeight}
-            onChange={(event) => setTargetWeight(event.target.value)}
-            type="number"
-            step="0.5"
-            placeholder="—"
-            className={inputClasses}
-          />
-        </label>
-        <label>
-          <span className="mb-1.5 block text-xs font-medium text-text-secondary">Dinlenme (sn)</span>
-          <input
-            value={rest}
-            onChange={(event) => setRest(event.target.value)}
-            type="number"
-            step="15"
-            placeholder="—"
-            className={inputClasses}
-          />
-        </label>
-      </div>
-
-      {addExercise.isError ? <p className="text-xs text-error">{addExercise.error.message}</p> : null}
-
-      <div className="flex flex-wrap gap-2">
-        <Button type="submit" size="sm" disabled={addExercise.isPending || !exerciseId}>
-          {addExercise.isPending ? 'Ekleniyor…' : 'Ekle'}
-        </Button>
-        <Button type="button" size="sm" variant="ghost" onClick={onDone}>
-          Vazgeç
-        </Button>
-      </div>
-    </form>
+        </td>
+        {SET_NUMBERS.map((number) => (
+          <td key={number} className="px-1 py-1.5">
+            <input
+              ref={(element) => {
+                setRefs.current[number - 1] = element
+              }}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter') {
+                  event.preventDefault()
+                  add()
+                }
+              }}
+              maxLength={16}
+              placeholder={number === 1 ? 'tekrar' : '—'}
+              aria-label={`Yeni hareket set ${number} tekrar`}
+              className={cellClasses}
+            />
+          </td>
+        ))}
+        <td className="px-2 py-1.5 text-right">
+          <button
+            type="button"
+            onClick={add}
+            disabled={addExercise.isPending}
+            aria-label="Hareket ekle"
+            className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-primary text-canvas transition-colors hover:bg-primary-hover disabled:opacity-50"
+          >
+            <PlusIcon className="h-4 w-4" />
+          </button>
+        </td>
+      </tr>
+      {addExercise.isError ? (
+        <tr>
+          <td colSpan={MAX_SET_CELLS + 2} className="px-4 pb-2 text-xs text-error">
+            {addExercise.error.message}
+          </td>
+        </tr>
+      ) : null}
+    </>
   )
+}
+
+function blurOnEnter(event: React.KeyboardEvent<HTMLInputElement>) {
+  if (event.key === 'Enter') {
+    event.preventDefault()
+    event.currentTarget.blur()
+  }
 }

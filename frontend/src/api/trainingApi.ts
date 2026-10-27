@@ -128,8 +128,8 @@ export function useCreateTemplate() {
   const invalidate = useInvalidatePlans()
 
   return useMutation({
-    mutationFn: (input: UpsertPlanInput) =>
-      apiFetch<TrainingPlan>('/api/admin/training-plan-templates', {
+    mutationFn: ({ input, blank }: { input: UpsertPlanInput; blank?: boolean }) =>
+      apiFetch<TrainingPlan>(`/api/admin/training-plan-templates${blank ? '?blank=true' : ''}`, {
         method: 'POST',
         headers: adminHeaders(token!),
         body: JSON.stringify(input),
@@ -143,11 +143,23 @@ export function useCreateMemberPlan(memberId: string) {
   const invalidate = useInvalidatePlans()
 
   return useMutation({
-    mutationFn: ({ input, templateId }: { input: UpsertPlanInput; templateId?: string }) =>
-      apiFetch<TrainingPlan>(
-        `/api/admin/members/${memberId}/training-plans${templateId ? `?templateId=${templateId}` : ''}`,
-        { method: 'POST', headers: adminHeaders(token!), body: JSON.stringify(input) },
-      ),
+    // Without a template the server starts the plan with empty Gün 1–5; `blank` opts out.
+    mutationFn: ({
+      input,
+      templateId,
+      blank,
+    }: {
+      input: UpsertPlanInput
+      templateId?: string
+      blank?: boolean
+    }) => {
+      const query = templateId ? `?templateId=${templateId}` : blank ? '?blank=true' : ''
+      return apiFetch<TrainingPlan>(`/api/admin/members/${memberId}/training-plans${query}`, {
+        method: 'POST',
+        headers: adminHeaders(token!),
+        body: JSON.stringify(input),
+      })
+    },
     onSuccess: invalidate,
   })
 }
@@ -232,6 +244,22 @@ export function useAddPlanExercise() {
     mutationFn: ({ dayId, input }: { dayId: string; input: UpsertPlanExerciseInput }) =>
       apiFetch<TrainingPlan>(`/api/admin/training-plan-days/${dayId}/exercises`, {
         method: 'POST',
+        headers: adminHeaders(token!),
+        body: JSON.stringify(input),
+      }),
+    onSuccess: invalidate,
+  })
+}
+
+/** Replaces the whole prescription, so a cell edit has to send the row's other fields back. */
+export function useUpdatePlanExercise() {
+  const { token } = useAdminAuth()
+  const invalidate = useInvalidatePlans()
+
+  return useMutation({
+    mutationFn: ({ planExerciseId, input }: { planExerciseId: string; input: UpsertPlanExerciseInput }) =>
+      apiFetch<TrainingPlan>(`/api/admin/training-plan-exercises/${planExerciseId}`, {
+        method: 'PUT',
         headers: adminHeaders(token!),
         body: JSON.stringify(input),
       }),
