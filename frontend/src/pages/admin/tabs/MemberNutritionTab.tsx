@@ -7,6 +7,7 @@ import {
   useMemberNutritionPlans,
   useNutritionTemplates,
 } from '@/api/nutritionApi'
+import { MemberIntakeHistory } from '@/components/nutrition/MemberIntakeHistory'
 import { MacroSummary } from '@/components/nutrition/MacroSummary'
 import { NutritionPlanEditor } from '@/components/nutrition/NutritionPlanEditor'
 import { Button } from '@/components/ui/Button'
@@ -167,6 +168,11 @@ export function MemberNutritionTab() {
           Bu üyeye henüz beslenme planı atanmadı.
         </p>
       )}
+
+      <MemberIntakeHistory
+        memberId={member.id}
+        targetCalories={plans?.find((plan) => plan.active)?.targetCalories ?? null}
+      />
 
       {deletingPlan ? (
         <ConfirmDialog
