@@ -12,6 +12,7 @@ import { MemberListPage } from '@/pages/admin/MemberListPage'
 import { NewMemberPage } from '@/pages/admin/NewMemberPage'
 import { PlanTemplatesPage } from '@/pages/admin/PlanTemplatesPage'
 import { MemberNotesTab } from '@/pages/admin/tabs/MemberNotesTab'
+import { MemberFormChecksTab } from '@/pages/admin/tabs/MemberFormChecksTab'
 import { MemberAnalysisTab } from '@/pages/admin/tabs/MemberAnalysisTab'
 import { MemberCheckInsTab } from '@/pages/admin/tabs/MemberCheckInsTab'
 import { MemberMeasurementsTab } from '@/pages/admin/tabs/MemberMeasurementsTab'
@@ -23,6 +24,7 @@ import { MemberProfileTab } from '@/pages/admin/tabs/MemberProfileTab'
 import { LandingPage } from '@/pages/LandingPage'
 import { MemberHistoryPage } from '@/pages/member/MemberHistoryPage'
 import { MemberPhotosPage } from '@/pages/member/MemberPhotosPage'
+import { MemberFormCheckPage } from '@/pages/member/MemberFormCheckPage'
 import { MemberQuestionnairePage } from '@/pages/member/MemberQuestionnairePage'
 import { MemberCheckInPage } from '@/pages/member/MemberCheckInPage'
 import { MemberMeasurementsPage } from '@/pages/member/MemberMeasurementsPage'
@@ -47,6 +49,7 @@ export default function App() {
         <Route path="olcumler" element={<MemberMeasurementsPage />} />
         <Route path="haftalik" element={<MemberCheckInPage />} />
         <Route path="anket" element={<MemberQuestionnairePage />} />
+        <Route path="form-kontrol" element={<MemberFormCheckPage />} />
         <Route path="gecmis" element={<MemberHistoryPage />} />
         <Route path="fotograflar" element={<MemberPhotosPage />} />
         <Route path="mesajlar" element={<MemberMessagesPage />} />
@@ -64,6 +67,7 @@ export default function App() {
           <Route path="olcumler" element={<MemberMeasurementsTab />} />
           <Route path="haftalik" element={<MemberCheckInsTab />} />
           <Route path="analiz" element={<MemberAnalysisTab />} />
+          <Route path="form-kontrol" element={<MemberFormChecksTab />} />
           <Route path="fotograflar" element={<MemberPhotosTab />} />
           <Route path="mesajlar" element={<MemberMessagesTab />} />
           <Route path="notlar" element={<MemberNotesTab />} />

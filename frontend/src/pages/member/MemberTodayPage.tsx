@@ -12,7 +12,7 @@ import { TodayMacrosCard } from '@/components/member/TodayMacrosCard'
 import { ComingSoonCard, PageHeading } from '@/components/ui/PageHeading'
 import { useMemberProfileSync } from '@/hooks/useMemberProfileSync'
 import { formatDate } from '@/lib/date'
-import { AppleIcon, CameraIcon, ChartIcon, ClipboardIcon, DumbbellIcon, HistoryIcon } from '@/components/ui/icons'
+import { AppleIcon, CameraIcon, ChartIcon, ClipboardIcon, DumbbellIcon, HistoryIcon, PlayIcon } from '@/components/ui/icons'
 
 /** The member's landing screen: what to do today, then the shortcuts into each section. */
 export function MemberTodayPage() {
@@ -72,11 +72,12 @@ export function MemberTodayPage() {
 
         {nutritionPlan ? <TodayMacrosCard plan={nutritionPlan} /> : null}
 
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-6">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-7">
           <ShortcutCard to="/uye/antrenman" label="Antrenman" icon={DumbbellIcon} />
           <ShortcutCard to="/uye/beslenme" label="Beslenme" icon={AppleIcon} />
           <ShortcutCard to="/uye/olcumler" label="Ölçümler" icon={ChartIcon} />
           <ShortcutCard to="/uye/haftalik" label="Haftalık" icon={ClipboardIcon} />
+          <ShortcutCard to="/uye/form-kontrol" label="Form Kontrolü" icon={PlayIcon} />
           <ShortcutCard to="/uye/gecmis" label="Geçmiş" icon={HistoryIcon} />
           <ShortcutCard to="/uye/fotograflar" label="Fotoğraflar" icon={CameraIcon} />
         </div>

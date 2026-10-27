@@ -34,6 +34,7 @@ class AttentionScorerTest {
 		boolean unansweredCheckIn;
 		boolean questionnaire = true;
 		boolean clearance;
+		boolean formCheck;
 
 		F workout(LocalDate d) {
 			workout = d;
@@ -85,6 +86,11 @@ class AttentionScorerTest {
 			return this;
 		}
 
+		F formCheck() {
+			formCheck = true;
+			return this;
+		}
+
 		F clearance() {
 			clearance = true;
 			return this;
@@ -92,7 +98,7 @@ class AttentionScorerTest {
 
 		Signals build() {
 			return new Signals(UUID.randomUUID(), "Ahmet", joined, trainingPlan, nutritionPlan, workout, measurement,
-					intake, unread, membershipEnd, unansweredCheckIn, questionnaire, clearance);
+					intake, unread, membershipEnd, unansweredCheckIn, questionnaire, clearance, formCheck);
 		}
 	}
 
@@ -217,5 +223,10 @@ class AttentionScorerTest {
 
 		// Cannot both be true in practice; if it ever is, the clearance flag wins and no nag is added.
 		assertThat(codes(item)).doesNotContain("NO_QUESTIONNAIRE");
+	}
+
+	@Test
+	void shouldFlagAFormCheckVideoWaitingForAnAnswer() {
+		assertThat(codes(AttentionScorer.score(with(F::formCheck), TODAY))).containsExactly("FORM_CHECK");
 	}
 }

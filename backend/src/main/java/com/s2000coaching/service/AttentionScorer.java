@@ -37,7 +37,7 @@ public final class AttentionScorer {
 	public record Signals(UUID memberId, String fullName, LocalDate joinedOn, boolean hasTrainingPlan,
 			boolean hasNutritionPlan, LocalDate lastWorkout, LocalDate lastMeasurement, LocalDate lastIntake,
 			boolean unreadMessage, LocalDate membershipEnd, boolean unansweredCheckIn, boolean hasQuestionnaire,
-			boolean needsMedicalClearance) {
+			boolean needsMedicalClearance, boolean unansweredFormCheck) {
 	}
 
 	/** {@code code} is stable for the UI; {@code label} is what the coach reads. */
@@ -59,6 +59,10 @@ public final class AttentionScorer {
 			reasons.add(new Reason("MEDICAL_CLEARANCE", "Sağlık anketinde dikkat gerektiren yanıt var (doktor onayı)", 4));
 		} else if (!s.hasQuestionnaire() && quietDays(null, s.joinedOn(), today) >= QUESTIONNAIRE_GRACE_DAYS) {
 			reasons.add(new Reason("NO_QUESTIONNAIRE", "Sağlık anketini henüz doldurmadı", 2));
+		}
+
+		if (s.unansweredFormCheck()) {
+			reasons.add(new Reason("FORM_CHECK", "Form kontrolü videosu yanıt bekliyor", 3));
 		}
 
 		if (s.unansweredCheckIn()) {

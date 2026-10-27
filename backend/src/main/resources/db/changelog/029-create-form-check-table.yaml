@@ -1,0 +1,41 @@
+databaseChangeLog:
+  - changeSet:
+      id: 045-create-form-check-table
+      author: s2000
+      comment: >-
+        A member asking the coach to look at their form: which exercise, a YouTube link to the
+        clip (stored in canonical form, so only a YouTube video can ever be embedded), a note,
+        and the coach's written answer on the same row.
+      changes:
+        - createTable:
+            tableName: form_check
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: member_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_form_check_member
+                    references: member(id)
+              - column: { name: exercise_name, type: varchar(120), constraints: { nullable: false } }
+              - column: { name: video_url, type: varchar(200), constraints: { nullable: false } }
+              - column: { name: note, type: text }
+              - column: { name: coach_reply, type: text }
+              - column: { name: coach_replied_at, type: timestamp with time zone }
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false
+        - createIndex:
+            indexName: idx_form_check_member_created
+            tableName: form_check
+            columns:
+              - column: { name: member_id }
+              - column: { name: created_at }

@@ -14,6 +14,7 @@ import {
   DumbbellIcon,
   HistoryIcon,
   HomeIcon,
+  PlayIcon,
   UserIcon,
 } from '@/components/ui/icons'
 
@@ -23,6 +24,7 @@ const navItems: PortalNavItem[] = [
   { to: '/uye/beslenme', label: 'Beslenme', icon: AppleIcon },
   { to: '/uye/olcumler', label: 'Ölçümler', icon: ChartIcon },
   { to: '/uye/haftalik', label: 'Haftalık', icon: ClipboardIcon, desktopOnly: true },
+  { to: '/uye/form-kontrol', label: 'Form', icon: PlayIcon, desktopOnly: true },
   { to: '/uye/gecmis', label: 'Geçmiş', icon: HistoryIcon, desktopOnly: true },
   { to: '/uye/fotograflar', label: 'Fotoğraflar', icon: CameraIcon, desktopOnly: true },
   { to: '/uye/mesajlar', label: 'Mesajlar', icon: ChatIcon },

@@ -4,6 +4,7 @@ import com.s2000coaching.domain.Member;
 import com.s2000coaching.domain.MemberStatus;
 import com.s2000coaching.domain.OrderStatus;
 import com.s2000coaching.repository.CheckInRepository;
+import com.s2000coaching.repository.FormCheckRepository;
 import com.s2000coaching.repository.MeasurementRepository;
 import com.s2000coaching.repository.MemberIntakeRepository;
 import com.s2000coaching.repository.MemberRepository;
@@ -47,6 +48,7 @@ public class AttentionService {
 	private final MembershipRepository membershipRepository;
 	private final OrderRepository orderRepository;
 	private final CheckInRepository checkInRepository;
+	private final FormCheckRepository formCheckRepository;
 	private final MemberQuestionnaireRepository questionnaireRepository;
 	private final MessageService messageService;
 	private final Clock clock;
@@ -55,9 +57,10 @@ public class AttentionService {
 			MeasurementRepository measurementRepository, MemberIntakeRepository intakeRepository,
 			TrainingPlanRepository trainingPlanRepository, NutritionPlanRepository nutritionPlanRepository,
 			MembershipRepository membershipRepository, OrderRepository orderRepository,
-			CheckInRepository checkInRepository, MemberQuestionnaireRepository questionnaireRepository,
+			CheckInRepository checkInRepository, FormCheckRepository formCheckRepository, MemberQuestionnaireRepository questionnaireRepository,
 			MessageService messageService, Clock clock) {
 		this.questionnaireRepository = questionnaireRepository;
+		this.formCheckRepository = formCheckRepository;
 		this.checkInRepository = checkInRepository;
 		this.memberRepository = memberRepository;
 		this.workoutLogRepository = workoutLogRepository;
@@ -85,11 +88,12 @@ public class AttentionService {
 		Set<UUID> unread = new HashSet<>(messageService.memberIdsAwaitingReply());
 		Set<UUID> withQuestionnaire = new HashSet<>(questionnaireRepository.findMemberIdsWithQuestionnaire());
 		Set<UUID> needClearance = new HashSet<>(questionnaireRepository.findMemberIdsNeedingClearance());
+		Set<UUID> unansweredFormChecks = new HashSet<>(formCheckRepository.findMemberIdsWithUnansweredFormCheck());
 		Set<UUID> unansweredCheckIns = new HashSet<>(checkInRepository.findMemberIdsWithUnansweredCheckIn());
 
 		List<Item> items = memberRepository.findAllByStatusOrderByCreatedAtDesc(MemberStatus.ACTIVE).stream()
 				.map(member -> AttentionScorer.score(signals(member, zone, lastWorkout, lastMeasurement, lastIntake,
-						membershipEnd, trainingPlans, nutritionPlans, unread, unansweredCheckIns, withQuestionnaire, needClearance), today))
+						membershipEnd, trainingPlans, nutritionPlans, unread, unansweredCheckIns, withQuestionnaire, needClearance, unansweredFormChecks), today))
 				.filter(item -> item != null)
 				.sorted(Comparator.comparingInt(Item::score).reversed().thenComparing(Item::fullName))
 				.toList();
@@ -104,14 +108,15 @@ public class AttentionService {
 	private static Signals signals(Member member, ZoneId zone, Map<UUID, LocalDate> lastWorkout,
 			Map<UUID, LocalDate> lastMeasurement, Map<UUID, LocalDate> lastIntake,
 			Map<UUID, LocalDate> membershipEnd, Set<UUID> trainingPlans, Set<UUID> nutritionPlans,
-			Set<UUID> unread, Set<UUID> unansweredCheckIns, Set<UUID> withQuestionnaire, Set<UUID> needClearance) {
+			Set<UUID> unread, Set<UUID> unansweredCheckIns, Set<UUID> withQuestionnaire, Set<UUID> needClearance,
+			Set<UUID> unansweredFormChecks) {
 		UUID id = member.getId();
 		// Counted from the day they could first have done anything: confirming the account.
 		var joined = member.getVerifiedAt() != null ? member.getVerifiedAt() : member.getCreatedAt();
 		return new Signals(id, member.getFullName(), joined.atZone(zone).toLocalDate(), trainingPlans.contains(id),
 				nutritionPlans.contains(id), lastWorkout.get(id), lastMeasurement.get(id), lastIntake.get(id),
 				unread.contains(id), membershipEnd.get(id), unansweredCheckIns.contains(id),
-				withQuestionnaire.contains(id), needClearance.contains(id));
+				withQuestionnaire.contains(id), needClearance.contains(id), unansweredFormChecks.contains(id));
 	}
 
 	/** Rows of (member id, date) from a grouped query. */
