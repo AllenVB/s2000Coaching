@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 
 import { useMyTrainingPlan, useSaveWorkoutLog } from '@/api/trainingApi'
+import { ExerciseVideo } from '@/components/training/ExerciseVideo'
 import { Button } from '@/components/ui/Button'
 import { inputClasses, textareaClasses } from '@/components/ui/FormField'
 import { ArrowLeftIcon, CheckIcon } from '@/components/ui/icons'
@@ -121,6 +122,10 @@ export function MemberWorkoutDayPage() {
             {planExercise.note ? (
               <p className="mb-3 text-xs leading-relaxed text-text-secondary">{planExercise.note}</p>
             ) : null}
+
+            <div className="mb-3">
+              <ExerciseVideo exercise={planExercise.exercise} />
+            </div>
 
             <ul className="space-y-2">
               {(values[planExercise.id] ?? []).map((entry, index) => (

@@ -19,8 +19,16 @@ export interface Exercise {
   id: string
   name: string
   muscleGroup: MuscleGroup
+  /** The address as stored; for an old entry that is not YouTube it is all there is. */
   videoUrl: string | null
+  /** What the player is built from; null when there is no YouTube video. */
+  video: ExerciseVideo | null
   note: string | null
+}
+
+export interface ExerciseVideo {
+  id: string
+  startSeconds: number
 }
 
 export interface UpsertExerciseInput {

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 
 import { useCreateExercise, useDeleteExercise, useExercises } from '@/api/trainingApi'
+import { ExerciseVideoEditor } from '@/components/training/ExerciseVideoEditor'
 import { Button } from '@/components/ui/Button'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { Field, inputClasses } from '@/components/ui/FormField'
@@ -79,8 +80,9 @@ export function ExerciseCatalogPage() {
                 <input
                   value={videoUrl}
                   onChange={(event) => setVideoUrl(event.target.value)}
-                  type="url"
-                  placeholder="https://…"
+                  type="text"
+                  inputMode="url"
+                  placeholder="YouTube bağlantısı — https://youtu.be/…"
                   className={inputClasses}
                 />
               </Field>
@@ -119,6 +121,7 @@ export function ExerciseCatalogPage() {
                       {muscleGroupLabel(exercise.muscleGroup)}
                       {exercise.videoUrl ? ' · video var' : ''}
                     </span>
+                    <ExerciseVideoEditor exercise={exercise} />
                   </span>
                   <button
                     type="button"

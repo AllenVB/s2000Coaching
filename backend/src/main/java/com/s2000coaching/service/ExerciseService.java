@@ -1,6 +1,7 @@
 package com.s2000coaching.service;
 
 import com.s2000coaching.domain.Exercise;
+import com.s2000coaching.exception.BadRequestException;
 import com.s2000coaching.exception.ConflictException;
 import com.s2000coaching.exception.NotFoundException;
 import com.s2000coaching.repository.ExerciseRepository;
@@ -38,7 +39,7 @@ public class ExerciseService {
 			throw new ConflictException("Bu isimde bir hareket zaten var: " + name);
 		}
 		Exercise exercise = new Exercise(UUID.randomUUID(), name, request.muscleGroup(),
-				blankToNull(request.videoUrl()), blankToNull(request.note()), Instant.now());
+				normalizedVideoUrl(request.videoUrl()), blankToNull(request.note()), Instant.now());
 		return ExerciseResponse.from(exerciseRepository.save(exercise));
 	}
 
@@ -51,7 +52,7 @@ public class ExerciseService {
 		}
 		exercise.setName(name);
 		exercise.setMuscleGroup(request.muscleGroup());
-		exercise.setVideoUrl(blankToNull(request.videoUrl()));
+		exercise.setVideoUrl(normalizedVideoUrl(request.videoUrl()));
 		exercise.setNote(blankToNull(request.note()));
 		return ExerciseResponse.from(exercise);
 	}
@@ -81,5 +82,20 @@ public class ExerciseService {
 
 	private static String blankToNull(String value) {
 		return value == null || value.isBlank() ? null : value.trim();
+	}
+
+	/**
+	 * Blank clears the video; anything else must be a YouTube link and is stored in its
+	 * canonical form. Refusing other hosts here is what keeps the player address something we
+	 * build from a video id, not something a pasted link gets to choose.
+	 */
+	private static String normalizedVideoUrl(String raw) {
+		if (raw == null || raw.isBlank()) {
+			return null;
+		}
+		return YouTubeLink.parse(raw)
+				.map(YouTubeLink.Parsed::canonicalUrl)
+				.orElseThrow(() -> new BadRequestException(
+						"Video bağlantısı bir YouTube bağlantısı olmalı (örn. https://youtu.be/… ya da https://www.youtube.com/watch?v=…)."));
 	}
 }
