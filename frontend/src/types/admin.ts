@@ -7,7 +7,9 @@ export interface CoachNote {
   updatedAt: string
 }
 
-export type OrderStatus = 'PENDING' | 'AWAITING_PAYMENT' | 'PAID' | 'FAILED'
+import type { OrderStatus, PaymentMethod } from '@/types/order'
+
+export type { OrderStatus }
 
 export interface OrderSummary {
   orderNumber: string
@@ -21,6 +23,9 @@ export interface OrderSummary {
   createdAt: string
   /** The member this order belongs to, or null if the buyer is not one yet. */
   memberId: string | null
+  paymentMethod: PaymentMethod
+  /** When the money was confirmed; null until then (and always null for the development gateway). */
+  paidAt: string | null
 }
 
 export interface AdminDashboard {

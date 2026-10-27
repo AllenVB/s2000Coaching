@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 
 import { useUpdateMyProfile } from '@/api/memberAuthApi'
+import { MembershipCard } from '@/components/member/MembershipCard'
 import { MemberStatusBadge } from '@/components/member/MemberStatusBadge'
 import { Button } from '@/components/ui/Button'
 import { Field, inputClasses, textareaClasses } from '@/components/ui/FormField'
@@ -27,11 +28,14 @@ export function MemberProfilePage() {
         description="İletişim bilgilerinizi kendiniz güncelleyebilirsiniz."
       />
 
-      {editing ? (
-        <ProfileForm member={member} onDone={() => setEditing(false)} />
-      ) : (
-        <ProfileCard member={member} onEdit={() => setEditing(true)} />
-      )}
+      <div className="space-y-6">
+        <MembershipCard />
+        {editing ? (
+          <ProfileForm member={member} onDone={() => setEditing(false)} />
+        ) : (
+          <ProfileCard member={member} onEdit={() => setEditing(true)} />
+        )}
+      </div>
     </>
   )
 }

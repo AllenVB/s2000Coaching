@@ -1,6 +1,9 @@
 package com.s2000coaching.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.never;
+import static org.mockito.ArgumentMatchers.any;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.when;
 
@@ -29,13 +32,17 @@ class AdminOrderServiceTest {
 	@Mock
 	private OrderRepository orderRepository;
 
+	@Mock
+	private MembershipService membershipService;
+
 	private AdminOrderService adminOrderService;
 	private Member member;
 	private CoachingPackage coachingPackage;
 
 	@BeforeEach
 	void setUp() {
-		adminOrderService = new AdminOrderService(orderRepository);
+		adminOrderService = new AdminOrderService(orderRepository, membershipService,
+				java.time.Clock.fixed(java.time.Instant.parse("2026-10-10T09:00:00Z"), java.time.ZoneOffset.UTC));
 		member = new Member(UUID.randomUUID(), "sporcu@example.com", "Ahmet Yılmaz", "+905551112233", 182,
 				new BigDecimal("84.50"), "5 yıl fitness", MemberStatus.ACTIVE, Instant.now());
 		coachingPackage = new CoachingPackage(UUID.randomUUID(), "kocluk-1-ay", PackageCategory.KOCLUK,
@@ -94,5 +101,67 @@ class AdminOrderServiceTest {
 
 		assertThatThrownBy(() -> adminOrderService.getByOrderNumber("S2K-YOK"))
 				.isInstanceOf(NotFoundException.class);
+	}
+
+	@Test
+	void shouldConfirmAWaitingTransferAndGrantTheMembership() {
+		Order waiting = order("sporcu@example.com");
+		waiting.setStatus(OrderStatus.AWAITING_TRANSFER);
+		waiting.setMember(member);
+		when(orderRepository.findByOrderNumber("S2K-TEST0001")).thenReturn(Optional.of(waiting));
+
+		var response = adminOrderService.confirmPayment("S2K-TEST0001");
+
+		assertThat(response.status()).isEqualTo(OrderStatus.PAID);
+		assertThat(waiting.getPaidAt()).isEqualTo(Instant.parse("2026-10-10T09:00:00Z"));
+		verify(membershipService).grantFor(waiting);
+	}
+
+	/** Confirming twice, or confirming something nobody transferred for, must be refused. */
+	@Test
+	void shouldRefuseToConfirmAnOrderThatIsNotAwaitingATransfer() {
+		Order paid = order("sporcu@example.com");
+		paid.markPaid(Instant.now());
+		when(orderRepository.findByOrderNumber("S2K-TEST0001")).thenReturn(Optional.of(paid));
+
+		assertThatThrownBy(() -> adminOrderService.confirmPayment("S2K-TEST0001"))
+				.isInstanceOf(com.s2000coaching.exception.ConflictException.class);
+		verify(membershipService, never()).grantFor(any());
+	}
+
+	@Test
+	void shouldGrantThePeriodWhenALaterMemberIsLinkedToAnAlreadyPaidOrder() {
+		Order paid = order("sporcu@example.com");
+		paid.markPaid(Instant.now());
+		when(orderRepository.findAllByEmailIgnoreCaseAndMemberIsNull("sporcu@example.com"))
+				.thenReturn(List.of(paid));
+
+		adminOrderService.linkOrdersTo(member);
+
+		verify(membershipService).grantFor(paid);
+	}
+
+	@Test
+	void shouldNotGrantForAnOrderThatWasNeverPaid() {
+		Order waiting = order("sporcu@example.com");
+		waiting.setStatus(OrderStatus.AWAITING_TRANSFER);
+		when(orderRepository.findAllByEmailIgnoreCaseAndMemberIsNull("sporcu@example.com"))
+				.thenReturn(List.of(waiting));
+
+		adminOrderService.linkOrdersTo(member);
+
+		verify(membershipService, never()).grantFor(any());
+	}
+
+	@Test
+	void shouldCancelAWaitingTransferButNotAPaidOrder() {
+		Order waiting = order("sporcu@example.com");
+		waiting.setStatus(OrderStatus.AWAITING_TRANSFER);
+		when(orderRepository.findByOrderNumber("S2K-TEST0001")).thenReturn(Optional.of(waiting));
+		assertThat(adminOrderService.cancel("S2K-TEST0001").status()).isEqualTo(OrderStatus.CANCELLED);
+
+		waiting.markPaid(Instant.now());
+		assertThatThrownBy(() -> adminOrderService.cancel("S2K-TEST0001"))
+				.isInstanceOf(com.s2000coaching.exception.ConflictException.class);
 	}
 }

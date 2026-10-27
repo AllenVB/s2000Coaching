@@ -26,3 +26,13 @@ rem set "MAIL_PORT=587"
 rem set "MAIL_USERNAME=ornek@gmail.com"
 rem set "MAIL_PASSWORD=uygulama-sifresi"
 rem set "MAIL_FROM=S2000 Coaching <ornek@gmail.com>"
+
+rem --- Odeme: IBAN / havale (istege bagli).
+rem     IBAN ve hesap sahibi tanimlanirsa odeme sayfasi havale secenegini sunar ve
+rem     test odemesi KAPANIR: siparis "Havale bekleniyor" olarak durur, parayi
+rem     gordugunuzde yonetim panelindeki Siparisler sayfasindan "Odeme Alindi"
+rem     dersiniz ve uyelik suresi o anda baslar. Tanimli degilse siparisler test
+rem     modunda aninda onaylanir (yalnizca gelistirme icin).
+rem set "PAYMENT_IBAN=TR00 0000 0000 0000 0000 0000 00"
+rem set "PAYMENT_IBAN_HOLDER=Ad Soyad"
+rem set "PAYMENT_IBAN_BANK=Banka Adi"

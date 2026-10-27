@@ -67,6 +67,14 @@ app:
     # rate limit counts rows from the last hour; anything under two hours is refused.
     cron: ${CLEANUP_CRON:0 30 3 * * *}
     code-retention: ${CLEANUP_CODE_RETENTION:7d}
+  payment:
+    # With an IBAN and account holder set, checkout offers bank transfer and the development
+    # mock disappears: an order then waits as AWAITING_TRANSFER until the coach confirms the
+    # money arrived. With neither set the mock settles orders at once (development only).
+    iban:
+      number: ${PAYMENT_IBAN:}
+      account-holder: ${PAYMENT_IBAN_HOLDER:}
+      bank-name: ${PAYMENT_IBAN_BANK:}
   photos:
     # Only the key lives in the database; the bytes live here. A deployment on more than one
     # machine needs a shared volume or an object-storage PhotoStorage implementation.

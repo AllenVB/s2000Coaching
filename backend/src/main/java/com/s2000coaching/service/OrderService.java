@@ -3,9 +3,12 @@ package com.s2000coaching.service;
 import com.s2000coaching.domain.CoachingPackage;
 import com.s2000coaching.domain.Order;
 import com.s2000coaching.domain.OrderStatus;
+import com.s2000coaching.domain.PaymentMethod;
 import com.s2000coaching.exception.NotFoundException;
+import com.s2000coaching.payment.BankDetails;
 import com.s2000coaching.payment.PaymentGateway;
-import com.s2000coaching.payment.PaymentResult;
+import com.s2000coaching.payment.PaymentInitiation;
+import com.s2000coaching.payment.PaymentMethods;
 import com.s2000coaching.repository.OrderRepository;
 import com.s2000coaching.web.dto.CreateOrderRequest;
 import com.s2000coaching.web.dto.OrderResponse;
@@ -23,13 +26,13 @@ public class OrderService {
 
 	private final OrderRepository orderRepository;
 	private final PackageService packageService;
-	private final PaymentGateway paymentGateway;
+	private final PaymentMethods paymentMethods;
 
 	public OrderService(OrderRepository orderRepository, PackageService packageService,
-			PaymentGateway paymentGateway) {
+			PaymentMethods paymentMethods) {
 		this.orderRepository = orderRepository;
 		this.packageService = packageService;
-		this.paymentGateway = paymentGateway;
+		this.paymentMethods = paymentMethods;
 	}
 
 	@Transactional
@@ -49,18 +52,29 @@ public class OrderService {
 				request.kvkkConsent(),
 				Instant.now());
 
-		PaymentResult result = paymentGateway.charge(order);
-		order.setStatus(result.success() ? OrderStatus.MOCK_PAID : OrderStatus.FAILED);
+		// Resolved before anything is saved: an unavailable method must not leave an order behind.
+		PaymentGateway gateway = paymentMethods.resolve(request.paymentMethod());
+		PaymentInitiation initiation = gateway.initiate(order);
+		order.setPaymentMethod(gateway.method());
+		order.setStatus(initiation.status());
+		order.setPaymentReference(initiation.reference());
 
 		Order saved = orderRepository.save(order);
-		return OrderResponse.from(saved);
+		return respond(saved, initiation.redirectUrl());
 	}
 
 	@Transactional(readOnly = true)
 	public OrderResponse getByOrderNumber(String orderNumber) {
 		Order order = orderRepository.findByOrderNumber(orderNumber)
 				.orElseThrow(() -> new NotFoundException("Sipariş bulunamadı: " + orderNumber));
-		return OrderResponse.from(order);
+		return respond(order, null);
+	}
+
+	private OrderResponse respond(Order order, String redirectUrl) {
+		BankDetails bank = order.getPaymentMethod() == PaymentMethod.IBAN
+				? paymentMethods.bankDetails(order.getOrderNumber())
+				: null;
+		return OrderResponse.from(order, redirectUrl, bank);
 	}
 
 	private String generateOrderNumber() {

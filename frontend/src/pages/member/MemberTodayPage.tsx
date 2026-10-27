@@ -5,6 +5,7 @@ import type { TrainingPlan } from '@/types/training'
 import { useMyMeasurements } from '@/api/measurementsApi'
 import { useMyNutritionPlan } from '@/api/nutritionApi'
 import { useMyTrainingPlan } from '@/api/trainingApi'
+import { RenewalNotice } from '@/components/member/MembershipCard'
 import { MeasurementReminder } from '@/components/member/MeasurementReminder'
 import { TodayMacrosCard } from '@/components/member/TodayMacrosCard'
 import { ComingSoonCard, PageHeading } from '@/components/ui/PageHeading'
@@ -37,6 +38,8 @@ export function MemberTodayPage() {
       ) : null}
 
       <div className="space-y-6">
+        <RenewalNotice />
+
         {/* Only once the list has loaded: an empty array while loading would claim the
             member has never checked in. */}
         {measurements ? <MeasurementReminder measurements={measurements} /> : null}

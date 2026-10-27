@@ -1,17 +1,25 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 
-import { useCreateOrder } from '@/api/ordersApi'
+import { useState } from 'react'
+
+import { useCreateOrder, usePaymentMethods } from '@/api/ordersApi'
 import { Button } from '@/components/ui/Button'
 import { Field, inputClasses } from '@/components/ui/FormField'
-import { CheckIcon, CloseIcon, ShieldIcon } from '@/components/ui/icons'
+import { CheckIcon, CloseIcon } from '@/components/ui/icons'
 import { useCart } from '@/context/CartContext'
 import { formatMinor } from '@/lib/money'
 import { checkoutSchema, type CheckoutFormValues } from '@/schemas/checkoutSchema'
+import type { PaymentMethod } from '@/types/order'
 
 export function CheckoutModal() {
   const { selectedPackage, isCheckoutOpen, closeCheckout, removeFromCart } = useCart()
   const createOrder = useCreateOrder()
+  const { data: methods } = usePaymentMethods()
+  const [chosenMethod, setChosenMethod] = useState<PaymentMethod | null>(null)
+  // The first offered method until the buyer picks another.
+  const method = chosenMethod ?? methods?.[0]?.method ?? null
+  const selected = methods?.find((option) => option.method === method) ?? null
 
   const {
     register,
@@ -46,6 +54,7 @@ export function CheckoutModal() {
       cityAge: values.cityAge || undefined,
       packageId: selectedPackage.id,
       kvkkConsent: values.kvkkConsent,
+      paymentMethod: method ?? undefined,
     })
   }
 
@@ -90,6 +99,30 @@ export function CheckoutModal() {
               >
                 Ödemeye Devam Et
               </a>
+            </div>
+          ) : createOrder.isSuccess && createOrder.data.bankTransfer ? (
+            <div className="mx-auto max-w-lg px-2 py-8">
+              <h3 className="mb-2 text-center text-2xl font-bold text-text-primary">Siparişiniz Alındı</h3>
+              <p className="mb-5 text-center text-sm text-text-secondary">
+                Ödemeyi aşağıdaki hesaba havale/EFT ile yapın. Açıklama kısmına{' '}
+                <strong className="text-text-primary">sipariş numaranızı</strong> yazmayı unutmayın.
+              </p>
+              <dl className="space-y-3 rounded-xl border border-border bg-surface-elevated p-5 text-sm">
+                <BankRow label="Alıcı" value={createOrder.data.bankTransfer.accountHolder} />
+                {createOrder.data.bankTransfer.bankName ? (
+                  <BankRow label="Banka" value={createOrder.data.bankTransfer.bankName} />
+                ) : null}
+                <BankRow label="IBAN" value={formatIban(createOrder.data.bankTransfer.iban)} mono />
+                <BankRow label="Tutar" value={formatMinor(createOrder.data.priceMinor)} />
+                <BankRow label="Açıklama" value={createOrder.data.orderNumber} mono />
+              </dl>
+              <p className="mt-4 text-xs leading-relaxed text-text-muted">
+                Ödemeniz hesaba ulaşıp koç tarafından onaylandığında üyeliğiniz başlar ve giriş bilgileriniz
+                e-postanıza gönderilir. Bu genellikle aynı gün içinde olur.
+              </p>
+              <Button className="mt-6 w-full" onClick={handleFinish}>
+                Anladım, Kapat
+              </Button>
             </div>
           ) : createOrder.isSuccess ? (
             <div className="flex flex-col items-center px-4 py-12 text-center">
@@ -152,13 +185,42 @@ export function CheckoutModal() {
                     </Field>
                   </div>
 
-                  <div className="flex items-start gap-2 rounded-lg border border-border bg-surface-elevated p-3.5 text-xs text-text-secondary">
-                    <ShieldIcon className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-                    <span>
-                      <strong className="text-text-primary">Test modu:</strong> Gerçek ödeme sağlayıcısı entegre
-                      edilene kadar siparişiniz simülasyon ile anında onaylanır. Kart bilgisi istenmez.
-                    </span>
-                  </div>
+                  <fieldset className="space-y-2">
+                    <legend className="mb-1.5 text-xs font-medium text-text-secondary">Ödeme Yöntemi</legend>
+                    {methods?.map((option) => (
+                      <label
+                        key={option.method}
+                        className={`flex cursor-pointer items-start gap-2.5 rounded-lg border p-3 text-xs ${
+                          option.method === method
+                            ? 'border-primary bg-primary/5 text-text-primary'
+                            : 'border-border bg-surface-elevated text-text-secondary'
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          name="payment-method"
+                          checked={option.method === method}
+                          onChange={() => setChosenMethod(option.method)}
+                          className="mt-0.5"
+                        />
+                        <span>
+                          <span className="block font-semibold text-text-primary">{option.label}</span>
+                          {option.method === 'MOCK' ? (
+                            <span className="block text-text-muted">
+                              Gerçek ödeme sağlayıcısı tanımlanana kadar sipariş simülasyonla onaylanır. Kart
+                              bilgisi istenmez.
+                            </span>
+                          ) : null}
+                          {option.method === 'IBAN' ? (
+                            <span className="block text-text-muted">
+                              Siparişten sonra IBAN bilgisi gösterilir; ödemeniz koç tarafından onaylanınca
+                              üyeliğiniz başlar.
+                            </span>
+                          ) : null}
+                        </span>
+                      </label>
+                    ))}
+                  </fieldset>
 
                   <div className="flex items-start gap-2 pt-1">
                     <input
@@ -179,7 +241,7 @@ export function CheckoutModal() {
                     </p>
                   ) : null}
 
-                  <Button type="submit" className="w-full" disabled={createOrder.isPending}>
+                  <Button type="submit" className="w-full" disabled={createOrder.isPending || !selected}>
                     {createOrder.isPending ? 'Gönderiliyor…' : 'Siparişi Onayla'}
                   </Button>
                 </form>
@@ -227,4 +289,18 @@ export function CheckoutModal() {
       </div>
     </div>
   )
+}
+
+function BankRow({ label, value, mono = false }: { label: string; value: string; mono?: boolean }) {
+  return (
+    <div className="flex flex-wrap items-baseline justify-between gap-2">
+      <dt className="text-xs uppercase tracking-wider text-text-muted">{label}</dt>
+      <dd className={`select-all break-all font-semibold text-text-primary ${mono ? 'font-mono' : ''}`}>{value}</dd>
+    </div>
+  )
+}
+
+/** TR33 0006 1005 … in groups of four, which is how people read and copy it. */
+function formatIban(iban: string): string {
+  return iban.replace(/(.{4})/g, '$1 ').trim()
 }

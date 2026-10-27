@@ -13,5 +13,7 @@ public record CreateOrderRequest(
 		@NotBlank @Size(max = 40) String phone,
 		@Size(max = 120) String cityAge,
 		@NotNull UUID packageId,
-		@AssertTrue(message = "KVKK onamı zorunludur") boolean kvkkConsent) {
+		@AssertTrue(message = "KVKK onamı zorunludur") boolean kvkkConsent,
+		/** Null means the first available method. */
+		com.s2000coaching.domain.PaymentMethod paymentMethod) {
 }

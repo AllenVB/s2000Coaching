@@ -1,10 +1,11 @@
 import { Link } from 'react-router-dom'
 
-import { useOrders } from '@/api/ordersAdminApi'
+import { useCancelOrder, useConfirmPayment, useOrders } from '@/api/ordersAdminApi'
 import { Button } from '@/components/ui/Button'
 import { PageHeading } from '@/components/ui/PageHeading'
 import { useSignOutOn401 } from '@/hooks/useAdminSession'
 import { formatDateTime } from '@/lib/date'
+import { ORDER_STATUS, TONE_CLASSES } from '@/lib/orderStatus'
 import { formatMinor } from '@/lib/money'
 
 /**
@@ -14,6 +15,8 @@ import { formatMinor } from '@/lib/money'
 export function AdminOrdersPage() {
   const { data: orders, isLoading, isError, error } = useOrders()
   useSignOutOn401(error)
+  const confirmPayment = useConfirmPayment()
+  const cancelOrder = useCancelOrder()
 
   return (
     <>
@@ -21,6 +24,12 @@ export function AdminOrdersPage() {
         title="Siparişler"
         description="Üyeliğe dönüşmemiş siparişler işaretlidir; tek tıkla üye oluşturabilirsiniz."
       />
+
+      {confirmPayment.isError || cancelOrder.isError ? (
+        <p className="mb-3 text-xs text-error">
+          {(confirmPayment.error ?? cancelOrder.error)?.message}
+        </p>
+      ) : null}
 
       {isLoading ? (
         <div className="h-24 animate-pulse rounded-2xl border border-border bg-surface" />
@@ -38,6 +47,11 @@ export function AdminOrdersPage() {
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2.5">
                   <span className="font-semibold text-text-primary">{order.customerName}</span>
+                  <span
+                    className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide ${TONE_CLASSES[ORDER_STATUS[order.status].tone]}`}
+                  >
+                    {ORDER_STATUS[order.status].label}
+                  </span>
                   {order.memberId ? (
                     <span className="inline-flex items-center rounded-full border border-success/40 bg-success/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-wide text-success">
                       Üye
@@ -60,6 +74,31 @@ export function AdminOrdersPage() {
 
               <div className="flex flex-wrap items-center gap-3">
                 <span className="text-sm font-semibold text-primary">{formatMinor(order.priceMinor)}</span>
+                {order.status === 'AWAITING_TRANSFER' ? (
+                  <>
+                    <Button
+                      type="button"
+                      size="sm"
+                      disabled={confirmPayment.isPending}
+                      onClick={() => {
+                        if (window.confirm(`${order.customerName} — ${formatMinor(order.priceMinor)} hesabınıza geçti mi? Onaylarsanız ödendi sayılır.`)) {
+                          confirmPayment.mutate(order.orderNumber)
+                        }
+                      }}
+                    >
+                      Ödeme Alındı
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      disabled={cancelOrder.isPending}
+                      onClick={() => cancelOrder.mutate(order.orderNumber)}
+                    >
+                      İptal
+                    </Button>
+                  </>
+                ) : null}
                 {order.memberId ? (
                   <Link to={`/yonetim/uyeler/${order.memberId}`}>
                     <Button type="button" size="sm" variant="secondary">

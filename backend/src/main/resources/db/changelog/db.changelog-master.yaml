@@ -50,3 +50,5 @@ databaseChangeLog:
       file: db/changelog/022-create-case-study-photo-table.yaml
   - include:
       file: db/changelog/023-create-member-intake-table.yaml
+  - include:
+      file: db/changelog/024-add-payment-and-membership.yaml
