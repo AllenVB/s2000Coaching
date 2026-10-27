@@ -6,7 +6,7 @@ services:
       POSTGRES_USER: s2000coaching
       POSTGRES_PASSWORD: s2000coaching
     ports:
-      - '5432:5432'
+      - '10003:5432'
     volumes:
       - s2000coaching_postgres_data:/var/lib/postgresql/data
 

@@ -63,7 +63,7 @@ Elle çalıştırmak isterseniz (ya da Linux/macOS'taysanız):
 # 1) Veritabanı
 docker compose up -d postgres
 
-# 2) Backend (varsayılan port 8080; meşgulse SERVER_PORT ile değiştirin)
+# 2) Backend (varsayılan port 10002; meşgulse SERVER_PORT ile değiştirin)
 #    ADMIN_EMAIL ve ADMIN_PASSWORD tanımlı değilse koç hesabı oluşmaz ve
 #    yönetim paneline giriş yapılamaz.
 cd backend
@@ -79,7 +79,7 @@ npm run dev
 Windows CMD'de `./` öneki yoktur (`gradlew bootRun`), ortam değişkenleri de ayrı satırda
 `set ADMIN_EMAIL=...` ile tanımlanır.
 
-Frontend `http://localhost:3000`, backend varsayılan olarak `http://localhost:8080` üzerinde
+Frontend `http://localhost:10001`, backend varsayılan olarak `http://localhost:10002` üzerinde
 çalışır. Yönetim paneline `ADMIN_EMAIL` / `ADMIN_PASSWORD` ile girilir.
 
 **Gerekenler:** Java 21, Node 22, Docker (yalnızca PostgreSQL için).
