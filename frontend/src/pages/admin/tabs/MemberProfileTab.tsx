@@ -10,6 +10,7 @@ import {
   useUpdateMember,
 } from '@/api/adminMembersApi'
 import { useMemberOrders } from '@/api/ordersAdminApi'
+import { MemberQuestionnaireCard } from '@/components/admin/MemberQuestionnaireCard'
 import { MemberMembershipsCard } from '@/components/admin/MemberMembershipsCard'
 import { Button } from '@/components/ui/Button'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
@@ -118,6 +119,8 @@ export function MemberProfileTab() {
           </div>
         </form>
       </section>
+
+      <MemberQuestionnaireCard memberId={member.id} />
 
       <MemberMembershipsCard memberId={member.id} />
 

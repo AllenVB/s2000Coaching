@@ -23,6 +23,7 @@ import { MemberProfileTab } from '@/pages/admin/tabs/MemberProfileTab'
 import { LandingPage } from '@/pages/LandingPage'
 import { MemberHistoryPage } from '@/pages/member/MemberHistoryPage'
 import { MemberPhotosPage } from '@/pages/member/MemberPhotosPage'
+import { MemberQuestionnairePage } from '@/pages/member/MemberQuestionnairePage'
 import { MemberCheckInPage } from '@/pages/member/MemberCheckInPage'
 import { MemberMeasurementsPage } from '@/pages/member/MemberMeasurementsPage'
 import { MemberMessagesPage } from '@/pages/member/MemberMessagesPage'
@@ -45,6 +46,7 @@ export default function App() {
         <Route path="beslenme" element={<MemberNutritionPage />} />
         <Route path="olcumler" element={<MemberMeasurementsPage />} />
         <Route path="haftalik" element={<MemberCheckInPage />} />
+        <Route path="anket" element={<MemberQuestionnairePage />} />
         <Route path="gecmis" element={<MemberHistoryPage />} />
         <Route path="fotograflar" element={<MemberPhotosPage />} />
         <Route path="mesajlar" element={<MemberMessagesPage />} />

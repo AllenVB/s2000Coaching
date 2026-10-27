@@ -27,6 +27,8 @@ public final class AttentionScorer {
 	static final int INTAKE_QUIET_DAYS = 3;
 	static final int INTAKE_VERY_QUIET_DAYS = 7;
 	static final int MEMBERSHIP_ENDING_DAYS = 14;
+	/** A new member is given a few days to fill in the starting questionnaire before being chased. */
+	static final int QUESTIONNAIRE_GRACE_DAYS = 3;
 
 	private AttentionScorer() {
 	}
@@ -34,7 +36,8 @@ public final class AttentionScorer {
 	/** What is known about one member. Dates are null when nothing has ever been recorded. */
 	public record Signals(UUID memberId, String fullName, LocalDate joinedOn, boolean hasTrainingPlan,
 			boolean hasNutritionPlan, LocalDate lastWorkout, LocalDate lastMeasurement, LocalDate lastIntake,
-			boolean unreadMessage, LocalDate membershipEnd, boolean unansweredCheckIn) {
+			boolean unreadMessage, LocalDate membershipEnd, boolean unansweredCheckIn, boolean hasQuestionnaire,
+			boolean needsMedicalClearance) {
 	}
 
 	/** {@code code} is stable for the UI; {@code label} is what the coach reads. */
@@ -50,6 +53,12 @@ public final class AttentionScorer {
 
 		if (s.unreadMessage()) {
 			reasons.add(new Reason("MESSAGE", "Cevap bekleyen mesajı var", 4));
+		}
+
+		if (s.needsMedicalClearance()) {
+			reasons.add(new Reason("MEDICAL_CLEARANCE", "Sağlık anketinde dikkat gerektiren yanıt var (doktor onayı)", 4));
+		} else if (!s.hasQuestionnaire() && quietDays(null, s.joinedOn(), today) >= QUESTIONNAIRE_GRACE_DAYS) {
+			reasons.add(new Reason("NO_QUESTIONNAIRE", "Sağlık anketini henüz doldurmadı", 2));
 		}
 
 		if (s.unansweredCheckIn()) {

@@ -56,3 +56,5 @@ databaseChangeLog:
       file: db/changelog/025-add-set-log-rpe.yaml
   - include:
       file: db/changelog/026-create-check-in-table.yaml
+  - include:
+      file: db/changelog/027-create-member-questionnaire.yaml

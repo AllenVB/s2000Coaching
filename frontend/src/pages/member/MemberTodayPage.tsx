@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 
 import type { TrainingPlan } from '@/types/training'
 
+import { useMyQuestionnaire } from '@/api/questionnaireApi'
 import { useMyMeasurements } from '@/api/measurementsApi'
 import { useMyNutritionPlan } from '@/api/nutritionApi'
 import { useMyTrainingPlan } from '@/api/trainingApi'
@@ -19,6 +20,7 @@ export function MemberTodayPage() {
   const { data: plan } = useMyTrainingPlan()
   const { data: nutritionPlan } = useMyNutritionPlan()
   const { data: measurements } = useMyMeasurements()
+  const { data: questionnaire } = useMyQuestionnaire()
 
   if (!member) {
     return null
@@ -39,6 +41,23 @@ export function MemberTodayPage() {
 
       <div className="space-y-6">
         <RenewalNotice />
+
+        {questionnaire && !questionnaire.answers ? (
+          <section className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-primary/30 bg-primary/5 p-5">
+            <div>
+              <h2 className="text-sm font-bold uppercase tracking-wider text-text-primary">Başlangıç Anketi</h2>
+              <p className="mt-1 text-xs leading-relaxed text-text-secondary">
+                Koçunuzun size uygun ve güvenli bir program yazabilmesi için kısa bir sağlık ve hedef anketi.
+              </p>
+            </div>
+            <Link
+              to="/uye/anket"
+              className="inline-flex h-10 items-center justify-center rounded-xl bg-primary px-4 text-xs font-semibold uppercase tracking-wide text-canvas transition-colors hover:bg-primary-hover"
+            >
+              Anketi Doldur
+            </Link>
+          </section>
+        ) : null}
 
         {/* Only once the list has loaded: an empty array while loading would claim the
             member has never checked in. */}

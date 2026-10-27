@@ -10,6 +10,7 @@ import {
   usePlanTemplates,
 } from '@/api/trainingApi'
 import { TrainingStatsView } from '@/components/training/TrainingStatsView'
+import { useMemberQuestionnaire } from '@/api/questionnaireApi'
 import { PlanEditor } from '@/components/training/PlanEditor'
 import { Button } from '@/components/ui/Button'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
@@ -24,6 +25,9 @@ export function MemberTrainingTab() {
   const { data: templates } = usePlanTemplates()
   const { data: logs } = useMemberWorkoutLogs(member.id)
   const { data: stats } = useMemberTrainingStats(member.id)
+  const { data: questionnaire } = useMemberQuestionnaire(member.id)
+  // The member said how many days a week they can train; a template with that many days fits.
+  const wantedDays = questionnaire?.answers?.trainingDaysPerWeek ?? null
 
   const createPlan = useCreateMemberPlan(member.id)
   const activatePlan = useActivatePlan()
@@ -86,7 +90,10 @@ export function MemberTrainingTab() {
             />
           </label>
           <label className="min-w-[200px] flex-1">
-            <span className="mb-1.5 block text-xs font-medium text-text-secondary">Şablondan Kopyala</span>
+            <span className="mb-1.5 block text-xs font-medium text-text-secondary">
+              Şablondan Kopyala
+              {wantedDays !== null ? ` (★ = üyenin istediği ${wantedDays} günlük)` : ''}
+            </span>
             <select
               value={templateId}
               onChange={(event) => setTemplateId(event.target.value)}
@@ -95,6 +102,7 @@ export function MemberTrainingTab() {
               <option value="">Boş plan</option>
               {templates?.map((template) => (
                 <option key={template.id} value={template.id}>
+                  {wantedDays !== null && template.days.length === wantedDays ? '★ ' : ''}
                   {template.name} ({template.days.length} gün)
                 </option>
               ))}
