@@ -117,6 +117,19 @@ planı olabilir ama yalnızca biri **aktiftir**; üye alanında görünen odur.
 kez yapılıyorsa hedef kilo yazar. Aynı gün ve tarihe tekrar kaydetmek o seansı düzeltir, ikinci kayıt
 açmaz. Üyenin "Bugün" sayfası en uzun süredir yapılmamış günü **Sıradaki Antrenman** olarak önerir.
 
+**Standart şema.** Şablon seçmeden plan oluşturduğunuzda plan boş **Gün 1 – Gün 5** ile açılır
+(`günsüz boş plan` seçeneği bunu atlar). Her gün bir tablodur: hareket ve **Set 1 – Set 4** tekrar hedefi
+(`30-25-20` gibi; yalnızca ilki zorunlu, boşluk bırakıp sonrasını doldurmak reddedilir çünkü setleri
+sessizce yeniden numaralamak olurdu). Hücreler odak kaybedince kaydolur, tablonun altındaki **+** yeni
+hareket ekler. Set sayısı ve tekrar metni bu hücrelerden türetilir; eski biçimde (set sayısı + serbest
+metin) yazılmış hareketler olduğu gibi çalışmaya devam eder.
+
+**Antrenman 1 – 10.** Üyenin gün sayfasında her hareketin altında on kutu vardır; kutular üyenin zaten
+kaydettiği seanslardan dolar (o seansın en ağır seti), yani ağırlık tek yerden girilir. Onuncudan sonra
+pencere kayar ve numaralar sürer (Antrenman 3 – 12). Üye bir değer yazmaya başlayınca "bugün" kutusu
+yazdığını gösterir; dokunmadan önce, geçen seansın ön-dolu değerlerini bugün kaldırılmış ağırlık gibi
+göstermemek için boştur.
+
 Koç, üye detayındaki Antrenman sekmesinin altında üyenin son seanslarını görür.
 
 ## Beslenme planları
@@ -124,6 +137,15 @@ Koç, üye detayındaki Antrenman sekmesinin altında üyenin son seanslarını 
 Antrenmanla aynı kalıp: `/yonetim/sablonlar` sayfasının **Beslenme** sekmesinde şablon yazılır (öğünler ve
 her öğünde besin + miktar + kalori/makro), üye detayındaki **Beslenme** sekmesinden üyeye kopyalanır. Kopya
 yine bağımsızdır ve üyenin yalnızca bir planı aktiftir.
+
+**Standart şema.** Şablon seçmeden plan oluşturduğunuzda (Planı Oluştur) plan koçun kendi planlarındaki
+şemayla açılır: Sabah, Öğlen, Antrenman öncesi/sonrası, Akşam, Uyumadan önce öğünleri ve üç supplement
+bloğu, besinler yazılı, **miktarlar boş**. Miktar, kalori ve su hedefi üyeye özeldir, bu yüzden şemada
+hiç yoktur; boş bir kutu "reçete edilmedi" demektir, "sıfır" değil. Plan her öğün/supplement için bir
+tablodur: besin solda, miktar sağda; miktar kutusuna yazıp Enter'a basınca bir alttakine geçer, tablonun
+altındaki **+** besin ekler, çöp kutusu çıkarır; öğün ve supplement bloğu da aynı şekilde eklenip silinir.
+`Tamamen boş plan` seçeneği şemayı atlar. Üye aynı tabloyu salt okunur görür; girilmemiş miktar "—"
+olarak çıkar.
 
 Plan düzeyinde **makro hedefi** (kalori/protein/karbonhidrat/yağ) tutulur; arayüz bunun yanında öğünlerin
 fiili toplamını da gösterir — aradaki fark planın henüz tamamlanmadığını söyleyen şeydir. Makro girmek
