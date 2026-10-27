@@ -14,14 +14,16 @@ public record CaseStudyResponse(
 		Sex sex,
 		Integer birthYear,
 		boolean published,
+		boolean photosPublished,
 		long measurementCount,
 		long intakeCount,
+		long photoCount,
 		Instant createdAt,
 		Instant updatedAt) {
 
-	public static CaseStudyResponse from(CaseStudy study, long measurementCount, long intakeCount) {
+	public static CaseStudyResponse from(CaseStudy study, long measurementCount, long intakeCount, long photoCount) {
 		return new CaseStudyResponse(study.getId(), study.getSlug(), study.getTitle(), study.getSummary(),
 				study.getHeightCm(), study.getSex(), study.getBirthYear(), study.isPublished(),
-				measurementCount, intakeCount, study.getCreatedAt(), study.getUpdatedAt());
+				study.isPhotosPublished(), measurementCount, intakeCount, photoCount, study.getCreatedAt(), study.getUpdatedAt());
 	}
 }

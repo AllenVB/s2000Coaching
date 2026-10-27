@@ -1,0 +1,74 @@
+databaseChangeLog:
+  - changeSet:
+      id: 036-create-case-study-photo-table
+      author: s2000
+      comment: >-
+        Photos of the coach's own body for a case study. Separate from progress_photo for the
+        same reason case_study is separate from member: a public endpoint must not be one
+        forgotten filter away from a member's photo. Publishing the photos is its own flag,
+        independent of publishing the data: a body photo is special-category personal data,
+        and agreeing to show numbers is not agreeing to show a body.
+      changes:
+        - addColumn:
+            tableName: case_study
+            columns:
+              - column:
+                  name: photos_published
+                  type: boolean
+                  defaultValueBoolean: false
+                  constraints:
+                    nullable: false
+        - createTable:
+            tableName: case_study_photo
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: case_study_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_case_study_photo_study
+                    references: case_study(id)
+              - column:
+                  name: taken_on
+                  type: date
+                  constraints:
+                    nullable: false
+              - column:
+                  name: pose
+                  type: varchar(20)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: storage_key
+                  type: varchar(300)
+                  constraints:
+                    nullable: false
+                    unique: true
+                    uniqueConstraintName: uk_case_study_photo_storage_key
+              - column:
+                  name: content_type
+                  type: varchar(100)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: size_bytes
+                  type: bigint
+                  constraints:
+                    nullable: false
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false
+        - createIndex:
+            indexName: idx_case_study_photo_study_date
+            tableName: case_study_photo
+            columns:
+              - column: { name: case_study_id }
+              - column: { name: taken_on }
