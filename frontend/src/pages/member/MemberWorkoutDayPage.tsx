@@ -211,7 +211,13 @@ export function MemberWorkoutDayPage() {
         </section>
 
         {saveLog.isError ? <p className="text-xs text-error">Kaydedilemedi: {saveLog.error.message}</p> : null}
-        {saveLog.isSuccess ? (
+        {saveLog.isSuccess && 'queued' in saveLog.data ? (
+          <p className="rounded-xl border border-warning/40 bg-warning/10 p-3.5 text-xs leading-relaxed text-warning">
+            Bağlantı yok: antrenmanınız telefonunuza kaydedildi ve internet gelince otomatik gönderilecek.
+            Uygulamayı bu cihazda açık tutmanız yeterli.
+          </p>
+        ) : null}
+        {saveLog.isSuccess && !('queued' in saveLog.data) ? (
           <p className="flex items-center gap-1.5 text-xs text-success">
             <CheckIcon className="h-3.5 w-3.5" /> Antrenmanınız kaydedildi.
           </p>
