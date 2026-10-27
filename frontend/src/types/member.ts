@@ -13,6 +13,8 @@ export interface Member {
   verifiedAt: string | null
   /** When the member accepted health-data processing; null until they do. */
   healthDataConsentAt: string | null
+  /** Whether reminder e-mails (renewal, weekly check-in, measurement) are wanted. */
+  remindersEnabled: boolean
 }
 
 export interface CreateMemberInput {

@@ -54,6 +54,10 @@ public class Member {
 	@Column(name = "health_data_consent_at")
 	private Instant healthDataConsentAt;
 
+	/** Whether reminder e-mails (renewal, weekly check-in, measurement) are wanted. */
+	@Column(name = "reminders_enabled", nullable = false)
+	private boolean remindersEnabled = true;
+
 	protected Member() {
 	}
 
@@ -128,6 +132,14 @@ public class Member {
 
 	public Instant getVerifiedAt() {
 		return verifiedAt;
+	}
+
+	public boolean isRemindersEnabled() {
+		return remindersEnabled;
+	}
+
+	public void setRemindersEnabled(boolean remindersEnabled) {
+		this.remindersEnabled = remindersEnabled;
 	}
 
 	public boolean isActive() {

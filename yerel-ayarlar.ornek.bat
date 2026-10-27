@@ -36,3 +36,10 @@ rem     modunda aninda onaylanir (yalnizca gelistirme icin).
 rem set "PAYMENT_IBAN=TR00 0000 0000 0000 0000 0000 00"
 rem set "PAYMENT_IBAN_HOLDER=Ad Soyad"
 rem set "PAYMENT_IBAN_BANK=Banka Adi"
+
+rem --- Hatirlatma e-postalari.
+rem     SMTP tanimliysa her sabah 09:00'da uyelere (uyelik bitisi, haftalik degerlendirme,
+rem     olcum) ve size (ilgi bekleyenlerin ozeti) e-posta gider. SMTP tanimli degilse hicbir
+rem     sey gonderilmez ve gonderildi diye de kaydedilmez. E-postalardaki baglantilar icin
+rem     sitenizin adresini yazin:
+rem set "PUBLIC_URL=https://siteniz.com"

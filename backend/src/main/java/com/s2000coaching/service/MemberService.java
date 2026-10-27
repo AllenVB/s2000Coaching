@@ -169,6 +169,14 @@ public class MemberService {
 		return MemberResponse.from(member);
 	}
 
+	/** The member switching reminder e-mails on or off for themselves. */
+	@Transactional
+	public MemberResponse setRemindersEnabled(UUID memberId, boolean enabled) {
+		Member member = getOrThrow(memberId);
+		member.setRemindersEnabled(enabled);
+		return MemberResponse.from(member);
+	}
+
 	@Transactional
 	public void deleteMember(UUID memberId) {
 		Member member = getOrThrow(memberId);

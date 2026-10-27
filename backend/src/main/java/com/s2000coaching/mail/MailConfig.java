@@ -34,6 +34,19 @@ public class MailConfig {
 	}
 
 	@Bean
+	@ConditionalOnExpression("!'${spring.mail.host:}'.isBlank()")
+	NotificationMailSender smtpNotificationMailSender(JavaMailSender mailSender,
+			@Value("${app.mail.from}") String from) {
+		return new SmtpNotificationMailSender(mailSender, from);
+	}
+
+	@Bean
+	@ConditionalOnMissingBean(NotificationMailSender.class)
+	NotificationMailSender loggingNotificationMailSender() {
+		return new LoggingNotificationMailSender();
+	}
+
+	@Bean
 	@ConditionalOnMissingBean(VerificationMailSender.class)
 	VerificationMailSender loggingVerificationMailSender() {
 		return new LoggingVerificationMailSender();

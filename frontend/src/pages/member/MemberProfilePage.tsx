@@ -2,7 +2,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 
-import { useUpdateMyProfile } from '@/api/memberAuthApi'
+import { useSetReminders, useUpdateMyProfile } from '@/api/memberAuthApi'
 import { MembershipCard } from '@/components/member/MembershipCard'
 import { MemberStatusBadge } from '@/components/member/MemberStatusBadge'
 import { Button } from '@/components/ui/Button'
@@ -30,6 +30,7 @@ export function MemberProfilePage() {
 
       <div className="space-y-6">
         <MembershipCard />
+        <RemindersCard member={member} />
         {editing ? (
           <ProfileForm member={member} onDone={() => setEditing(false)} />
         ) : (
@@ -176,5 +177,30 @@ function ProfileRow({ label, value }: { label: string; value: string }) {
       <dt className="text-[11px] font-semibold uppercase tracking-wider text-text-muted">{label}</dt>
       <dd className="break-all text-right text-sm text-text-primary">{value}</dd>
     </div>
+  )
+}
+
+/** Opt-out for the reminder e-mails; on by default, one click to turn off. */
+function RemindersCard({ member }: { member: Member }) {
+  const setReminders = useSetReminders()
+
+  return (
+    <section className="rounded-2xl border border-border bg-surface p-6">
+      <h2 className="mb-2 text-sm font-bold uppercase tracking-wider text-text-primary">Hatırlatma E-postaları</h2>
+      <p className="mb-4 text-xs leading-relaxed text-text-secondary">
+        Üyelik bitişi, haftalık değerlendirme ve ölçüm hatırlatmaları e-postanıza gelir. Giriş ve onay kodları
+        bundan bağımsızdır, her zaman gönderilir.
+      </p>
+      <label className="flex cursor-pointer items-center gap-2.5 text-sm text-text-primary">
+        <input
+          type="checkbox"
+          checked={member.remindersEnabled}
+          disabled={setReminders.isPending}
+          onChange={(event) => setReminders.mutate(event.target.checked)}
+        />
+        Hatırlatma e-postaları almak istiyorum
+      </label>
+      {setReminders.isError ? <p className="mt-2 text-xs text-error">{setReminders.error.message}</p> : null}
+    </section>
   )
 }

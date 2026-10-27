@@ -19,4 +19,8 @@ public interface CheckInRepository extends JpaRepository<CheckIn, UUID> {
 	/** Members with a check-in the coach has not answered, for the attention panel. */
 	@Query("select distinct c.member.id from CheckIn c where c.coachReply is null")
 	List<UUID> findMemberIdsWithUnansweredCheckIn();
+
+	/** The newest week each member reported, in one pass for the reminder job. */
+	@Query("select c.member.id, max(c.weekStart) from CheckIn c group by c.member.id")
+	List<Object[]> latestWeekPerMember();
 }
