@@ -29,11 +29,11 @@ databaseChangeLog:
                   type: date
                   constraints:
                     nullable: false
-              - column: { name: sleep, type: smallint, constraints: { nullable: false } }
-              - column: { name: stress, type: smallint, constraints: { nullable: false } }
-              - column: { name: energy, type: smallint, constraints: { nullable: false } }
-              - column: { name: hunger, type: smallint, constraints: { nullable: false } }
-              - column: { name: diet_adherence_percent, type: smallint }
+              - column: { name: sleep, type: int, constraints: { nullable: false } }
+              - column: { name: stress, type: int, constraints: { nullable: false } }
+              - column: { name: energy, type: int, constraints: { nullable: false } }
+              - column: { name: hunger, type: int, constraints: { nullable: false } }
+              - column: { name: diet_adherence_percent, type: int }
               - column: { name: note, type: text }
               - column: { name: coach_reply, type: text }
               - column: { name: coach_replied_at, type: timestamp with time zone }
