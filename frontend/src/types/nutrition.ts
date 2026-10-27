@@ -11,12 +11,16 @@ export interface MealItem {
   note: string | null
 }
 
+/** A supplement block is laid out like a meal but is not food, so it is counted apart. */
+export type MealKind = 'MEAL' | 'SUPPLEMENT'
+
 export interface Meal {
   id: string
   displayOrder: number
   name: string
   timeHint: string | null
   note: string | null
+  kind: MealKind
   items: MealItem[]
 }
 
@@ -30,6 +34,8 @@ export interface NutritionPlan {
   targetProteinG: number | null
   targetCarbsG: number | null
   targetFatG: number | null
+  /** Daily water in litres. */
+  waterLiters: number | null
   updatedAt: string
   meals: Meal[]
 }
@@ -41,12 +47,14 @@ export interface UpsertNutritionPlanInput {
   targetProteinG?: number | null
   targetCarbsG?: number | null
   targetFatG?: number | null
+  waterLiters?: number | null
 }
 
 export interface UpsertMealInput {
   name: string
   timeHint?: string | null
   note?: string | null
+  kind?: MealKind
 }
 
 export interface UpsertMealItemInput {
@@ -83,4 +91,20 @@ export function planTotals(plan: NutritionPlan): MacroTotals {
 
 export function mealCalories(meal: Meal): number {
   return meal.items.reduce((total, item) => total + (item.calories ?? 0), 0)
+}
+
+/** Meals and supplement blocks, each in the order the coach set them. */
+export function splitBlocks(plan: NutritionPlan): { meals: Meal[]; supplements: Meal[] } {
+  const ordered = [...plan.meals].sort((a, b) => a.displayOrder - b.displayOrder)
+  return {
+    meals: ordered.filter((meal) => meal.kind !== 'SUPPLEMENT'),
+    supplements: ordered.filter((meal) => meal.kind === 'SUPPLEMENT'),
+  }
+}
+
+/** Foods and supplements still waiting for an amount — what is left for the coach to fill in. */
+export function missingAmounts(plan: NutritionPlan): number {
+  return plan.meals
+    .flatMap((meal) => meal.items)
+    .filter((item) => item.amount === null || item.amount.trim() === '').length
 }
