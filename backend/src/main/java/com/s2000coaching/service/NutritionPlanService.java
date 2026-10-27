@@ -2,6 +2,7 @@ package com.s2000coaching.service;
 
 import com.s2000coaching.domain.Meal;
 import com.s2000coaching.domain.MealItem;
+import com.s2000coaching.domain.MealKind;
 import com.s2000coaching.domain.Member;
 import com.s2000coaching.domain.NutritionPlan;
 import com.s2000coaching.exception.BadRequestException;
@@ -49,11 +50,19 @@ public class NutritionPlanService {
 				.toList();
 	}
 
+	/**
+	 * A new template starts from {@link DefaultNutritionScheme} unless {@code blank} is set, so
+	 * the coach never begins from an empty page; {@code blank} is for the rare plan that does not
+	 * look like the usual ones.
+	 */
 	@Transactional
-	public NutritionPlanResponse createTemplate(UpsertNutritionPlanRequest request) {
+	public NutritionPlanResponse createTemplate(UpsertNutritionPlanRequest request, boolean blank) {
 		NutritionPlan plan = planRepository.save(new NutritionPlan(UUID.randomUUID(), null,
 				request.name().trim(), blankToNull(request.note()), false, Instant.now()));
 		applyTargets(plan, request);
+		if (!blank) {
+			DefaultNutritionScheme.seed(plan);
+		}
 		return NutritionPlanResponse.from(plan);
 	}
 
@@ -70,9 +79,13 @@ public class NutritionPlanService {
 		return planRepository.findByMemberIdAndActiveTrue(memberId).map(NutritionPlanResponse::from);
 	}
 
+	/**
+	 * Where the plan's meals come from, in order: the chosen template; otherwise the default
+	 * scheme (foods listed, amounts empty); otherwise nothing, when {@code blank} is set.
+	 */
 	@Transactional
 	public NutritionPlanResponse createForMember(UUID memberId, UpsertNutritionPlanRequest request,
-			UUID templateId) {
+			UUID templateId, boolean blank) {
 		Member member = memberService.requireMember(memberId);
 		// Assigned UUIDs mean save() merges and returns a different managed instance; keep
 		// that one, or the meals added below would be written to a detached copy.
@@ -86,6 +99,8 @@ public class NutritionPlanService {
 				throw new BadRequestException("Yalnızca şablonlar kopyalanabilir.");
 			}
 			copyInto(plan, template);
+		} else if (!blank) {
+			DefaultNutritionScheme.seed(plan);
 		}
 
 		deactivateOtherPlans(memberId, plan.getId());
@@ -123,8 +138,10 @@ public class NutritionPlanService {
 		NutritionPlan plan = getPlanOrThrow(planId);
 		int nextOrder = plan.getMeals().stream().mapToInt(Meal::getDisplayOrder).max().orElse(0) + 1;
 		// Cascaded from the managed plan; an explicit save() would merge a duplicate.
-		plan.getMeals().add(new Meal(UUID.randomUUID(), plan, nextOrder, request.name().trim(),
-				blankToNull(request.timeHint()), blankToNull(request.note())));
+		Meal meal = new Meal(UUID.randomUUID(), plan, nextOrder, request.name().trim(),
+				blankToNull(request.timeHint()), blankToNull(request.note()));
+		meal.setKind(kindOrMeal(request.kind()));
+		plan.getMeals().add(meal);
 		plan.setUpdatedAt(Instant.now());
 		return NutritionPlanResponse.from(plan);
 	}
@@ -135,6 +152,9 @@ public class NutritionPlanService {
 		meal.setName(request.name().trim());
 		meal.setTimeHint(blankToNull(request.timeHint()));
 		meal.setNote(blankToNull(request.note()));
+		if (request.kind() != null) {
+			meal.setKind(request.kind());
+		}
 		meal.getPlan().setUpdatedAt(Instant.now());
 		return NutritionPlanResponse.from(meal.getPlan());
 	}
@@ -159,10 +179,24 @@ public class NutritionPlanService {
 		return NutritionPlanResponse.from(meal.getPlan());
 	}
 
+	/** Replaces every field of one item; the table view edits a cell and sends the row back. */
+	@Transactional
+	public NutritionPlanResponse updateItem(UUID itemId, UpsertMealItemRequest request) {
+		MealItem item = getItemOrThrow(itemId);
+		item.setName(request.name().trim());
+		item.setAmount(blankToNull(request.amount()));
+		item.setCalories(request.calories());
+		item.setProteinG(request.proteinG());
+		item.setCarbsG(request.carbsG());
+		item.setFatG(request.fatG());
+		item.setNote(blankToNull(request.note()));
+		item.getMeal().getPlan().setUpdatedAt(Instant.now());
+		return NutritionPlanResponse.from(item.getMeal().getPlan());
+	}
+
 	@Transactional
 	public NutritionPlanResponse deleteItem(UUID itemId) {
-		MealItem item = mealItemRepository.findById(itemId)
-				.orElseThrow(() -> new NotFoundException("Öğün kalemi bulunamadı: " + itemId));
+		MealItem item = getItemOrThrow(itemId);
 		Meal meal = item.getMeal();
 		meal.getItems().remove(item);
 		meal.getPlan().setUpdatedAt(Instant.now());
@@ -174,6 +208,7 @@ public class NutritionPlanService {
 		for (Meal sourceMeal : source.getMeals()) {
 			Meal meal = new Meal(UUID.randomUUID(), target, sourceMeal.getDisplayOrder(),
 					sourceMeal.getName(), sourceMeal.getTimeHint(), sourceMeal.getNote());
+			meal.setKind(sourceMeal.getKind());
 			target.getMeals().add(meal);
 
 			for (MealItem sourceItem : sourceMeal.getItems()) {
@@ -190,6 +225,7 @@ public class NutritionPlanService {
 		plan.setTargetProteinG(request.targetProteinG());
 		plan.setTargetCarbsG(request.targetCarbsG());
 		plan.setTargetFatG(request.targetFatG());
+		plan.setWaterLiters(request.waterLiters());
 		plan.setUpdatedAt(Instant.now());
 	}
 
@@ -202,6 +238,15 @@ public class NutritionPlanService {
 	private NutritionPlan getPlanOrThrow(UUID planId) {
 		return planRepository.findById(planId)
 				.orElseThrow(() -> new NotFoundException("Beslenme planı bulunamadı: " + planId));
+	}
+
+	private MealItem getItemOrThrow(UUID itemId) {
+		return mealItemRepository.findById(itemId)
+				.orElseThrow(() -> new NotFoundException("Öğün kalemi bulunamadı: " + itemId));
+	}
+
+	private static MealKind kindOrMeal(MealKind kind) {
+		return kind == null ? MealKind.MEAL : kind;
 	}
 
 	private Meal getMealOrThrow(UUID mealId) {

@@ -100,7 +100,7 @@ class MemberTrainingControllerTest {
 		when(memberAuthService.requireMember(BEARER)).thenReturn(member);
 		when(nutritionPlanService.findActivePlan(member.getId())).thenReturn(Optional.of(
 				new NutritionPlanResponse(UUID.randomUUID(), "Ekim Beslenmesi", null, false, true, 2400, 180,
-						250, 70, Instant.now(), List.of())));
+						250, 70, null, Instant.now(), List.of())));
 
 		assertThat(mvc.get().uri("/api/member/nutrition-plan").header(HttpHeaders.AUTHORIZATION, BEARER))
 				.hasStatus(HttpStatus.OK)
