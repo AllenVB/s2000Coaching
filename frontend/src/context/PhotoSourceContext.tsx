@@ -87,6 +87,49 @@ export function PublicCaseStudyPhotoSourceProvider({
   return <PhotoSourceContext.Provider value={value}>{children}</PhotoSourceContext.Provider>
 }
 
+/** Success-story photo copies on the coach side (not the member's own progress photos). */
+export function StoryCoachPhotoSourceProvider({ children }: { children: ReactNode }) {
+  const { token } = useAdminAuth()
+
+  const value = useMemo<PhotoSource>(
+    () => ({
+      contentPath: (photoId) => `/api/admin/success-story-photos/${photoId}/content`,
+      headers: token ? adminHeaders(token) : null,
+    }),
+    [token],
+  )
+
+  return <PhotoSourceContext.Provider value={value}>{children}</PhotoSourceContext.Provider>
+}
+
+/** The member looking at the story they are being asked about. */
+export function StoryMemberPhotoSourceProvider({ children }: { children: ReactNode }) {
+  const { session } = useMemberAuth()
+
+  const value = useMemo<PhotoSource>(
+    () => ({
+      contentPath: (photoId) => `/api/member/success-story-photos/${photoId}/content`,
+      headers: session ? memberHeaders(session.token) : null,
+    }),
+    [session],
+  )
+
+  return <PhotoSourceContext.Provider value={value}>{children}</PhotoSourceContext.Provider>
+}
+
+/** The public site: no credentials; the server serves a photo only while its story is published. */
+export function PublicStoryPhotoSourceProvider({ storyId, children }: { storyId: string; children: ReactNode }) {
+  const value = useMemo<PhotoSource>(
+    () => ({
+      contentPath: (photoId) => `/api/success-stories/${storyId}/photos/${photoId}/content`,
+      headers: {},
+    }),
+    [storyId],
+  )
+
+  return <PhotoSourceContext.Provider value={value}>{children}</PhotoSourceContext.Provider>
+}
+
 export function usePhotoSource(): PhotoSource {
   const value = useContext(PhotoSourceContext)
   if (!value) {

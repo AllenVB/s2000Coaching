@@ -5,6 +5,7 @@ import { MemberAreaLayout } from '@/components/layout/MemberAreaLayout'
 import { AdminDashboardPage } from '@/pages/admin/AdminDashboardPage'
 import { AdminOrdersPage } from '@/pages/admin/AdminOrdersPage'
 import { AdminSettingsPage } from '@/pages/admin/AdminSettingsPage'
+import { StoriesPage } from '@/pages/admin/StoriesPage'
 import { CaseStudiesPage } from '@/pages/admin/CaseStudiesPage'
 import { ExerciseCatalogPage } from '@/pages/admin/ExerciseCatalogPage'
 import { MemberDetailPage } from '@/pages/admin/MemberDetailPage'
@@ -24,6 +25,7 @@ import { MemberProfileTab } from '@/pages/admin/tabs/MemberProfileTab'
 import { LandingPage } from '@/pages/LandingPage'
 import { MemberHistoryPage } from '@/pages/member/MemberHistoryPage'
 import { MemberPhotosPage } from '@/pages/member/MemberPhotosPage'
+import { MemberStoryPage } from '@/pages/member/MemberStoryPage'
 import { MemberFormCheckPage } from '@/pages/member/MemberFormCheckPage'
 import { MemberQuestionnairePage } from '@/pages/member/MemberQuestionnairePage'
 import { MemberCheckInPage } from '@/pages/member/MemberCheckInPage'
@@ -50,6 +52,7 @@ export default function App() {
         <Route path="haftalik" element={<MemberCheckInPage />} />
         <Route path="anket" element={<MemberQuestionnairePage />} />
         <Route path="form-kontrol" element={<MemberFormCheckPage />} />
+        <Route path="hikayem" element={<MemberStoryPage />} />
         <Route path="gecmis" element={<MemberHistoryPage />} />
         <Route path="fotograflar" element={<MemberPhotosPage />} />
         <Route path="mesajlar" element={<MemberMessagesPage />} />
@@ -75,6 +78,7 @@ export default function App() {
         <Route path="hareketler" element={<ExerciseCatalogPage />} />
         <Route path="sablonlar" element={<PlanTemplatesPage />} />
         <Route path="vaka-calismalari" element={<CaseStudiesPage />} />
+        <Route path="hikayeler" element={<StoriesPage />} />
         <Route path="siparisler" element={<AdminOrdersPage />} />
         <Route path="ayarlar" element={<AdminSettingsPage />} />
       </Route>

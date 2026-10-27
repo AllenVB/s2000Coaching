@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom'
 
 import type { TrainingPlan } from '@/types/training'
 
+import { useMyStories } from '@/api/storyApi'
 import { useMyQuestionnaire } from '@/api/questionnaireApi'
 import { useMyMeasurements } from '@/api/measurementsApi'
 import { useMyNutritionPlan } from '@/api/nutritionApi'
@@ -21,6 +22,8 @@ export function MemberTodayPage() {
   const { data: nutritionPlan } = useMyNutritionPlan()
   const { data: measurements } = useMyMeasurements()
   const { data: questionnaire } = useMyQuestionnaire()
+  const { data: stories } = useMyStories()
+  const waitingStory = stories?.find((story) => story.status === 'AWAITING_CONSENT')
 
   if (!member) {
     return null
@@ -41,6 +44,23 @@ export function MemberTodayPage() {
 
       <div className="space-y-6">
         <RenewalNotice />
+
+        {waitingStory ? (
+          <section className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-primary/30 bg-primary/5 p-5">
+            <div>
+              <h2 className="text-sm font-bold uppercase tracking-wider text-text-primary">Hikâyeniz Onayınızı Bekliyor</h2>
+              <p className="mt-1 text-xs leading-relaxed text-text-secondary">
+                Koçunuz başarı hikâyenizi sitede paylaşmak istiyor. Önce okuyun; onay vermek tamamen sizin kararınız.
+              </p>
+            </div>
+            <Link
+              to="/uye/hikayem"
+              className="inline-flex h-10 items-center justify-center rounded-xl bg-primary px-4 text-xs font-semibold uppercase tracking-wide text-canvas transition-colors hover:bg-primary-hover"
+            >
+              Hikâyeyi Gör
+            </Link>
+          </section>
+        ) : null}
 
         {questionnaire && !questionnaire.answers ? (
           <section className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-primary/30 bg-primary/5 p-5">

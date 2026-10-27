@@ -9,8 +9,7 @@ import { FinalCta } from '@/components/sections/FinalCta'
 import { Hero } from '@/components/sections/Hero'
 import { HowItWorks } from '@/components/sections/HowItWorks'
 import { Pricing } from '@/components/sections/Pricing'
-import { Testimonials } from '@/components/sections/Testimonials'
-import { Transformations } from '@/components/sections/Transformations'
+import { SuccessStories } from '@/components/sections/SuccessStories'
 import { TrustStats } from '@/components/sections/TrustStats'
 import { CartProvider } from '@/context/CartContext'
 import { PricingCategoryProvider } from '@/context/PricingCategoryContext'
@@ -27,9 +26,8 @@ export function LandingPage() {
           <HowItWorks />
           <AppEcosystem />
           <Pricing />
-          <Transformations />
+          <SuccessStories />
           <Experience />
-          <Testimonials />
           <Faq />
           <FinalCta />
         </main>
