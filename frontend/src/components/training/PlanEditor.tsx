@@ -7,6 +7,7 @@ import {
   useDeletePlanExercise,
   useExercises,
 } from '@/api/trainingApi'
+import { ExerciseVideoEditor } from '@/components/training/ExerciseVideoEditor'
 import { Button } from '@/components/ui/Button'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { inputClasses } from '@/components/ui/FormField'
@@ -92,6 +93,7 @@ function DayCard({ day }: { day: PlanDay }) {
                 {planExercise.note ? (
                   <span className="mt-0.5 block text-xs text-text-secondary">{planExercise.note}</span>
                 ) : null}
+                <ExerciseVideoEditor exercise={planExercise.exercise} />
               </span>
               <button
                 type="button"

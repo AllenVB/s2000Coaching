@@ -57,7 +57,14 @@ export function useUpdateExercise() {
         headers: adminHeaders(token!),
         body: JSON.stringify(input),
       }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: EXERCISES_KEY }),
+    // Plans embed the exercise, so a new video has to reach them too — the coach's plan
+    // editor and the member's own plan would otherwise keep showing the old one.
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: EXERCISES_KEY })
+      queryClient.invalidateQueries({ queryKey: TEMPLATES_KEY })
+      queryClient.invalidateQueries({ queryKey: ['admin-member-plans'] })
+      queryClient.invalidateQueries({ queryKey: ['member-training-plan'] })
+    },
   })
 }
 
