@@ -39,13 +39,14 @@ public class WorkoutLogService {
 	}
 
 	/**
-	 * The member's active plan with their most recent session per day attached, so each
-	 * exercise can show what they did last time next to what is prescribed.
+	 * The member's active plan with their sessions attached: the latest per day, so each
+	 * exercise can show what they did last time next to what is prescribed, and the weight of
+	 * every session for the "Antrenman 1–10" strip.
 	 */
 	@Transactional(readOnly = true)
 	public Optional<TrainingPlanResponse> findActivePlan(UUID memberId) {
 		return planRepository.findByMemberIdAndActiveTrue(memberId)
-				.map(plan -> TrainingPlanMapper.toResponse(plan, latestLogByDay(memberId, plan)));
+				.map(plan -> TrainingPlanMapper.toMemberResponse(plan, logsByDay(memberId, plan)));
 	}
 
 	@Transactional(readOnly = true)
@@ -111,15 +112,14 @@ public class WorkoutLogService {
 		return listLogs(memberId);
 	}
 
-	private Map<UUID, WorkoutLog> latestLogByDay(UUID memberId, TrainingPlan plan) {
-		Map<UUID, WorkoutLog> latest = new HashMap<>();
+	/** Every session of each day of the plan, newest first. */
+	private Map<UUID, List<WorkoutLog>> logsByDay(UUID memberId, TrainingPlan plan) {
+		Map<UUID, List<WorkoutLog>> logs = new HashMap<>();
 		for (TrainingPlanDay day : plan.getDays()) {
-			workoutLogRepository.findAllByMemberIdAndDayIdOrderByPerformedOnDesc(memberId, day.getId())
-					.stream()
-					.findFirst()
-					.ifPresent(log -> latest.put(day.getId(), log));
+			logs.put(day.getId(),
+					workoutLogRepository.findAllByMemberIdAndDayIdOrderByPerformedOnDesc(memberId, day.getId()));
 		}
-		return latest;
+		return logs;
 	}
 
 	private static String blankToNull(String value) {

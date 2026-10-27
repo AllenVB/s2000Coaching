@@ -1,0 +1,21 @@
+databaseChangeLog:
+  - changeSet:
+      id: 048-add-plan-exercise-set-reps
+      author: s2000
+      comment: >-
+        The rep target of each set (up to four), kept as the coach wrote them: "30|25|20" means
+        set 1 is 30 reps, set 2 is 25, set 3 is 20. Null for exercises written before this existed,
+        which keep their single free-text reps field; set_count and reps are still filled in for
+        both, so everything that reads them keeps working.
+      changes:
+        # Four per-set targets joined with '-' ('30-25-20') no longer fit the old 40 characters.
+        - addColumn:
+            tableName: training_plan_exercise
+            columns:
+              - column:
+                  name: set_reps
+                  type: varchar(80)
+        - modifyDataType:
+            tableName: training_plan_exercise
+            columnName: reps
+            newDataType: varchar(80)

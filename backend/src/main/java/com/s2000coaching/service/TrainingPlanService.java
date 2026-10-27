@@ -29,6 +29,8 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class TrainingPlanService {
 
+	private static final int STANDARD_DAYS = 5;
+
 	private final TrainingPlanRepository planRepository;
 	private final TrainingPlanDayRepository dayRepository;
 	private final TrainingPlanExerciseRepository planExerciseRepository;
@@ -62,11 +64,18 @@ public class TrainingPlanService {
 				.toList();
 	}
 
+	/**
+	 * A new template starts with the standard days ("Gün 1" to "Gün 5", empty) unless
+	 * {@code blank} is set, so the coach adds exercises instead of building the week first.
+	 */
 	@Transactional
-	public TrainingPlanResponse createTemplate(UpsertTrainingPlanRequest request) {
-		TrainingPlan plan = new TrainingPlan(UUID.randomUUID(), null, request.name().trim(),
-				blankToNull(request.note()), false, Instant.now());
-		return TrainingPlanMapper.toResponse(planRepository.save(plan));
+	public TrainingPlanResponse createTemplate(UpsertTrainingPlanRequest request, boolean blank) {
+		TrainingPlan plan = planRepository.save(new TrainingPlan(UUID.randomUUID(), null,
+				request.name().trim(), blankToNull(request.note()), false, Instant.now()));
+		if (!blank) {
+			seedStandardDays(plan);
+		}
+		return TrainingPlanMapper.toResponse(plan);
 	}
 
 	/* ---------- member plans ---------- */
@@ -80,12 +89,13 @@ public class TrainingPlanService {
 	}
 
 	/**
-	 * Creates a plan for the member, either empty or as a copy of a template, and makes it the
-	 * active one — assigning a plan the member cannot see would be a surprising default.
+	 * Creates a plan for the member and makes it the active one — assigning a plan the member
+	 * cannot see would be a surprising default. It is a copy of the template when one is given,
+	 * otherwise the standard days "Gün 1" to "Gün 5", otherwise empty when {@code blank} is set.
 	 */
 	@Transactional
 	public TrainingPlanResponse createForMember(UUID memberId, UpsertTrainingPlanRequest request,
-			UUID templateId) {
+			UUID templateId, boolean blank) {
 		Member member = memberService.requireMember(memberId);
 		Instant now = Instant.now();
 
@@ -101,6 +111,8 @@ public class TrainingPlanService {
 				throw new BadRequestException("Yalnızca şablonlar kopyalanabilir.");
 			}
 			copyInto(plan, template);
+		} else if (!blank) {
+			seedStandardDays(plan);
 		}
 
 		deactivateOtherPlans(memberId, plan.getId());
@@ -179,9 +191,11 @@ public class TrainingPlanService {
 		int nextOrder = day.getExercises().stream()
 				.mapToInt(TrainingPlanExercise::getDisplayOrder).max().orElse(0) + 1;
 
+		Prescription prescription = prescriptionOf(request);
 		TrainingPlanExercise planExercise = new TrainingPlanExercise(UUID.randomUUID(), day, exercise,
-				nextOrder, request.setCount(), request.reps().trim(), request.targetWeightKg(),
+				nextOrder, prescription.setCount(), prescription.reps(), request.targetWeightKg(),
 				request.restSeconds(), blankToNull(request.note()));
+		planExercise.setSetReps(prescription.setReps());
 		day.getExercises().add(planExercise);
 		day.getPlan().setUpdatedAt(Instant.now());
 		return TrainingPlanMapper.toResponse(day.getPlan());
@@ -191,8 +205,10 @@ public class TrainingPlanService {
 	public TrainingPlanResponse updateExercise(UUID planExerciseId, UpsertPlanExerciseRequest request) {
 		TrainingPlanExercise planExercise = getPlanExerciseOrThrow(planExerciseId);
 		planExercise.setExercise(exerciseService.requireExercise(request.exerciseId()));
-		planExercise.setSetCount(request.setCount());
-		planExercise.setReps(request.reps().trim());
+		Prescription prescription = prescriptionOf(request);
+		planExercise.setSetCount(prescription.setCount());
+		planExercise.setReps(prescription.reps());
+		planExercise.setSetReps(prescription.setReps());
 		planExercise.setTargetWeightKg(request.targetWeightKg());
 		planExercise.setRestSeconds(request.restSeconds());
 		planExercise.setNote(blankToNull(request.note()));
@@ -227,9 +243,56 @@ public class TrainingPlanService {
 						sourceExercise.getSetCount(), sourceExercise.getReps(),
 						sourceExercise.getTargetWeightKg(), sourceExercise.getRestSeconds(),
 						sourceExercise.getNote());
+				copy.setSetReps(sourceExercise.getSetReps());
 				day.getExercises().add(copy);
 			}
 		}
+	}
+
+	/** What a new plan starts from: five empty days, ready for exercises. */
+	private void seedStandardDays(TrainingPlan plan) {
+		for (int number = 1; number <= STANDARD_DAYS; number++) {
+			plan.getDays().add(new TrainingPlanDay(UUID.randomUUID(), plan, number, "Gün " + number, null));
+		}
+	}
+
+	/** The sets and reps as stored: how many sets, the text shown for them, and the per-set list. */
+	private record Prescription(int setCount, String reps, String setReps) {
+	}
+
+	/**
+	 * Per-set targets win when any is given: they must be filled from set 1 without a gap
+	 * (a blank set 2 with a set 3 would silently renumber), and set count and reps are derived
+	 * from them so everything that reads those two keeps working. Otherwise the older
+	 * count-and-free-text shape is required.
+	 */
+	private static Prescription prescriptionOf(UpsertPlanExerciseRequest request) {
+		List<String> entered = request.setReps() == null
+				? List.of()
+				: request.setReps().stream().map(value -> value == null ? "" : value.trim()).toList();
+
+		if (entered.stream().allMatch(String::isEmpty)) {
+			if (request.setCount() == null || request.reps() == null || request.reps().isBlank()) {
+				throw new BadRequestException("En az Set 1'in tekrarını girin.");
+			}
+			return new Prescription(request.setCount(), request.reps().trim(), null);
+		}
+
+		int filled = 0;
+		while (filled < entered.size() && !entered.get(filled).isEmpty()) {
+			filled++;
+		}
+		for (int index = filled; index < entered.size(); index++) {
+			if (!entered.get(index).isEmpty()) {
+				throw new BadRequestException(
+						"Set " + (filled + 1) + " boş ama sonraki setler dolu; setleri baştan sırayla doldurun.");
+			}
+		}
+		List<String> sets = entered.subList(0, filled);
+		if (sets.stream().anyMatch(value -> value.contains("|"))) {
+			throw new BadRequestException("Tekrar alanında | karakteri kullanılamaz.");
+		}
+		return new Prescription(filled, String.join("-", sets), String.join("|", sets));
 	}
 
 	private void deleteLogsForDays(List<UUID> dayIds) {
