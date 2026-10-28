@@ -72,7 +72,7 @@ public class ReminderService implements MemberDataEraser {
 		this.enabled = enabled;
 	}
 
-	@Scheduled(cron = "${app.reminders.cron:0 0 9 * * *}", zone = "Europe/Istanbul")
+	@Scheduled(cron = "${app.reminders.cron:0 0 9 * * *}", zone = "${app.time-zone:Europe/Istanbul}")
 	public void runScheduled() {
 		run();
 	}

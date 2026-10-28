@@ -3,7 +3,7 @@ import type { WorkoutLog } from '@/types/training'
 import { useMyTrainingStats, useMyWorkoutLogs } from '@/api/trainingApi'
 import { TrainingStatsView } from '@/components/training/TrainingStatsView'
 import { ComingSoonCard, PageHeading } from '@/components/ui/PageHeading'
-import { formatDate } from '@/lib/date'
+import { currentMonthIso, formatDate } from '@/lib/date'
 import { formatMonth, groupByMonth, totalReps, totalVolumeKg } from '@/lib/workoutStats'
 
 /** Every session the member has recorded, newest first, grouped by month. */
@@ -80,7 +80,7 @@ export function MemberHistoryPage() {
 
 function SummaryRow({ logs }: { logs: WorkoutLog[] }) {
   const volume = logs.reduce((sum, log) => sum + totalVolumeKg(log), 0)
-  const thisMonth = logs.filter((log) => log.performedOn.startsWith(new Date().toISOString().slice(0, 7)))
+  const thisMonth = logs.filter((log) => log.performedOn.startsWith(currentMonthIso()))
 
   return (
     <div className="grid gap-3 sm:grid-cols-3">

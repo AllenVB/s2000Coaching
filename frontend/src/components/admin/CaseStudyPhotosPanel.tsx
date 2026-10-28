@@ -16,6 +16,7 @@ import { formatDate } from '@/lib/date'
 import type { CaseStudy } from '@/types/caseStudy'
 import type { PhotoPose } from '@/types/member'
 import { PHOTO_POSES } from '@/types/member'
+import { todayIso } from '@/lib/date'
 
 /** Mirrors `app.photos.max-size-bytes`; the server enforces it, this only says so earlier. */
 const MAX_BYTES = 8 * 1024 * 1024
@@ -44,7 +45,7 @@ function PanelBody({ study }: { study: CaseStudy }) {
   const setPhotosPublished = useSetCaseStudyPhotosPublished(study.id)
 
   const fileInput = useRef<HTMLInputElement>(null)
-  const today = new Date().toISOString().slice(0, 10)
+  const today = todayIso()
   const [file, setFile] = useState<File | null>(null)
   const [takenOn, setTakenOn] = useState(today)
   const [pose, setPose] = useState<PhotoPose>('ON')

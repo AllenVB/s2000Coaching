@@ -10,8 +10,9 @@ import {
   type MeasurementFormInput,
   type MeasurementFormValues,
 } from '@/schemas/measurementSchema'
+import { todayIso } from '@/lib/date'
 
-const today = () => new Date().toISOString().slice(0, 10)
+const today = todayIso
 
 /** Weekly check-in. Only weight is required so a quick scale reading still gets logged. */
 export function MeasurementForm() {

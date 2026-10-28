@@ -10,6 +10,7 @@ import { inputClasses, textareaClasses } from '@/components/ui/FormField'
 import { ArrowLeftIcon, CheckIcon } from '@/components/ui/icons'
 import { formatDate } from '@/lib/date'
 import type { PlanExercise } from '@/types/training'
+import { todayIso } from '@/lib/date'
 
 interface SetEntry {
   reps: string
@@ -17,7 +18,7 @@ interface SetEntry {
   rpe: string
 }
 
-const today = () => new Date().toISOString().slice(0, 10)
+const today = todayIso
 
 /**
  * The screen used in the gym: every exercise and every set on one page, pre-filled with last

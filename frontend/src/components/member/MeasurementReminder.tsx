@@ -4,6 +4,7 @@ import type { Measurement } from '@/types/measurement'
 
 import { ChartIcon } from '@/components/ui/icons'
 import { formatDate } from '@/lib/date'
+import { todayIso } from '@/lib/date'
 
 /**
  * Must match `AdminDashboardService.STALE_AFTER_DAYS`. The coach's dashboard lists members
@@ -16,8 +17,7 @@ function daysSince(isoDate: string): number {
   // Both sides are snapped to midnight UTC so the answer is a whole number of calendar
   // days, not a fraction that flips depending on the hour the page is opened.
   const then = Date.parse(`${isoDate}T00:00:00Z`)
-  const today = new Date()
-  const now = Date.UTC(today.getFullYear(), today.getMonth(), today.getDate())
+  const now = Date.parse(`${todayIso()}T00:00:00Z`)
   return Math.floor((now - then) / 86_400_000)
 }
 

@@ -43,6 +43,11 @@ server:
   port: ${SERVER_PORT:10002}
 
 app:
+  # The zone every "today" is read in: which day a workout or measurement belongs to, when a
+  # membership ends, when the morning e-mails go out. Fixed rather than taken from the host,
+  # because a cloud server is usually on UTC and would put 00:00-03:00 Turkish time on the
+  # previous day. The front end reads the same zone from VITE_APP_TIME_ZONE.
+  time-zone: ${APP_TIME_ZONE:Europe/Istanbul}
   cors:
     allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:10001}
   admin:

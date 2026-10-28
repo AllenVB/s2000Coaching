@@ -6,11 +6,12 @@ import { Field, inputClasses } from '@/components/ui/FormField'
 import { TrashIcon } from '@/components/ui/icons'
 import { formatDate } from '@/lib/date'
 import type { NutritionPlan } from '@/types/nutrition'
+import { todayIso } from '@/lib/date'
 
 /** How many recent days the list shows; older ones are still stored and analysed. */
 const SHOWN_DAYS = 14
 
-const today = () => new Date().toISOString().slice(0, 10)
+const today = todayIso
 
 /** Blank means "not recorded" (null), never zero — a zero would read as "ate nothing". */
 const optionalNumber = (value: string): number | null => (value.trim() === '' ? null : Number(value))
