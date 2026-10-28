@@ -1,0 +1,10 @@
+.git
+backend
+data
+frontend/node_modules
+frontend/dist
+**/.env
+docs
+stitch_fitcoach_premium_platform*
+*.pdf
+*.zip

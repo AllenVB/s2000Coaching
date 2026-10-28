@@ -8,6 +8,8 @@ import com.s2000coaching.domain.TrainingPlanExercise;
 import com.s2000coaching.domain.WorkoutLog;
 import com.s2000coaching.exception.BadRequestException;
 import com.s2000coaching.exception.NotFoundException;
+import com.s2000coaching.repository.SessionTopWeight;
+import com.s2000coaching.repository.SetLogRepository;
 import com.s2000coaching.repository.TrainingPlanRepository;
 import com.s2000coaching.repository.WorkoutLogRepository;
 import com.s2000coaching.web.dto.SaveWorkoutLogRequest;
@@ -27,25 +29,46 @@ import org.springframework.transaction.annotation.Transactional;
 public class WorkoutLogService {
 
 	private final WorkoutLogRepository workoutLogRepository;
+	private final SetLogRepository setLogRepository;
 	private final TrainingPlanRepository planRepository;
 	private final TrainingPlanService trainingPlanService;
 
 	public WorkoutLogService(WorkoutLogRepository workoutLogRepository,
+			SetLogRepository setLogRepository,
 			TrainingPlanRepository planRepository,
 			TrainingPlanService trainingPlanService) {
 		this.workoutLogRepository = workoutLogRepository;
+		this.setLogRepository = setLogRepository;
 		this.planRepository = planRepository;
 		this.trainingPlanService = trainingPlanService;
 	}
 
 	/**
-	 * The member's active plan with their most recent session per day attached, so each
-	 * exercise can show what they did last time next to what is prescribed.
+	 * The member's active plan with their sessions attached: the latest per day, so each
+	 * exercise can show what they did last time next to what is prescribed, and the weight of
+	 * every session for the "Antrenman 1–10" strip.
 	 */
 	@Transactional(readOnly = true)
 	public Optional<TrainingPlanResponse> findActivePlan(UUID memberId) {
-		return planRepository.findByMemberIdAndActiveTrue(memberId)
-				.map(plan -> TrainingPlanMapper.toResponse(plan, latestLogByDay(memberId, plan)));
+		return planRepository.findByMemberIdAndActiveTrue(memberId).map(plan -> {
+			List<UUID> dayIds = plan.getDays().stream().map(TrainingPlanDay::getId).toList();
+			List<UUID> exerciseIds = plan.getDays().stream()
+					.flatMap(day -> day.getExercises().stream())
+					.map(TrainingPlanExercise::getId)
+					.toList();
+			// Two queries however many sessions there are; a query per session is what a long-time
+			// member would otherwise pay on every visit.
+			Map<UUID, WorkoutLog> latestByDay = new HashMap<>();
+			if (!dayIds.isEmpty()) {
+				workoutLogRepository.findLatestPerDay(memberId, dayIds)
+						.forEach(log -> latestByDay.put(log.getDay().getId(), log));
+			}
+			List<SessionTopWeight> sessions = exerciseIds.isEmpty()
+					? List.of()
+					: setLogRepository.topWeightPerSession(memberId, exerciseIds);
+			return TrainingPlanMapper.toMemberResponse(plan, latestByDay,
+					TrainingPlanMapper.weightHistories(sessions));
+		});
 	}
 
 	@Transactional(readOnly = true)
@@ -109,17 +132,6 @@ public class WorkoutLogService {
 	@Transactional(readOnly = true)
 	public List<WorkoutLogResponse> listLogsAsCoach(UUID memberId) {
 		return listLogs(memberId);
-	}
-
-	private Map<UUID, WorkoutLog> latestLogByDay(UUID memberId, TrainingPlan plan) {
-		Map<UUID, WorkoutLog> latest = new HashMap<>();
-		for (TrainingPlanDay day : plan.getDays()) {
-			workoutLogRepository.findAllByMemberIdAndDayIdOrderByPerformedOnDesc(memberId, day.getId())
-					.stream()
-					.findFirst()
-					.ifPresent(log -> latest.put(day.getId(), log));
-		}
-		return latest;
 	}
 
 	private static String blankToNull(String value) {

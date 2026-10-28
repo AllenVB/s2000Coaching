@@ -30,7 +30,7 @@ export function PlanTemplatesPage() {
       return
     }
     createTemplate.mutate(
-      { name: trimmed },
+      { input: { name: trimmed } },
       {
         onSuccess: (template) => {
           setName('')

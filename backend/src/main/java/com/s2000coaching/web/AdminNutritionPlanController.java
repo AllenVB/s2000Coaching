@@ -33,10 +33,13 @@ public class AdminNutritionPlanController {
 		return nutritionPlanService.listTemplates();
 	}
 
+	/** {@code blank=true} skips the default scheme and creates an empty template. */
 	@PostMapping("/api/admin/nutrition-plan-templates")
 	public ResponseEntity<NutritionPlanResponse> createTemplate(
+			@RequestParam(defaultValue = "false") boolean blank,
 			@Valid @RequestBody UpsertNutritionPlanRequest request) {
-		return ResponseEntity.status(HttpStatus.CREATED).body(nutritionPlanService.createTemplate(request));
+		return ResponseEntity.status(HttpStatus.CREATED)
+				.body(nutritionPlanService.createTemplate(request, blank));
 	}
 
 	@GetMapping("/api/admin/members/{memberId}/nutrition-plans")
@@ -44,14 +47,19 @@ public class AdminNutritionPlanController {
 		return nutritionPlanService.listForMember(memberId);
 	}
 
-	/** {@code templateId} copies that template's meals and items into the new plan. */
+	/**
+	 * {@code templateId} copies that template's meals and items into the new plan. Without one
+	 * the plan starts from the default scheme (foods listed, amounts empty); {@code blank=true}
+	 * skips that and starts empty.
+	 */
 	@PostMapping("/api/admin/members/{memberId}/nutrition-plans")
 	public ResponseEntity<NutritionPlanResponse> createForMember(
 			@PathVariable UUID memberId,
 			@RequestParam(required = false) UUID templateId,
+			@RequestParam(defaultValue = "false") boolean blank,
 			@Valid @RequestBody UpsertNutritionPlanRequest request) {
 		return ResponseEntity.status(HttpStatus.CREATED)
-				.body(nutritionPlanService.createForMember(memberId, request, templateId));
+				.body(nutritionPlanService.createForMember(memberId, request, templateId, blank));
 	}
 
 	@PutMapping("/api/admin/nutrition-plans/{planId}")
@@ -92,6 +100,12 @@ public class AdminNutritionPlanController {
 	public NutritionPlanResponse addItem(@PathVariable UUID mealId,
 			@Valid @RequestBody UpsertMealItemRequest request) {
 		return nutritionPlanService.addItem(mealId, request);
+	}
+
+	@PutMapping("/api/admin/meal-items/{itemId}")
+	public NutritionPlanResponse updateItem(@PathVariable UUID itemId,
+			@Valid @RequestBody UpsertMealItemRequest request) {
+		return nutritionPlanService.updateItem(itemId, request);
 	}
 
 	@DeleteMapping("/api/admin/meal-items/{itemId}")

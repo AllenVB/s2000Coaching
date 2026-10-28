@@ -1,255 +1,376 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 
-import { useAddMeal, useAddMealItem, useDeleteMeal, useDeleteMealItem } from '@/api/nutritionApi'
-import { Button } from '@/components/ui/Button'
+import {
+  useAddMeal,
+  useAddMealItem,
+  useDeleteMeal,
+  useDeleteMealItem,
+  useUpdateMeal,
+  useUpdateMealItem,
+} from '@/api/nutritionApi'
+import { PlanTargetsForm } from '@/components/nutrition/PlanTargetsForm'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
-import { inputClasses } from '@/components/ui/FormField'
 import { PlusIcon, TrashIcon } from '@/components/ui/icons'
-import { mealCalories, type Meal, type NutritionPlan } from '@/types/nutrition'
+import {
+  missingAmounts,
+  splitBlocks,
+  type Meal,
+  type MealItem,
+  type MealKind,
+  type NutritionPlan,
+} from '@/types/nutrition'
 
-/** Meal-and-item editor, shared by the template page and a member's nutrition tab. */
+// Cells look like plain text until pointed at, so a filled plan reads like the printed one.
+const cellClasses =
+  'h-9 w-full rounded-md border border-transparent bg-transparent px-2 text-sm text-text-primary transition-colors hover:border-border focus:border-primary focus:bg-surface focus:outline-none'
+// An empty amount is what the coach still has to write, so it stands out.
+const emptyAmountClasses = 'border-dashed !border-primary/50 bg-primary/5 placeholder:text-primary/70'
+
+/**
+ * The plan as one editable table per meal or supplement block, shared by the template page
+ * and a member's nutrition tab. Every cell saves when it loses focus; the "+" at the foot of a
+ * table adds a row and the trash icon removes one. Enter in an amount cell jumps to the next
+ * empty-or-not amount below, so the grams can be filled in straight down the page.
+ */
 export function NutritionPlanEditor({ plan }: { plan: NutritionPlan }) {
-  const addMeal = useAddMeal()
-  const [name, setName] = useState('')
-
-  const submit = (event: React.FormEvent) => {
-    event.preventDefault()
-    const trimmed = name.trim()
-    if (trimmed.length > 0) {
-      addMeal.mutate({ planId: plan.id, input: { name: trimmed } }, { onSuccess: () => setName('') })
-    }
-  }
+  const { meals, supplements } = splitBlocks(plan)
+  const missing = missingAmounts(plan)
 
   return (
-    <div className="space-y-4">
-      {plan.meals.map((meal) => (
-        <MealCard key={meal.id} meal={meal} />
-      ))}
+    <div className="space-y-6" data-nutrition-editor>
+      <PlanTargetsForm key={plan.id} plan={plan} />
 
-      <form className="flex flex-wrap items-center gap-2" onSubmit={submit}>
-        <input
-          value={name}
-          onChange={(event) => setName(event.target.value)}
-          type="text"
-          placeholder="Örn: Kahvaltı"
-          aria-label="Yeni öğün adı"
-          className={`${inputClasses} max-w-xs`}
-        />
-        <Button type="submit" variant="secondary" disabled={addMeal.isPending || name.trim().length === 0}>
-          <PlusIcon className="h-3.5 w-3.5" />
-          Öğün Ekle
-        </Button>
-      </form>
+      <p className={`text-xs ${missing > 0 ? 'text-primary' : 'text-success'}`}>
+        {missing > 0
+          ? `${missing} kalemin miktarı henüz boş — turuncu kesikli kutuları doldurun.`
+          : 'Tüm miktarlar dolu.'}
+      </p>
 
-      {addMeal.isError ? <p className="text-xs text-error">{addMeal.error.message}</p> : null}
+      <BlockSection title="Beslenme Programı" kind="MEAL" blocks={meals} planId={plan.id} />
+      <BlockSection title="Supplement Planı" kind="SUPPLEMENT" blocks={supplements} planId={plan.id} />
     </div>
   )
 }
 
-function MealCard({ meal }: { meal: Meal }) {
-  const deleteMeal = useDeleteMeal()
-  const deleteItem = useDeleteMealItem()
-  const [isConfirmingDelete, setConfirmingDelete] = useState(false)
-  const [isAdding, setAdding] = useState(false)
+function BlockSection({
+  title,
+  kind,
+  blocks,
+  planId,
+}: {
+  title: string
+  kind: MealKind
+  blocks: Meal[]
+  planId: string
+}) {
+  const addMeal = useAddMeal()
+  const [name, setName] = useState('')
+  const noun = kind === 'SUPPLEMENT' ? 'Supplement Bloğu' : 'Öğün'
+
+  const add = () => {
+    const trimmed = name.trim()
+    if (trimmed.length > 0 && !addMeal.isPending) {
+      addMeal.mutate({ planId, input: { name: trimmed, kind } }, { onSuccess: () => setName('') })
+    }
+  }
 
   return (
-    <section className="rounded-2xl border border-border bg-surface-elevated p-5">
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3 border-b border-border pb-3">
-        <div>
-          <h3 className="text-sm font-bold uppercase tracking-wider text-text-primary">{meal.name}</h3>
-          <p className="mt-0.5 text-xs text-text-muted">
-            {meal.timeHint ? `${meal.timeHint} · ` : ''}
-            {mealCalories(meal)} kcal
-          </p>
-        </div>
+    <section className="space-y-4">
+      <h3 className="text-sm font-bold uppercase tracking-wider text-text-primary">{title}</h3>
+
+      {blocks.map((block) => (
+        <BlockTable key={block.id} block={block} />
+      ))}
+
+      <div className="flex flex-wrap items-center gap-2">
+        <input
+          value={name}
+          onChange={(event) => setName(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter') {
+              event.preventDefault()
+              add()
+            }
+          }}
+          type="text"
+          placeholder={kind === 'SUPPLEMENT' ? 'Örn: Uyumadan önce' : 'Örn: Ara öğün'}
+          aria-label={`Yeni ${noun.toLowerCase()} adı`}
+          className="h-9 w-full max-w-xs rounded-lg border border-border bg-surface px-3 text-sm text-text-primary focus:border-primary focus:outline-none"
+        />
+        <button
+          type="button"
+          onClick={add}
+          disabled={addMeal.isPending || name.trim().length === 0}
+          aria-label={`${noun} ekle`}
+          className="inline-flex h-9 items-center gap-1.5 rounded-full border border-border-strong bg-surface-elevated px-3.5 text-xs font-semibold uppercase tracking-wide text-text-primary transition-colors hover:border-primary/60 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          <PlusIcon className="h-3.5 w-3.5" />
+          {noun} Ekle
+        </button>
+      </div>
+      {addMeal.isError ? <p className="text-xs text-error">{addMeal.error.message}</p> : null}
+    </section>
+  )
+}
+
+function BlockTable({ block }: { block: Meal }) {
+  const updateMeal = useUpdateMeal()
+  const deleteMeal = useDeleteMeal()
+  const [isConfirmingDelete, setConfirmingDelete] = useState(false)
+
+  const rename = (value: string, input: HTMLInputElement) => {
+    const trimmed = value.trim()
+    if (trimmed.length === 0) {
+      input.value = block.name
+      return
+    }
+    if (trimmed !== block.name) {
+      updateMeal.mutate({
+        mealId: block.id,
+        input: { name: trimmed, timeHint: block.timeHint, note: block.note, kind: block.kind },
+      })
+    }
+  }
+
+  return (
+    <div className="overflow-hidden rounded-2xl border border-border bg-surface">
+      <div className="flex items-center justify-between gap-3 border-b border-border bg-surface-elevated px-3 py-1.5">
+        <input
+          defaultValue={block.name}
+          onBlur={(event) => rename(event.target.value, event.target)}
+          onKeyDown={blurOnEnter}
+          aria-label={`${block.name} adı`}
+          className="h-9 min-w-0 flex-1 rounded-md border border-transparent bg-transparent px-2 text-xs font-bold uppercase tracking-wider text-primary hover:border-border focus:border-primary focus:bg-surface focus:outline-none"
+        />
         <button
           type="button"
           onClick={() => setConfirmingDelete(true)}
-          aria-label={`${meal.name} öğününü sil`}
+          aria-label={`${block.name} bloğunu sil`}
           className="text-text-muted transition-colors hover:text-error"
         >
           <TrashIcon className="h-4 w-4" />
         </button>
       </div>
 
-      {meal.items.length === 0 ? (
-        <p className="text-sm italic text-text-muted">Bu öğüne henüz besin eklenmedi.</p>
-      ) : (
-        <ul className="space-y-2">
-          {meal.items.map((item) => (
-            <li
-              key={item.id}
-              className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border bg-surface px-4 py-3"
-            >
-              <span className="min-w-0">
-                <span className="block font-semibold text-text-primary">
-                  {item.name}
-                  {item.amount ? <span className="font-normal text-text-secondary"> · {item.amount}</span> : null}
-                </span>
-                <span className="block text-xs text-text-muted">{macroLine(item)}</span>
-              </span>
-              <button
-                type="button"
-                onClick={() => deleteItem.mutate({ itemId: item.id })}
-                aria-label={`${item.name} besinini çıkar`}
-                className="text-text-muted transition-colors hover:text-error"
-              >
-                <TrashIcon className="h-4 w-4" />
-              </button>
-            </li>
+      <table className="w-full border-collapse">
+        <thead className="sr-only">
+          <tr>
+            <th scope="col">Besin</th>
+            <th scope="col">Miktar</th>
+            <th scope="col">İşlem</th>
+          </tr>
+        </thead>
+        <tbody>
+          {block.items.map((item) => (
+            <ItemRow key={item.id} item={item} />
           ))}
-        </ul>
-      )}
-
-      {isAdding ? (
-        <AddItemForm mealId={meal.id} onDone={() => setAdding(false)} />
-      ) : (
-        <Button type="button" variant="ghost" size="sm" className="mt-3" onClick={() => setAdding(true)}>
-          <PlusIcon className="h-3.5 w-3.5" />
-          Besin Ekle
-        </Button>
-      )}
+          <AddItemRow mealId={block.id} />
+        </tbody>
+      </table>
+      {updateMeal.isError ? <p className="px-4 pb-3 text-xs text-error">{updateMeal.error.message}</p> : null}
 
       {isConfirmingDelete ? (
         <ConfirmDialog
-          title="Öğünü Sil"
+          title="Bloğu Sil"
           confirmLabel="Evet, Sil"
           tone="danger"
           isPending={deleteMeal.isPending}
           error={deleteMeal.isError ? deleteMeal.error.message : null}
-          description={`"${meal.name}" öğününü ve içindeki besinleri silmek istediğinize emin misiniz?`}
+          description={`"${block.name}" bloğunu ve içindeki kalemleri silmek istediğinize emin misiniz?`}
           onCancel={() => setConfirmingDelete(false)}
           onConfirm={() =>
-            deleteMeal.mutate({ mealId: meal.id }, { onSuccess: () => setConfirmingDelete(false) })
+            deleteMeal.mutate({ mealId: block.id }, { onSuccess: () => setConfirmingDelete(false) })
           }
         />
       ) : null}
-    </section>
+    </div>
   )
 }
 
-function AddItemForm({ mealId, onDone }: { mealId: string; onDone: () => void }) {
+function ItemRow({ item }: { item: MealItem }) {
+  const update = useUpdateMealItem()
+  const remove = useDeleteMealItem()
+  const nameRef = useRef<HTMLInputElement>(null)
+  const amountRef = useRef<HTMLInputElement>(null)
+
+  // Both cells are read from the page every time, never from `item`: the server replaces the
+  // whole row, so a save that carried a stale sibling value would quietly undo the other edit.
+  const save = () => {
+    const name = nameRef.current?.value.trim() ?? ''
+    const amount = amountRef.current?.value.trim() ?? ''
+    if (name.length === 0) {
+      if (nameRef.current) nameRef.current.value = item.name
+      return
+    }
+    if (name === item.name && amount === (item.amount ?? '')) {
+      return
+    }
+    update.mutate({
+      itemId: item.id,
+      input: {
+        name,
+        amount: amount || null,
+        calories: item.calories,
+        proteinG: item.proteinG,
+        carbsG: item.carbsG,
+        fatG: item.fatG,
+        note: item.note,
+      },
+    })
+  }
+
+  const isEmpty = (item.amount ?? '').trim() === ''
+
+  return (
+    <>
+      <tr className="border-t border-border/60 first:border-t-0">
+        <td className="w-3/5 px-2 py-1">
+          <input
+            ref={nameRef}
+            defaultValue={item.name}
+            onBlur={save}
+            onKeyDown={blurOnEnter}
+            maxLength={160}
+            aria-label={`${item.name} adı`}
+            className={cellClasses}
+          />
+        </td>
+        <td className="px-2 py-1">
+          <input
+            ref={amountRef}
+            defaultValue={item.amount ?? ''}
+            onBlur={save}
+            onKeyDown={jumpToNextAmount}
+            maxLength={60}
+            placeholder="gram?"
+            data-amount
+            aria-label={`${item.name} miktarı`}
+            className={`${cellClasses} ${isEmpty ? emptyAmountClasses : ''}`}
+          />
+        </td>
+        <td className="w-10 px-2 py-1 text-right">
+          <button
+            type="button"
+            onClick={() => remove.mutate({ itemId: item.id })}
+            disabled={remove.isPending}
+            aria-label={`${item.name} kalemini çıkar`}
+            className="text-text-muted transition-colors hover:text-error disabled:opacity-50"
+          >
+            <TrashIcon className="h-4 w-4" />
+          </button>
+        </td>
+      </tr>
+      {update.isError || remove.isError ? (
+        <tr>
+          <td colSpan={3} className="px-4 pb-2 text-xs text-error">
+            {(update.error ?? remove.error)?.message}
+          </td>
+        </tr>
+      ) : null}
+    </>
+  )
+}
+
+/** The "+" row at the foot of a table: a name, an optional amount, Enter or "+" to add. */
+function AddItemRow({ mealId }: { mealId: string }) {
   const addItem = useAddMealItem()
+  const nameRef = useRef<HTMLInputElement>(null)
+  const amountRef = useRef<HTMLInputElement>(null)
 
-  const [name, setName] = useState('')
-  const [amount, setAmount] = useState('')
-  const [calories, setCalories] = useState('')
-  const [protein, setProtein] = useState('')
-  const [carbs, setCarbs] = useState('')
-  const [fat, setFat] = useState('')
-
-  const numberOrNull = (value: string) => (value.trim() === '' ? null : Number(value))
-
-  const submit = (event: React.FormEvent) => {
-    event.preventDefault()
-    const trimmed = name.trim()
-    if (trimmed.length === 0) {
+  const add = () => {
+    const name = nameRef.current?.value.trim() ?? ''
+    if (name.length === 0 || addItem.isPending) {
+      nameRef.current?.focus()
       return
     }
     addItem.mutate(
       {
         mealId,
-        input: {
-          name: trimmed,
-          amount: amount.trim() || null,
-          calories: numberOrNull(calories),
-          proteinG: numberOrNull(protein),
-          carbsG: numberOrNull(carbs),
-          fatG: numberOrNull(fat),
+        input: { name, amount: amountRef.current?.value.trim() || null },
+      },
+      {
+        onSuccess: () => {
+          if (nameRef.current) nameRef.current.value = ''
+          if (amountRef.current) amountRef.current.value = ''
+          nameRef.current?.focus()
         },
       },
-      { onSuccess: onDone },
     )
   }
 
+  const addOnEnter = (event: React.KeyboardEvent) => {
+    if (event.key === 'Enter') {
+      event.preventDefault()
+      add()
+    }
+  }
+
   return (
-    <form className="mt-4 space-y-3 rounded-xl border border-border bg-surface p-4" onSubmit={submit}>
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-6">
-        <label className="col-span-2">
-          <span className="mb-1.5 block text-xs font-medium text-text-secondary">Besin</span>
+    <>
+      <tr className="border-t border-dashed border-border bg-surface-elevated/40">
+        <td className="w-3/5 px-2 py-1">
           <input
-            value={name}
-            onChange={(event) => setName(event.target.value)}
-            type="text"
-            placeholder="Örn: Yulaf"
-            className={inputClasses}
+            ref={nameRef}
+            onKeyDown={addOnEnter}
+            maxLength={160}
+            placeholder="Yeni besin…"
+            aria-label="Yeni besin adı"
+            className={cellClasses}
           />
-        </label>
-        <label>
-          <span className="mb-1.5 block text-xs font-medium text-text-secondary">Miktar</span>
+        </td>
+        <td className="px-2 py-1">
           <input
-            value={amount}
-            onChange={(event) => setAmount(event.target.value)}
-            type="text"
-            placeholder="80 g"
-            className={inputClasses}
+            ref={amountRef}
+            onKeyDown={addOnEnter}
+            maxLength={60}
+            placeholder="miktar"
+            aria-label="Yeni besin miktarı"
+            className={cellClasses}
           />
-        </label>
-        <label>
-          <span className="mb-1.5 block text-xs font-medium text-text-secondary">kcal</span>
-          <input
-            value={calories}
-            onChange={(event) => setCalories(event.target.value)}
-            type="number"
-            min={0}
-            placeholder="—"
-            className={inputClasses}
-          />
-        </label>
-        <label>
-          <span className="mb-1.5 block text-xs font-medium text-text-secondary">P (g)</span>
-          <input
-            value={protein}
-            onChange={(event) => setProtein(event.target.value)}
-            type="number"
-            min={0}
-            placeholder="—"
-            className={inputClasses}
-          />
-        </label>
-        <label>
-          <span className="mb-1.5 block text-xs font-medium text-text-secondary">K (g)</span>
-          <input
-            value={carbs}
-            onChange={(event) => setCarbs(event.target.value)}
-            type="number"
-            min={0}
-            placeholder="—"
-            className={inputClasses}
-          />
-        </label>
-        <label>
-          <span className="mb-1.5 block text-xs font-medium text-text-secondary">Y (g)</span>
-          <input
-            value={fat}
-            onChange={(event) => setFat(event.target.value)}
-            type="number"
-            min={0}
-            placeholder="—"
-            className={inputClasses}
-          />
-        </label>
-      </div>
-
-      {addItem.isError ? <p className="text-xs text-error">{addItem.error.message}</p> : null}
-
-      <div className="flex flex-wrap gap-2">
-        <Button type="submit" size="sm" disabled={addItem.isPending || name.trim().length === 0}>
-          {addItem.isPending ? 'Ekleniyor…' : 'Ekle'}
-        </Button>
-        <Button type="button" size="sm" variant="ghost" onClick={onDone}>
-          Vazgeç
-        </Button>
-      </div>
-    </form>
+        </td>
+        <td className="w-10 px-2 py-1 text-right">
+          <button
+            type="button"
+            onClick={add}
+            disabled={addItem.isPending}
+            aria-label="Besin ekle"
+            className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-primary text-canvas transition-colors hover:bg-primary-hover disabled:opacity-50"
+          >
+            <PlusIcon className="h-4 w-4" />
+          </button>
+        </td>
+      </tr>
+      {addItem.isError ? (
+        <tr>
+          <td colSpan={3} className="px-4 pb-2 text-xs text-error">
+            {addItem.error.message}
+          </td>
+        </tr>
+      ) : null}
+    </>
   )
 }
 
-function macroLine(item: { calories: number | null; proteinG: number | null; carbsG: number | null; fatG: number | null }): string {
-  const parts: string[] = []
-  if (item.calories !== null) parts.push(`${item.calories} kcal`)
-  if (item.proteinG !== null) parts.push(`P ${item.proteinG}g`)
-  if (item.carbsG !== null) parts.push(`K ${item.carbsG}g`)
-  if (item.fatG !== null) parts.push(`Y ${item.fatG}g`)
-  return parts.length > 0 ? parts.join(' · ') : 'makro girilmemiş'
+function blurOnEnter(event: React.KeyboardEvent<HTMLInputElement>) {
+  if (event.key === 'Enter') {
+    event.preventDefault()
+    event.currentTarget.blur()
+  }
+}
+
+/** Enter moves down to the next amount cell (which saves this one on blur); on the last, it just saves. */
+function jumpToNextAmount(event: React.KeyboardEvent<HTMLInputElement>) {
+  if (event.key !== 'Enter') {
+    return
+  }
+  event.preventDefault()
+  const root = event.currentTarget.closest('[data-nutrition-editor]')
+  const cells = Array.from(root?.querySelectorAll<HTMLInputElement>('input[data-amount]') ?? [])
+  const next = cells[cells.indexOf(event.currentTarget) + 1]
+  if (next) {
+    next.focus()
+    next.select()
+  } else {
+    event.currentTarget.blur()
+  }
 }

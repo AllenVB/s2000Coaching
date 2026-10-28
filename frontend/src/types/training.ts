@@ -51,14 +51,32 @@ export interface PlanExercise {
   exercise: Exercise
   displayOrder: number
   setCount: number
-  /** Free text: "8-10", "AMRAP", … */
+  /** Free text: "8-10", "AMRAP", "30-25-20" — the per-set targets joined when there are some. */
   reps: string
+  /**
+   * The rep target of set 1, 2, 3, 4 as the coach wrote them; empty for an exercise written with
+   * one free-text reps. A plan cached on a phone before this existed has no such field at all.
+   */
+  setReps?: string[]
   targetWeightKg: number | null
   restSeconds: number | null
   note: string | null
   /** What the member recorded last time; empty on the coach side. */
   lastPerformed: SetLog[]
+  /** Top weight of each of the member's sessions of this exercise, oldest first; at most ten. */
+  weightHistory?: WeightEntry[]
 }
+
+export interface WeightEntry {
+  /** Counts the member's sessions of this exercise from 1, and keeps counting past ten. */
+  sessionNumber: number
+  performedOn: string
+  /** Null when the sets were recorded without a weight. */
+  topWeightKg: number | null
+}
+
+/** How many sets the editor has cells for. */
+export const MAX_SET_CELLS = 4
 
 export interface PlanDay {
   id: string
@@ -86,8 +104,10 @@ export interface UpsertPlanInput {
 
 export interface UpsertPlanExerciseInput {
   exerciseId: string
-  setCount: number
-  reps: string
+  /** The rep target of set 1–4; blank cells after the last filled one are fine, gaps are not. */
+  setReps: string[]
+  setCount?: number
+  reps?: string
   targetWeightKg?: number | null
   restSeconds?: number | null
   note?: string | null

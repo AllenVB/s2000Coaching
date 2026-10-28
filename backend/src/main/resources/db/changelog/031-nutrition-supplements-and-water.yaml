@@ -1,0 +1,26 @@
+databaseChangeLog:
+  - changeSet:
+      id: 047-add-meal-kind-and-water-target
+      author: s2000
+      comment: >-
+        A nutrition plan also carries a supplement schedule ("sabah kahvaltidan sonra",
+        "antrenman sonrasi", ...), which has the same shape as a meal - a name and a list of
+        things with an amount - so it is a meal of kind SUPPLEMENT rather than a table of its
+        own. Existing rows are ordinary meals. The plan also gets an optional daily water
+        target in litres.
+      changes:
+        - addColumn:
+            tableName: meal
+            columns:
+              - column:
+                  name: kind
+                  type: varchar(12)
+                  defaultValue: MEAL
+                  constraints:
+                    nullable: false
+        - addColumn:
+            tableName: nutrition_plan
+            columns:
+              - column:
+                  name: water_liters
+                  type: numeric(3,1)

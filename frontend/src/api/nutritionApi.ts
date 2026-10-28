@@ -53,8 +53,8 @@ export function useCreateNutritionTemplate() {
   const invalidate = useInvalidateNutrition()
 
   return useMutation({
-    mutationFn: (input: UpsertNutritionPlanInput) =>
-      apiFetch<NutritionPlan>('/api/admin/nutrition-plan-templates', {
+    mutationFn: ({ input, blank }: { input: UpsertNutritionPlanInput; blank?: boolean }) =>
+      apiFetch<NutritionPlan>(`/api/admin/nutrition-plan-templates${blank ? '?blank=true' : ''}`, {
         method: 'POST',
         headers: adminHeaders(token!),
         body: JSON.stringify(input),
@@ -68,11 +68,23 @@ export function useCreateMemberNutritionPlan(memberId: string) {
   const invalidate = useInvalidateNutrition()
 
   return useMutation({
-    mutationFn: ({ input, templateId }: { input: UpsertNutritionPlanInput; templateId?: string }) =>
-      apiFetch<NutritionPlan>(
-        `/api/admin/members/${memberId}/nutrition-plans${templateId ? `?templateId=${templateId}` : ''}`,
-        { method: 'POST', headers: adminHeaders(token!), body: JSON.stringify(input) },
-      ),
+    // Without a template the server starts the plan from the standard scheme; `blank` opts out.
+    mutationFn: ({
+      input,
+      templateId,
+      blank,
+    }: {
+      input: UpsertNutritionPlanInput
+      templateId?: string
+      blank?: boolean
+    }) => {
+      const query = templateId ? `?templateId=${templateId}` : blank ? '?blank=true' : ''
+      return apiFetch<NutritionPlan>(`/api/admin/members/${memberId}/nutrition-plans${query}`, {
+        method: 'POST',
+        headers: adminHeaders(token!),
+        body: JSON.stringify(input),
+      })
+    },
     onSuccess: invalidate,
   })
 }
@@ -135,6 +147,21 @@ export function useAddMeal() {
   })
 }
 
+export function useUpdateMeal() {
+  const { token } = useAdminAuth()
+  const invalidate = useInvalidateNutrition()
+
+  return useMutation({
+    mutationFn: ({ mealId, input }: { mealId: string; input: UpsertMealInput }) =>
+      apiFetch<NutritionPlan>(`/api/admin/meals/${mealId}`, {
+        method: 'PUT',
+        headers: adminHeaders(token!),
+        body: JSON.stringify(input),
+      }),
+    onSuccess: invalidate,
+  })
+}
+
 export function useDeleteMeal() {
   const { token } = useAdminAuth()
   const invalidate = useInvalidateNutrition()
@@ -157,6 +184,22 @@ export function useAddMealItem() {
     mutationFn: ({ mealId, input }: { mealId: string; input: UpsertMealItemInput }) =>
       apiFetch<NutritionPlan>(`/api/admin/meals/${mealId}/items`, {
         method: 'POST',
+        headers: adminHeaders(token!),
+        body: JSON.stringify(input),
+      }),
+    onSuccess: invalidate,
+  })
+}
+
+/** Replaces the whole item, so a cell edit has to send the row's other fields back unchanged. */
+export function useUpdateMealItem() {
+  const { token } = useAdminAuth()
+  const invalidate = useInvalidateNutrition()
+
+  return useMutation({
+    mutationFn: ({ itemId, input }: { itemId: string; input: UpsertMealItemInput }) =>
+      apiFetch<NutritionPlan>(`/api/admin/meal-items/${itemId}`, {
+        method: 'PUT',
         headers: adminHeaders(token!),
         body: JSON.stringify(input),
       }),

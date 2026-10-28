@@ -6,6 +6,7 @@ import { useUploadMyPhoto } from '@/api/photosApi'
 import { Button } from '@/components/ui/Button'
 import { Field, inputClasses, textareaClasses } from '@/components/ui/FormField'
 import { PHOTO_POSES } from '@/types/member'
+import { todayIso } from '@/lib/date'
 
 /** Mirrors `app.photos.max-size-bytes`; the server enforces it, this only says so earlier. */
 const MAX_BYTES = 8 * 1024 * 1024
@@ -15,12 +16,12 @@ export function PhotoUploadForm() {
   const uploadPhoto = useUploadMyPhoto()
   const fileInput = useRef<HTMLInputElement>(null)
   const [file, setFile] = useState<File | null>(null)
-  const [takenOn, setTakenOn] = useState(() => new Date().toISOString().slice(0, 10))
+  const [takenOn, setTakenOn] = useState(todayIso)
   const [pose, setPose] = useState<PhotoPose>('ON')
   const [note, setNote] = useState('')
   const [localError, setLocalError] = useState<string | null>(null)
 
-  const today = new Date().toISOString().slice(0, 10)
+  const today = todayIso()
 
   const pickFile = (picked: File | null) => {
     setLocalError(null)

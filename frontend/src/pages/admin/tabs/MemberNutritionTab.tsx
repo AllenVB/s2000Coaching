@@ -8,7 +8,6 @@ import {
   useNutritionTemplates,
 } from '@/api/nutritionApi'
 import { MemberIntakeHistory } from '@/components/nutrition/MemberIntakeHistory'
-import { MacroSummary } from '@/components/nutrition/MacroSummary'
 import { NutritionPlanEditor } from '@/components/nutrition/NutritionPlanEditor'
 import { Button } from '@/components/ui/Button'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
@@ -16,6 +15,9 @@ import { inputClasses } from '@/components/ui/FormField'
 import { TrashIcon } from '@/components/ui/icons'
 import { formatDate } from '@/lib/date'
 import { useMemberDetail } from '@/pages/admin/MemberDetailPage'
+
+/** The select's value for "start with nothing"; an empty value means the standard scheme. */
+const BLANK = 'blank'
 
 export function MemberNutritionTab() {
   const { member } = useMemberDetail()
@@ -38,7 +40,11 @@ export function MemberNutritionTab() {
       return
     }
     createPlan.mutate(
-      { input: { name: trimmed }, templateId: templateId || undefined },
+      {
+        input: { name: trimmed },
+        templateId: templateId && templateId !== BLANK ? templateId : undefined,
+        blank: templateId === BLANK,
+      },
       {
         onSuccess: (plan) => {
           setName('')
@@ -70,7 +76,9 @@ export function MemberNutritionTab() {
           Beslenme Planı Ata
         </h2>
         <p className="mb-4 text-xs leading-relaxed text-text-secondary">
-          Boş bir plan oluşturun ya da bir şablonu kopyalayın. Yeni plan otomatik olarak aktif olur.
+          Plan, öğünleri ve supplementleri hazır bir şemayla açılır: besinler yazılıdır, gramajları siz
+          doldurursunuz. İsterseniz bir şablonu kopyalayın ya da tamamen boş başlayın. Yeni plan otomatik
+          olarak aktif olur.
         </p>
         <form className="flex flex-wrap items-end gap-3" onSubmit={submit}>
           <label className="min-w-[200px] flex-1">
@@ -84,13 +92,14 @@ export function MemberNutritionTab() {
             />
           </label>
           <label className="min-w-[200px] flex-1">
-            <span className="mb-1.5 block text-xs font-medium text-text-secondary">Şablondan Kopyala</span>
+            <span className="mb-1.5 block text-xs font-medium text-text-secondary">Başlangıç</span>
             <select
               value={templateId}
               onChange={(event) => setTemplateId(event.target.value)}
               className={inputClasses}
             >
-              <option value="">Boş plan</option>
+              <option value="">Standart şema (besinler hazır, gramajlar boş)</option>
+              <option value={BLANK}>Tamamen boş plan</option>
               {templates?.map((template) => (
                 <option key={template.id} value={template.id}>
                   {template.name} ({template.meals.length} öğün)
@@ -157,7 +166,6 @@ export function MemberNutritionTab() {
 
             {openId === plan.id ? (
               <div className="mt-5 space-y-5 border-t border-border pt-5">
-                <MacroSummary plan={plan} />
                 <NutritionPlanEditor plan={plan} />
               </div>
             ) : null}

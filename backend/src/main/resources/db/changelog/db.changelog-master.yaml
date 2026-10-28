@@ -64,3 +64,7 @@ databaseChangeLog:
       file: db/changelog/029-create-form-check-table.yaml
   - include:
       file: db/changelog/030-create-success-story-tables.yaml
+  - include:
+      file: db/changelog/031-nutrition-supplements-and-water.yaml
+  - include:
+      file: db/changelog/032-training-set-reps.yaml

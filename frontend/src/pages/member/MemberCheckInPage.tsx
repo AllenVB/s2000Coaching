@@ -9,8 +9,9 @@ import { PageHeading } from '@/components/ui/PageHeading'
 import { useMemberProfileSync } from '@/hooks/useMemberProfileSync'
 import { formatDate } from '@/lib/date'
 import { CHECK_IN_SCALES } from '@/types/checkIn'
+import { todayIso } from '@/lib/date'
 
-const today = () => new Date().toISOString().slice(0, 10)
+const today = todayIso
 
 /** The weekly ritual: how the week went, in a minute; the coach answers on the same card. */
 export function MemberCheckInPage() {

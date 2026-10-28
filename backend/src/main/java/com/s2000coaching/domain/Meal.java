@@ -3,6 +3,8 @@ package com.s2000coaching.domain;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
@@ -38,6 +40,10 @@ public class Meal {
 	@Column(columnDefinition = "text")
 	private String note;
 
+	@Enumerated(EnumType.STRING)
+	@Column(nullable = false, length = 12)
+	private MealKind kind = MealKind.MEAL;
+
 	@OneToMany(mappedBy = "meal", cascade = CascadeType.ALL, orphanRemoval = true)
 	@OrderBy("displayOrder asc")
 	private List<MealItem> items = new ArrayList<>();
@@ -52,6 +58,14 @@ public class Meal {
 		this.name = name;
 		this.timeHint = timeHint;
 		this.note = note;
+	}
+
+	public MealKind getKind() {
+		return kind;
+	}
+
+	public void setKind(MealKind kind) {
+		this.kind = kind;
 	}
 
 	public UUID getId() {

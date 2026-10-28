@@ -19,6 +19,9 @@ import { TrashIcon } from '@/components/ui/icons'
 import { formatDate } from '@/lib/date'
 import { useMemberDetail } from '@/pages/admin/MemberDetailPage'
 
+/** The select's value for "no days at all"; an empty value means the standard Gün 1 – Gün 5. */
+const BLANK = 'blank'
+
 export function MemberTrainingTab() {
   const { member } = useMemberDetail()
   const { data: plans, isLoading, isError, error } = useMemberPlans(member.id)
@@ -45,7 +48,11 @@ export function MemberTrainingTab() {
       return
     }
     createPlan.mutate(
-      { input: { name: trimmed }, templateId: templateId || undefined },
+      {
+        input: { name: trimmed },
+        templateId: templateId && templateId !== BLANK ? templateId : undefined,
+        blank: templateId === BLANK,
+      },
       {
         onSuccess: (plan) => {
           setName('')
@@ -75,8 +82,9 @@ export function MemberTrainingTab() {
       <section className="rounded-2xl border border-border bg-surface p-6">
         <h2 className="mb-2 text-sm font-bold uppercase tracking-wider text-text-primary">Plan Ata</h2>
         <p className="mb-4 text-xs leading-relaxed text-text-secondary">
-          Boş bir plan oluşturun ya da bir şablonu kopyalayın. Yeni plan otomatik olarak aktif olur; üye üye
-          alanında yalnızca aktif planı görür.
+          Plan, boş Gün 1 – Gün 5 ile açılır; hareketleri ve setleri siz eklersiniz. İsterseniz bir şablonu
+          kopyalayın ya da günsüz boş başlayın. Yeni plan otomatik olarak aktif olur; üye üye alanında
+          yalnızca aktif planı görür.
         </p>
         <form className="flex flex-wrap items-end gap-3" onSubmit={submit}>
           <label className="min-w-[200px] flex-1">
@@ -91,7 +99,7 @@ export function MemberTrainingTab() {
           </label>
           <label className="min-w-[200px] flex-1">
             <span className="mb-1.5 block text-xs font-medium text-text-secondary">
-              Şablondan Kopyala
+              Başlangıç
               {wantedDays !== null ? ` (★ = üyenin istediği ${wantedDays} günlük)` : ''}
             </span>
             <select
@@ -99,7 +107,8 @@ export function MemberTrainingTab() {
               onChange={(event) => setTemplateId(event.target.value)}
               className={inputClasses}
             >
-              <option value="">Boş plan</option>
+              <option value="">Standart (boş Gün 1 – Gün 5)</option>
+              <option value={BLANK}>Günsüz boş plan</option>
               {templates?.map((template) => (
                 <option key={template.id} value={template.id}>
                   {wantedDays !== null && template.days.length === wantedDays ? '★ ' : ''}
