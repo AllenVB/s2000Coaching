@@ -5,17 +5,18 @@ import com.s2000coaching.domain.TrainingPlan;
 import com.s2000coaching.domain.TrainingPlanDay;
 import com.s2000coaching.domain.TrainingPlanExercise;
 import com.s2000coaching.domain.WorkoutLog;
+import com.s2000coaching.repository.SessionTopWeight;
 import com.s2000coaching.web.dto.ExerciseResponse;
 import com.s2000coaching.web.dto.PlanDayResponse;
 import com.s2000coaching.web.dto.PlanExerciseResponse;
 import com.s2000coaching.web.dto.SetLogResponse;
 import com.s2000coaching.web.dto.TrainingPlanResponse;
 import com.s2000coaching.web.dto.WeightEntry;
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -39,13 +40,14 @@ final class TrainingPlanMapper {
 	}
 
 	/**
-	 * The member's view: each day carries their latest session, and each exercise their weight
-	 * history across every session of that day.
+	 * The member's view: each day carries their latest session, and each exercise the weight of
+	 * every session they did of it.
 	 *
-	 * @param logsNewestFirstByDayId the member's {@link WorkoutLog}s per plan-day id, newest first
+	 * @param latestLogByDayId the member's most recent {@link WorkoutLog} per plan-day id
+	 * @param historyByPlanExerciseId {@link #weightHistories} for the plan's exercises
 	 */
-	static TrainingPlanResponse toMemberResponse(TrainingPlan plan,
-			Map<UUID, List<WorkoutLog>> logsNewestFirstByDayId) {
+	static TrainingPlanResponse toMemberResponse(TrainingPlan plan, Map<UUID, WorkoutLog> latestLogByDayId,
+			Map<UUID, List<WeightEntry>> historyByPlanExerciseId) {
 		return new TrainingPlanResponse(
 				plan.getId(),
 				plan.getName(),
@@ -54,10 +56,7 @@ final class TrainingPlanMapper {
 				plan.isActive(),
 				plan.getUpdatedAt(),
 				plan.getDays().stream()
-						.map(day -> {
-							List<WorkoutLog> logs = logsNewestFirstByDayId.getOrDefault(day.getId(), List.of());
-							return toDayResponse(day, logs.isEmpty() ? null : logs.get(0), logs);
-						})
+						.map(day -> toDayResponse(day, latestLogByDayId.get(day.getId()), historyByPlanExerciseId))
 						.toList());
 	}
 
@@ -76,11 +75,11 @@ final class TrainingPlanMapper {
 	}
 
 	static PlanDayResponse toDayResponse(TrainingPlanDay day, WorkoutLog latestLog) {
-		return toDayResponse(day, latestLog, latestLog == null ? List.of() : List.of(latestLog));
+		return toDayResponse(day, latestLog, Map.of());
 	}
 
 	private static PlanDayResponse toDayResponse(TrainingPlanDay day, WorkoutLog latestLog,
-			List<WorkoutLog> logsNewestFirst) {
+			Map<UUID, List<WeightEntry>> historyByPlanExerciseId) {
 		Map<UUID, List<SetLogResponse>> history = latestLog == null
 				? Map.of()
 				: latestLog.getSets().stream()
@@ -98,7 +97,7 @@ final class TrainingPlanMapper {
 				day.getExercises().stream()
 						.map(exercise -> toExerciseResponse(exercise,
 								history.getOrDefault(exercise.getId(), List.of()),
-								weightHistory(exercise, logsNewestFirst)))
+								historyByPlanExerciseId.getOrDefault(exercise.getId(), List.of())))
 						.toList());
 	}
 
@@ -124,29 +123,27 @@ final class TrainingPlanMapper {
 	}
 
 	/**
-	 * The heaviest weight of each session in which this exercise was done, oldest first, kept to
-	 * the last {@value #HISTORY_SESSIONS}. A session only counts if it recorded at least one set of
-	 * this exercise; its weight is null when none of those sets had one.
+	 * Numbers each exercise's sessions from 1 and keeps the last {@value #HISTORY_SESSIONS}, with
+	 * their true numbers, so "Antrenman 3" stays "Antrenman 3" as the window slides on.
+	 *
+	 * @param oldestFirst one row per exercise and session, ordered by date
 	 */
-	static List<WeightEntry> weightHistory(TrainingPlanExercise planExercise, List<WorkoutLog> logsNewestFirst) {
-		List<WorkoutLog> oldestFirst = new ArrayList<>(logsNewestFirst);
-		oldestFirst.sort(Comparator.comparing(WorkoutLog::getPerformedOn));
+	static Map<UUID, List<WeightEntry>> weightHistories(List<SessionTopWeight> oldestFirst) {
+		Map<UUID, List<SessionTopWeight>> byExercise = oldestFirst.stream()
+				.collect(Collectors.groupingBy(SessionTopWeight::planExerciseId, LinkedHashMap::new,
+						Collectors.toList()));
 
-		List<WeightEntry> entries = new ArrayList<>();
-		for (WorkoutLog log : oldestFirst) {
-			List<SetLog> sets = log.getSets().stream()
-					.filter(set -> set.getPlanExercise().getId().equals(planExercise.getId()))
-					.toList();
-			if (sets.isEmpty()) {
-				continue;
+		Map<UUID, List<WeightEntry>> histories = new HashMap<>();
+		byExercise.forEach((planExerciseId, sessions) -> {
+			List<WeightEntry> entries = new ArrayList<>();
+			for (SessionTopWeight session : sessions) {
+				entries.add(new WeightEntry(entries.size() + 1, session.performedOn(), session.topWeightKg()));
 			}
-			BigDecimal top = sets.stream().map(SetLog::getWeightKg).filter(java.util.Objects::nonNull)
-					.max(Comparator.naturalOrder()).orElse(null);
-			entries.add(new WeightEntry(entries.size() + 1, log.getPerformedOn(), top));
-		}
-		return entries.size() <= HISTORY_SESSIONS
-				? entries
-				: List.copyOf(entries.subList(entries.size() - HISTORY_SESSIONS, entries.size()));
+			histories.put(planExerciseId, entries.size() <= HISTORY_SESSIONS
+					? entries
+					: List.copyOf(entries.subList(entries.size() - HISTORY_SESSIONS, entries.size())));
+		});
+		return histories;
 	}
 
 	static SetLogResponse toSetResponse(SetLog setLog) {

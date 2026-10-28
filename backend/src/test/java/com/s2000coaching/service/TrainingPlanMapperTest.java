@@ -11,12 +11,11 @@ import com.s2000coaching.domain.TrainingPlan;
 import com.s2000coaching.domain.TrainingPlanDay;
 import com.s2000coaching.domain.TrainingPlanExercise;
 import com.s2000coaching.domain.WorkoutLog;
+import com.s2000coaching.repository.SessionTopWeight;
 import com.s2000coaching.web.dto.WeightEntry;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -50,52 +49,41 @@ class TrainingPlanMapperTest {
 		return planExercise;
 	}
 
-	/** A session of the day with one set of the given exercise per weight (null = no weight recorded). */
-	private WorkoutLog session(LocalDate on, TrainingPlanExercise planExercise, String... weights) {
-		WorkoutLog log = new WorkoutLog(UUID.randomUUID(), member, day, on, Instant.now());
-		int number = 1;
-		for (String weight : weights) {
-			log.getSets().add(new SetLog(UUID.randomUUID(), log, planExercise, number++, 8,
-					weight == null ? null : new BigDecimal(weight)));
-		}
-		return log;
-	}
-
-	/** The mapper is given sessions newest first, as the repository returns them. */
-	private List<WeightEntry> history(TrainingPlanExercise planExercise, WorkoutLog... oldestFirst) {
-		List<WorkoutLog> newestFirst = new ArrayList<>(List.of(oldestFirst));
-		Collections.reverse(newestFirst);
-		return TrainingPlanMapper.weightHistory(planExercise, newestFirst);
+	private static SessionTopWeight session(TrainingPlanExercise of, LocalDate on, String topKg) {
+		return new SessionTopWeight(of.getId(), on, topKg == null ? null : new BigDecimal(topKg));
 	}
 
 	@Test
-	void shouldTakeTheHeaviestSetOfEachSessionOldestFirst() {
-		var entries = history(bench,
-				session(LocalDate.of(2026, 10, 1), bench, "40", "45", "42.5"),
-				session(LocalDate.of(2026, 10, 4), bench, "45", "47.5"));
+	void shouldNumberSessionsFromOneInTheOrderGiven() {
+		var histories = TrainingPlanMapper.weightHistories(List.of(
+				session(bench, LocalDate.of(2026, 10, 1), "45"),
+				session(bench, LocalDate.of(2026, 10, 4), "47.5")));
 
-		assertThat(entries).extracting(WeightEntry::sessionNumber).containsExactly(1, 2);
-		assertThat(entries).extracting(WeightEntry::topWeightKg)
+		assertThat(histories.get(bench.getId())).extracting(WeightEntry::sessionNumber).containsExactly(1, 2);
+		assertThat(histories.get(bench.getId())).extracting(WeightEntry::topWeightKg)
 				.usingElementComparator(BigDecimal::compareTo)
 				.containsExactly(new BigDecimal("45"), new BigDecimal("47.5"));
-		assertThat(entries.get(0).performedOn()).isEqualTo(LocalDate.of(2026, 10, 1));
+		assertThat(histories.get(bench.getId()).get(0).performedOn()).isEqualTo(LocalDate.of(2026, 10, 1));
 	}
 
 	@Test
-	void shouldSkipSessionsThatDidNotDoThisExercise() {
-		var entries = history(bench,
-				session(LocalDate.of(2026, 10, 1), row, "60"),
-				session(LocalDate.of(2026, 10, 4), bench, "45"));
+	void shouldNumberEachExerciseOnItsOwnSoAnotherExerciseDoesNotShiftTheCount() {
+		// The row was done on the 1st only; the bench's first session is still its Antrenman 1.
+		var histories = TrainingPlanMapper.weightHistories(List.of(
+				session(row, LocalDate.of(2026, 10, 1), "60"),
+				session(bench, LocalDate.of(2026, 10, 4), "45")));
 
-		// Antrenman 1 of the bench is the session it was first done, not the first of the day.
-		assertThat(entries).singleElement().satisfies(entry -> assertThat(entry.sessionNumber()).isEqualTo(1));
+		assertThat(histories.get(bench.getId())).singleElement()
+				.satisfies(entry -> assertThat(entry.sessionNumber()).isEqualTo(1));
+		assertThat(histories.get(row.getId())).hasSize(1);
 	}
 
 	@Test
-	void shouldCountASessionWithoutAWeightButLeaveItsWeightEmpty() {
-		var entries = history(bench, session(LocalDate.of(2026, 10, 1), bench, (String) null));
+	void shouldKeepASessionWithoutAWeightButLeaveItsWeightEmpty() {
+		var histories = TrainingPlanMapper.weightHistories(List.of(
+				session(bench, LocalDate.of(2026, 10, 1), null)));
 
-		assertThat(entries).singleElement().satisfies(entry -> {
+		assertThat(histories.get(bench.getId())).singleElement().satisfies(entry -> {
 			assertThat(entry.sessionNumber()).isEqualTo(1);
 			assertThat(entry.topWeightKg()).isNull();
 		});
@@ -103,13 +91,12 @@ class TrainingPlanMapperTest {
 
 	@Test
 	void shouldKeepTheLastTenWithTheirTrueNumbers() {
-		WorkoutLog[] sessions = new WorkoutLog[13];
-		for (int index = 0; index < sessions.length; index++) {
-			sessions[index] = session(LocalDate.of(2026, 9, 1).plusDays(index * 2L), bench,
-					String.valueOf(40 + index));
+		List<SessionTopWeight> sessions = new java.util.ArrayList<>();
+		for (int index = 0; index < 13; index++) {
+			sessions.add(session(bench, LocalDate.of(2026, 9, 1).plusDays(index * 2L), String.valueOf(40 + index)));
 		}
 
-		var entries = history(bench, sessions);
+		var entries = TrainingPlanMapper.weightHistories(sessions).get(bench.getId());
 
 		assertThat(entries).hasSize(10);
 		assertThat(entries.get(0).sessionNumber()).isEqualTo(4);
@@ -118,16 +105,18 @@ class TrainingPlanMapperTest {
 	}
 
 	@Test
-	void shouldBeEmptyBeforeTheFirstSession() {
-		assertThat(history(bench)).isEmpty();
+	void shouldHaveNoHistoryBeforeTheFirstSession() {
+		assertThat(TrainingPlanMapper.weightHistories(List.of())).isEmpty();
 	}
 
 	@Test
-	void shouldAttachTheHistoryToTheMemberResponseAndNotToTheCoachOne() {
-		WorkoutLog log = session(LocalDate.of(2026, 10, 1), bench, "45");
+	void shouldAttachHistoryAndLastSessionToTheMemberResponseButNotToTheCoachOne() {
+		WorkoutLog log = new WorkoutLog(UUID.randomUUID(), member, day, LocalDate.of(2026, 10, 1), Instant.now());
+		log.getSets().add(new SetLog(UUID.randomUUID(), log, bench, 1, 8, new BigDecimal("45")));
 		TrainingPlan plan = day.getPlan();
 
-		var memberView = TrainingPlanMapper.toMemberResponse(plan, Map.of(day.getId(), List.of(log)));
+		var memberView = TrainingPlanMapper.toMemberResponse(plan, Map.of(day.getId(), log),
+				TrainingPlanMapper.weightHistories(List.of(session(bench, LocalDate.of(2026, 10, 1), "45"))));
 		var coachView = TrainingPlanMapper.toResponse(plan);
 
 		var memberBench = memberView.days().get(0).exercises().get(0);
