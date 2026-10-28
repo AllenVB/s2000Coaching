@@ -37,3 +37,6 @@ backend/data/
 
 # Backups (health data and body photos - never commit)
 yedekler/
+
+# Production secrets (deploy/.env.example is the template)
+deploy/.env

@@ -84,6 +84,14 @@ Frontend `http://localhost:10001`, backend varsayılan olarak `http://localhost:
 
 **Gerekenler:** Java 21, Node 22, Docker (yalnızca PostgreSQL için).
 
+## Yayına alma
+
+Siteyi gerçek üyeler için bir sunucuda çalıştırmak: **[docs/yayin-rehberi.md](docs/yayin-rehberi.md)**
+(sunucu, alan adı, HTTPS, e-posta, ödeme, yedekleme ve güncelleme adım adım). Üretim yığını
+`deploy/` klasöründedir: `docker-compose.yml`, `Caddyfile` (HTTPS + güvenlik başlıkları), `.env.example`,
+`backup.sh` ve `restore.sh`. Saat dilimi tek bir ayardan gelir: `APP_TIME_ZONE` (varsayılan
+`Europe/Istanbul`; ön yüz için `VITE_APP_TIME_ZONE`).
+
 ## Üyelik akışı
 
 Üyeler kendileri kayıt olmaz; koç `/yonetim` sayfasından oluşturur.
