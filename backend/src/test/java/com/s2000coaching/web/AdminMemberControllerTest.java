@@ -13,7 +13,9 @@ import com.s2000coaching.service.MemberService;
 import com.s2000coaching.domain.MemberStatus;
 import com.s2000coaching.exception.UnauthorizedException;
 import com.s2000coaching.service.CoachAuthService;
+import com.s2000coaching.mail.MailDelivery;
 import com.s2000coaching.web.dto.CreateMemberRequest;
+import com.s2000coaching.web.dto.CreateMemberResponse;
 import com.s2000coaching.web.dto.MemberResponse;
 import com.s2000coaching.web.dto.UpdateMemberRequest;
 import com.s2000coaching.web.dto.VerificationCodeRequest;
@@ -88,8 +90,8 @@ class AdminMemberControllerTest {
 
 	@Test
 	void shouldCreateMemberAsPendingVerification() {
-		when(memberService.createMember(any())).thenReturn(response(UUID.randomUUID(),
-				MemberStatus.PENDING_VERIFICATION));
+		when(memberService.createMember(any())).thenReturn(new CreateMemberResponse(
+				response(UUID.randomUUID(), MemberStatus.PENDING_VERIFICATION), MailDelivery.SENT));
 
 		assertThat(mvc.post().uri("/api/admin/members")
 				.header(HttpHeaders.AUTHORIZATION, BEARER)
@@ -97,7 +99,22 @@ class AdminMemberControllerTest {
 				.content(jsonMapper.writeValueAsString(validRequest())))
 				.hasStatus(HttpStatus.CREATED)
 				.bodyJson()
-				.extractingPath("$.status").isEqualTo("PENDING_VERIFICATION");
+				.extractingPath("$.member.status").isEqualTo("PENDING_VERIFICATION");
+	}
+
+	/** The member exists either way; the coach has to be able to see that the invitation did not go. */
+	@Test
+	void shouldTellTheCoachWhenTheInvitationMailFailed() {
+		when(memberService.createMember(any())).thenReturn(new CreateMemberResponse(
+				response(UUID.randomUUID(), MemberStatus.PENDING_VERIFICATION), MailDelivery.FAILED));
+
+		assertThat(mvc.post().uri("/api/admin/members")
+				.header(HttpHeaders.AUTHORIZATION, BEARER)
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(jsonMapper.writeValueAsString(validRequest())))
+				.hasStatus(HttpStatus.CREATED)
+				.bodyJson()
+				.extractingPath("$.inviteDelivery").isEqualTo("FAILED");
 	}
 
 	@Test
@@ -168,16 +185,24 @@ class AdminMemberControllerTest {
 	}
 
 	@Test
-	void shouldReturn204WhenResendingACodeAndWhenDeleting() {
+	void shouldReportWhetherAResentCodeWasMailed() {
 		UUID memberId = UUID.randomUUID();
+		when(memberService.resendRegistrationCode(memberId)).thenReturn(MailDelivery.FAILED);
 
 		assertThat(mvc.post().uri("/api/admin/members/" + memberId + "/verification-code")
 				.header(HttpHeaders.AUTHORIZATION, BEARER))
-				.hasStatus(HttpStatus.NO_CONTENT);
+				.hasStatus(HttpStatus.OK)
+				.bodyJson()
+				.extractingPath("$.delivery").isEqualTo("FAILED");
+	}
+
+	@Test
+	void shouldReturn204WhenDeleting() {
+		UUID memberId = UUID.randomUUID();
+
 		assertThat(mvc.delete().uri("/api/admin/members/" + memberId).header(HttpHeaders.AUTHORIZATION, BEARER))
 				.hasStatus(HttpStatus.NO_CONTENT);
 
-		verify(memberService).resendRegistrationCode(memberId);
 		verify(memberService).deleteMember(memberId);
 	}
 }

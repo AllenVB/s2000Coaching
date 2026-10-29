@@ -14,7 +14,9 @@ import com.s2000coaching.repository.MessageRepository;
 import com.s2000coaching.repository.NutritionPlanRepository;
 import com.s2000coaching.repository.TrainingPlanRepository;
 import com.s2000coaching.repository.WorkoutLogRepository;
+import com.s2000coaching.mail.MailDelivery;
 import com.s2000coaching.web.dto.CreateMemberRequest;
+import com.s2000coaching.web.dto.CreateMemberResponse;
 import com.s2000coaching.web.dto.MemberResponse;
 import com.s2000coaching.web.dto.UpdateMemberRequest;
 import com.s2000coaching.web.dto.UpdateOwnProfileRequest;
@@ -123,7 +125,7 @@ public class MemberService {
 	 * by the admin or by the member on the member page.
 	 */
 	@Transactional
-	public MemberResponse createMember(CreateMemberRequest request) {
+	public CreateMemberResponse createMember(CreateMemberRequest request) {
 		String email = normalizeEmail(request.email());
 		if (memberRepository.existsByEmail(email)) {
 			throw new ConflictException("Bu e-posta ile kayıtlı bir üye zaten var: " + email);
@@ -143,17 +145,18 @@ public class MemberService {
 		Member saved = memberRepository.save(member);
 		// Any order already placed with this address becomes part of the new member's history.
 		adminOrderService.linkOrdersTo(saved);
-		verificationCodeService.issueAndSend(saved, VerificationPurpose.REGISTRATION);
-		return MemberResponse.from(saved);
+		MailDelivery delivery = verificationCodeService.issueAndSend(saved, VerificationPurpose.REGISTRATION);
+		return new CreateMemberResponse(MemberResponse.from(saved), delivery);
 	}
 
+	/** @return whether the new code was mailed, so the coach can be told when it was not */
 	@Transactional
-	public void resendRegistrationCode(UUID memberId) {
+	public MailDelivery resendRegistrationCode(UUID memberId) {
 		Member member = getOrThrow(memberId);
 		if (member.isActive()) {
 			throw new ConflictException("Üye zaten onaylanmış: " + member.getEmail());
 		}
-		verificationCodeService.issueAndSend(member, VerificationPurpose.REGISTRATION);
+		return verificationCodeService.issueAndSend(member, VerificationPurpose.REGISTRATION);
 	}
 
 	@Transactional

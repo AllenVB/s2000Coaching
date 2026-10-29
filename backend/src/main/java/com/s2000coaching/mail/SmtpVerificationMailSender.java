@@ -25,7 +25,7 @@ public class SmtpVerificationMailSender implements VerificationMailSender {
 	}
 
 	@Override
-	public void sendVerificationCode(Member member, String code, VerificationPurpose purpose) {
+	public MailDelivery sendVerificationCode(Member member, String code, VerificationPurpose purpose) {
 		SimpleMailMessage message = new SimpleMailMessage();
 		message.setFrom(from);
 		message.setTo(member.getEmail());
@@ -34,11 +34,14 @@ public class SmtpVerificationMailSender implements VerificationMailSender {
 
 		try {
 			mailSender.send(message);
+			return MailDelivery.SENT;
 		}
 		catch (MailException ex) {
 			// The code is already persisted, so a failed send is recoverable: the admin can
-			// trigger a resend. Surfacing it as a 500 would hide the created member from the UI.
+			// trigger a resend. Throwing would turn it into a 500 and hide the created member
+			// from the UI, so the failure is returned and the coach is told.
 			log.error("{} kodu {} adresine gönderilemedi", purpose, member.getEmail(), ex);
+			return MailDelivery.FAILED;
 		}
 	}
 
