@@ -11,5 +11,9 @@ import com.s2000coaching.domain.VerificationPurpose;
  */
 public interface VerificationMailSender {
 
-	void sendVerificationCode(Member member, String code, VerificationPurpose purpose);
+	/**
+	 * @return what happened, so the coach can be told when a code never left — the member is
+	 *         never told, because the answer would reveal whether an address is registered
+	 */
+	MailDelivery sendVerificationCode(Member member, String code, VerificationPurpose purpose);
 }

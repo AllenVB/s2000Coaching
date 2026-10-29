@@ -317,7 +317,10 @@ geri yüklenerek denendi; `yedekle.bat`'ın Windows'a özgü kısımları (Power
 
 **Önemli:** `MAIL_HOST` tanımlı değilse e-posta gönderilmez; kodlar yalnızca uygulama loguna
 `WARN` seviyesinde yazılır (`LoggingVerificationMailSender`). Bu yalnızca yerel geliştirme içindir —
-prodüksiyonda SMTP ayarları mutlaka verilmelidir.
+prodüksiyonda SMTP ayarları mutlaka verilmelidir. Ayarların çalıştığını **Ayarlar → Test E-postası Gönder**
+ile görürsünüz (kendi adresinize gider; başarısızsa mail sunucusunun verdiği neden yazar). Üye
+oluştururken ya da kodu tekrar gönderirken e-posta gitmediyse üyenin sayfasında bu açıkça uyarılır;
+üyenin kendi giriş kodu isteği ise adresin kayıtlı olup olmadığını sızdırmamak için sonucu söylemez.
 
 ### Üyenin kendi bilgileri
 

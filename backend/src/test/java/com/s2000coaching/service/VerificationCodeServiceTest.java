@@ -14,6 +14,7 @@ import com.s2000coaching.domain.MemberVerificationCode;
 import com.s2000coaching.domain.VerificationPurpose;
 import com.s2000coaching.exception.BadRequestException;
 import com.s2000coaching.exception.TooManyRequestsException;
+import com.s2000coaching.mail.MailDelivery;
 import com.s2000coaching.mail.VerificationMailSender;
 import com.s2000coaching.repository.MemberVerificationCodeRepository;
 import java.math.BigDecimal;
@@ -65,6 +66,18 @@ class VerificationCodeServiceTest {
 
 	@Nested
 	class Issuing {
+
+		@Test
+		void shouldReturnWhatTheMailSenderSaid() {
+			when(codeRepository.findAllByMemberIdAndConsumedAtIsNull(member.getId())).thenReturn(List.of());
+			when(mailSender.sendVerificationCode(eq(member), any(), eq(VerificationPurpose.REGISTRATION)))
+					.thenReturn(MailDelivery.FAILED);
+
+			assertThat(verificationCodeService.issueAndSend(member, VerificationPurpose.REGISTRATION))
+					.isEqualTo(MailDelivery.FAILED);
+			// The code is stored regardless: a failed mail is recoverable by sending another.
+			verify(codeRepository).save(any(MemberVerificationCode.class));
+		}
 
 		@Test
 		void shouldMailASixDigitCodeAndPersistOnlyItsHash() {

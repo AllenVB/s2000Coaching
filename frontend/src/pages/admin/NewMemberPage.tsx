@@ -44,7 +44,11 @@ export function NewMemberPage() {
             ? { email: order.email, fullName: order.customerName, phone: order.phone }
             : undefined
         }
-        onCreated={(member) => navigate(`/yonetim/uyeler/${member.id}`)}
+        // The delivery rides along in the navigation state, so the member's page can say the
+        // invitation did not go out instead of looking like everything worked.
+        onCreated={(member, inviteDelivery) =>
+          navigate(`/yonetim/uyeler/${member.id}`, { state: { inviteDelivery } })
+        }
       />
     </>
   )

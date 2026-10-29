@@ -4,6 +4,8 @@ import com.s2000coaching.service.MemberService;
 import com.s2000coaching.web.dto.CreateMemberRequest;
 import com.s2000coaching.web.dto.MemberResponse;
 import com.s2000coaching.web.dto.UpdateMemberRequest;
+import com.s2000coaching.web.dto.CreateMemberResponse;
+import com.s2000coaching.web.dto.ResendCodeResponse;
 import com.s2000coaching.web.dto.VerificationCodeRequest;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -49,15 +51,17 @@ public class AdminMemberController {
 	}
 
 	@PostMapping("/api/admin/members")
-	public ResponseEntity<MemberResponse> createMember(@Valid @RequestBody CreateMemberRequest request) {
+	public ResponseEntity<CreateMemberResponse> createMember(@Valid @RequestBody CreateMemberRequest request) {
 		return ResponseEntity.status(HttpStatus.CREATED).body(memberService.createMember(request));
 	}
 
-	/** Mails a new registration code to a member who has not confirmed yet. */
+	/**
+	 * Mails a new registration code to a member who has not confirmed yet, and says whether the
+	 * mail went out: a code that never left is the coach's to fix, not the member's to guess.
+	 */
 	@PostMapping("/api/admin/members/{memberId}/verification-code")
-	public ResponseEntity<Void> resendVerificationCode(@PathVariable UUID memberId) {
-		memberService.resendRegistrationCode(memberId);
-		return ResponseEntity.noContent().build();
+	public ResendCodeResponse resendVerificationCode(@PathVariable UUID memberId) {
+		return new ResendCodeResponse(memberService.resendRegistrationCode(memberId));
 	}
 
 	/** Completes the registration with the code the member received by e-mail. */

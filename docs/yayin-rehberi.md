@@ -143,10 +143,12 @@ dakika gecikebilir. Açılmazsa en alttaki **Sorun giderme** bölümüne bakın.
 
 Bu listeyi atlamayın. Her madde gerçek bir "üye geldi ama çalışmadı" durumunu önler.
 
-- [ ] **E-posta gidiyor mu?** Yönetim panelinden **kendi başka bir e-posta adresinizle** bir test üyesi açın.
-      Davet e-postası gelmeli. *Gelmezse:* şu an uygulama bunu yalnızca günlüğe yazıyor, ekranda
-      göstermiyor (üye yine de oluşur). `docker compose -f deploy/docker-compose.yml logs backend | grep -i "gönderilemedi"`
-      ile bakın; genelde kullanıcı adı/parola ya da port/`MAIL_STARTTLS` ayarı yanlıştır.
+- [ ] **E-posta gidiyor mu?** Yönetim panelinde **Ayarlar → E-Posta Gönderimi → Test E-postası Gönder**'a basın.
+      Kendi adresinize bir e-posta gelmeli. Gelmezse ekranda sunucunun verdiği neden yazar (ör. "535 …
+      Username and Password not accepted" = kullanıcı adı/parola yanlış; "Could not connect to SMTP host" =
+      sunucu adı ya da port yanlış). Düzeltip `deploy/.env`'i kaydedin, `docker compose -f deploy/docker-compose.yml up -d`
+      çalıştırın ve tekrar deneyin. Sonra kendi başka bir adresinizle test üyesi açın: e-posta gitmezse üyenin
+      sayfasında kırmızı bir uyarı çıkar ("Onay kodu e-postayla gönderilemedi"); düzelince **Kodu Tekrar Gönder**.
 - [ ] **Üye girişi.** `https://ornek.com/uye` adresinden test üyesiyle girin; kod e-postayla gelmeli.
 - [ ] **Antrenman ve beslenme.** Test üyesine plan atayın, üye olarak bir antrenman kaydedin.
 - [ ] **Fotoğraf.** Üye olarak bir fotoğraf yükleyin, koç olarak görün.
@@ -235,7 +237,7 @@ yedeklerin sunucu dışına şifreli kopyası, `deploy/.env` dosyasının gizli 
 | Site açılmıyor / sertifika hatası | DNS A kaydı sunucuyu göstermiyor ya da 80/443 kapalı. `docker compose -f deploy/docker-compose.yml logs web` içinde "challenge" ya da "dns" hatası aranır. Çok sık denemek sertifika sağlayıcısının limitine takılır; önce DNS'i düzeltin. |
 | `up` komutu "… is not set in deploy/.env" diyor | Zorunlu bir ayar boş: `DB_PASSWORD`, `PUBLIC_URL`, `ADMIN_EMAIL`, `MAIL_HOST`, `MAIL_FROM`, `SITE_ADDRESS`. |
 | Backend "unhealthy" ya da sürekli yeniden başlıyor | `logs backend`. Sık neden: `DB_PASSWORD` sonradan değiştirilmiş (yukarıdaki nota bakın) ya da bellek yetersiz. |
-| Üye kodu gelmiyor | SMTP ayarı. `logs backend` içinde "gönderilemedi" arayın. Port 465 kullanıyorsanız `MAIL_SSL=true` ve `MAIL_STARTTLS=false`. Spam klasörüne de bakın. |
+| Üye kodu gelmiyor | SMTP ayarı. Önce Ayarlar'daki test e-postasına bakın (nedeni ekranda yazar); ayrıntı için `logs backend` içinde "gönderilemedi" arayın. Port 465 kullanıyorsanız `MAIL_SSL=true` ve `MAIL_STARTTLS=false`. Spam klasörüne de bakın. |
 | Fotoğraflar yok | `photos` volume'u silinmiş ya da yeni sunucuya taşınırken yedekten alınmamış. `docker volume ls` içinde `s2000_photos` olmalı. |
 | 80/443 "already in use" | Sunucuda başka bir web sunucusu çalışıyor (`apache2`, `nginx`). Durdurun ya da kaldırın. |
 | Telefondaki eski sürüm | Site yeniden derlenince telefon yeni sürümü bir sonraki açılışta alır; kapatıp açmak yeter. |
@@ -254,6 +256,7 @@ betiğindeki bir hata bu denemede bulunup düzeltildi).
   (`gradlew bootJar`, `npm ci`, `npm run build`) sunucuda çalıştırıldı, imajların çalışma aşamaları ve yığın o
   çıktılarla denendi. İlk gerçek `up --build` sizin sunucunuzda olacak; bir derleme hatası çıkarsa bana iletin.
 - Gerçek bir alan adıyla otomatik HTTPS sertifikası alınması (burada yerel, kendinden imzalı sertifika kullanıldı).
-- Gerçek SMTP sağlayıcısıyla e-posta gönderimi ve iyzico (sandbox da dahil).
+- Gerçek bir SMTP sağlayıcısıyla e-posta gönderimi ve iyzico (sandbox da dahil). E-posta uyarıları yerel bir sahte SMTP
+  sunucusuyla denendi (parolayı reddeden, her şeyi kabul eden ve hiç tanımlı olmayan üç durum).
 - Bu rehberdeki Ubuntu komutları (ufw, unattended-upgrades, cron, Docker kurulumu) ve sunucu dışına yedek kopyalama.
 - Windows'ta `baslat.bat` / `yedekle.bat` — bunlar yalnızca geliştirme içindir, sunucuda kullanılmaz.

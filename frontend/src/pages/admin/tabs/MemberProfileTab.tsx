@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 
 import {
   useCompleteRegistration,
@@ -10,6 +10,7 @@ import {
   useUpdateMember,
 } from '@/api/adminMembersApi'
 import { useMemberOrders } from '@/api/ordersAdminApi'
+import { MailDeliveryNotice } from '@/components/admin/MailDeliveryNotice'
 import { MemberQuestionnaireCard } from '@/components/admin/MemberQuestionnaireCard'
 import { MemberMembershipsCard } from '@/components/admin/MemberMembershipsCard'
 import { Button } from '@/components/ui/Button'
@@ -17,6 +18,7 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { Field, inputClasses, textareaClasses } from '@/components/ui/FormField'
 import { CheckIcon, TrashIcon } from '@/components/ui/icons'
 import { formatDate } from '@/lib/date'
+import type { MailDelivery } from '@/types/member'
 import { formatMinor } from '@/lib/money'
 import { ORDER_STATUS, TONE_CLASSES } from '@/lib/orderStatus'
 import { useMemberDetail } from '@/pages/admin/MemberDetailPage'
@@ -210,6 +212,11 @@ function PendingVerificationCard({ memberId }: { memberId: string }) {
   const [code, setCode] = useState('')
   const completeRegistration = useCompleteRegistration()
   const resendCode = useResendVerificationCode()
+  // How the first invitation went (passed along when the member was created), until a resend
+  // replaces it with a newer answer. Unknown when the page is opened some other way.
+  const location = useLocation()
+  const firstDelivery = (location.state as { inviteDelivery?: MailDelivery } | null)?.inviteDelivery
+  const delivery = resendCode.data?.delivery ?? firstDelivery
 
   const submitCode = (event: React.FormEvent) => {
     event.preventDefault()
@@ -225,9 +232,13 @@ function PendingVerificationCard({ memberId }: { memberId: string }) {
     <section className="rounded-2xl border border-warning/40 bg-warning/5 p-6">
       <h2 className="text-sm font-bold uppercase tracking-wider text-text-primary">Üyelik Onayı Bekleniyor</h2>
       <p className="mt-2 text-xs leading-relaxed text-text-secondary">
-        Üyeye 6 haneli onay kodu gönderildi. Üye kodu üye sayfasında kendisi girebilir; kodu size ilettiyse
-        buradan da tamamlayabilirsiniz.
+        Üye kodu üye sayfasında kendisi girebilir; kodu size ilettiyse buradan da tamamlayabilirsiniz.
       </p>
+      {delivery ? (
+        <div className="mt-3">
+          <MailDeliveryNotice delivery={delivery} />
+        </div>
+      ) : null}
 
       <form className="mt-4 flex flex-wrap items-start gap-2" onSubmit={submitCode}>
         <div>
@@ -261,7 +272,6 @@ function PendingVerificationCard({ memberId }: { memberId: string }) {
         </Button>
       </form>
 
-      {resendCode.isSuccess ? <p className="mt-2 text-[11px] text-success">Yeni onay kodu gönderildi.</p> : null}
       {resendCode.isError ? <p className="mt-2 text-[11px] text-error">{resendCode.error.message}</p> : null}
     </section>
   )

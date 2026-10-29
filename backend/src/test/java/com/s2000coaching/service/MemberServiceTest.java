@@ -9,6 +9,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.s2000coaching.domain.Member;
+import com.s2000coaching.mail.MailDelivery;
 import com.s2000coaching.domain.MemberStatus;
 import com.s2000coaching.domain.VerificationPurpose;
 import com.s2000coaching.exception.BadRequestException;
@@ -109,8 +110,13 @@ class MemberServiceTest {
 			when(memberRepository.existsByEmail("sporcu@example.com")).thenReturn(false);
 			when(memberRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
-			var response = memberService.createMember(request("  Sporcu@Example.COM "));
+			when(verificationCodeService.issueAndSend(any(Member.class), eq(VerificationPurpose.REGISTRATION)))
+					.thenReturn(MailDelivery.SENT);
 
+			var created = memberService.createMember(request("  Sporcu@Example.COM "));
+			var response = created.member();
+
+			assertThat(created.inviteDelivery()).isEqualTo(MailDelivery.SENT);
 			assertThat(response.email()).isEqualTo("sporcu@example.com");
 			assertThat(response.fullName()).isEqualTo("Ahmet Yılmaz");
 			assertThat(response.phone()).isEqualTo("+905551112233");
@@ -194,10 +200,25 @@ class MemberServiceTest {
 		void shouldResendToAPendingMember() {
 			Member member = pendingMember();
 			when(memberRepository.findById(member.getId())).thenReturn(Optional.of(member));
+			when(verificationCodeService.issueAndSend(member, VerificationPurpose.REGISTRATION))
+					.thenReturn(MailDelivery.SENT);
 
-			memberService.resendRegistrationCode(member.getId());
+			assertThat(memberService.resendRegistrationCode(member.getId())).isEqualTo(MailDelivery.SENT);
 
 			verify(verificationCodeService).issueAndSend(member, VerificationPurpose.REGISTRATION);
+		}
+
+		@Test
+		void shouldPassOnAFailedMailSoTheMemberIsStillCreatedButTheCoachIsTold() {
+			when(memberRepository.existsByEmail("sporcu@example.com")).thenReturn(false);
+			when(memberRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+			when(verificationCodeService.issueAndSend(any(Member.class), eq(VerificationPurpose.REGISTRATION)))
+					.thenReturn(MailDelivery.FAILED);
+
+			var created = memberService.createMember(request("sporcu@example.com"));
+
+			assertThat(created.member().status()).isEqualTo(MemberStatus.PENDING_VERIFICATION);
+			assertThat(created.inviteDelivery()).isEqualTo(MailDelivery.FAILED);
 		}
 	}
 

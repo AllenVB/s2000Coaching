@@ -14,8 +14,8 @@ public class LoggingNotificationMailSender implements NotificationMailSender {
 	}
 
 	@Override
-	public boolean send(String to, String subject, String body) {
+	public MailResult deliver(String to, String subject, String body) {
 		log.info("SMTP yapılandırılmadı; e-posta gönderilmedi — alıcı: {}, konu: {}", to, subject);
-		return false;
+		return MailResult.notConfigured();
 	}
 }
