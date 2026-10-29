@@ -2,6 +2,7 @@ package com.s2000coaching.web;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.doReturn;
@@ -74,7 +75,7 @@ class AdminTrainingPlanControllerTest {
 
 	@Test
 	void shouldCreateATemplate() {
-		when(trainingPlanService.createTemplate(any())).thenReturn(plan("PPL", true, false));
+		when(trainingPlanService.createTemplate(any(), anyBoolean())).thenReturn(plan("PPL", true, false));
 
 		assertThat(mvc.post().uri("/api/admin/training-plan-templates")
 				.header(HttpHeaders.AUTHORIZATION, BEARER)
@@ -92,14 +93,14 @@ class AdminTrainingPlanControllerTest {
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(jsonMapper.writeValueAsString(new UpsertTrainingPlanRequest(" ", null))))
 				.hasStatus(HttpStatus.BAD_REQUEST);
-		verify(trainingPlanService, never()).createTemplate(any());
+		verify(trainingPlanService, never()).createTemplate(any(), anyBoolean());
 	}
 
 	@Test
 	void shouldPassTheTemplateIdThroughWhenAssigning() {
 		UUID memberId = UUID.randomUUID();
 		UUID templateId = UUID.randomUUID();
-		when(trainingPlanService.createForMember(eq(memberId), any(), eq(templateId)))
+		when(trainingPlanService.createForMember(eq(memberId), any(), eq(templateId), eq(false)))
 				.thenReturn(plan("Ekim Bloğu", false, true));
 
 		assertThat(mvc.post().uri("/api/admin/members/" + memberId + "/training-plans?templateId=" + templateId)
@@ -114,7 +115,7 @@ class AdminTrainingPlanControllerTest {
 	@Test
 	void shouldAssignAnEmptyPlanWhenNoTemplateIsGiven() {
 		UUID memberId = UUID.randomUUID();
-		when(trainingPlanService.createForMember(eq(memberId), any(), isNull()))
+		when(trainingPlanService.createForMember(eq(memberId), any(), isNull(), eq(false)))
 				.thenReturn(plan("Boş", false, true));
 
 		assertThat(mvc.post().uri("/api/admin/members/" + memberId + "/training-plans")
@@ -122,7 +123,21 @@ class AdminTrainingPlanControllerTest {
 				.contentType(MediaType.APPLICATION_JSON)
 				.content(jsonMapper.writeValueAsString(new UpsertTrainingPlanRequest("Boş", null))))
 				.hasStatus(HttpStatus.CREATED);
-		verify(trainingPlanService).createForMember(eq(memberId), any(), isNull());
+		verify(trainingPlanService).createForMember(eq(memberId), any(), isNull(), eq(false));
+	}
+
+	@Test
+	void shouldPassBlankThroughSoTheStandardDaysCanBeSkipped() {
+		UUID memberId = UUID.randomUUID();
+		when(trainingPlanService.createForMember(eq(memberId), any(), isNull(), eq(true)))
+				.thenReturn(plan("Boş", false, true));
+
+		assertThat(mvc.post().uri("/api/admin/members/" + memberId + "/training-plans?blank=true")
+				.header(HttpHeaders.AUTHORIZATION, BEARER)
+				.contentType(MediaType.APPLICATION_JSON)
+				.content(jsonMapper.writeValueAsString(new UpsertTrainingPlanRequest("Boş", null))))
+				.hasStatus(HttpStatus.CREATED);
+		verify(trainingPlanService).createForMember(eq(memberId), any(), isNull(), eq(true));
 	}
 
 	@Test

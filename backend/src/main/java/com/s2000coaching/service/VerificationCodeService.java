@@ -5,6 +5,7 @@ import com.s2000coaching.domain.MemberVerificationCode;
 import com.s2000coaching.domain.VerificationPurpose;
 import com.s2000coaching.exception.BadRequestException;
 import com.s2000coaching.exception.TooManyRequestsException;
+import com.s2000coaching.mail.MailDelivery;
 import com.s2000coaching.mail.VerificationMailSender;
 import com.s2000coaching.repository.MemberVerificationCodeRepository;
 import java.security.SecureRandom;
@@ -45,7 +46,8 @@ public class VerificationCodeService {
 
 	/**
 	 * Invalidates any outstanding code of the same purpose, stores the digest of a fresh one
-	 * and mails the plain code to the member. The plain code is never returned or persisted.
+	 * and mails the plain code to the member. The plain code is never returned or persisted;
+	 * what comes back is only whether the mail went out.
 	 *
 	 * <p>Rate limited per member, not per caller: anyone who knows an address could otherwise
 	 * ask for codes in a loop, and every one of them lands in that member's inbox. The limit
@@ -53,7 +55,7 @@ public class VerificationCodeService {
 	 * restart and cannot drift from what was actually sent.
 	 */
 	@Transactional
-	public void issueAndSend(Member member, VerificationPurpose purpose) {
+	public MailDelivery issueAndSend(Member member, VerificationPurpose purpose) {
 		Instant now = Instant.now();
 		enforceRateLimit(member.getId(), now);
 		codeRepository.findAllByMemberIdAndConsumedAtIsNull(member.getId()).stream()
@@ -64,7 +66,7 @@ public class VerificationCodeService {
 		codeRepository.save(new MemberVerificationCode(
 				UUID.randomUUID(), member, purpose, Sha256.hex(code), now, now.plus(codeTtl)));
 
-		mailSender.sendVerificationCode(member, code, purpose);
+		return mailSender.sendVerificationCode(member, code, purpose);
 	}
 
 	private void enforceRateLimit(UUID memberId, Instant now) {

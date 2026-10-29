@@ -100,7 +100,7 @@ class MemberTrainingControllerTest {
 		when(memberAuthService.requireMember(BEARER)).thenReturn(member);
 		when(nutritionPlanService.findActivePlan(member.getId())).thenReturn(Optional.of(
 				new NutritionPlanResponse(UUID.randomUUID(), "Ekim Beslenmesi", null, false, true, 2400, 180,
-						250, 70, Instant.now(), List.of())));
+						250, 70, null, Instant.now(), List.of())));
 
 		assertThat(mvc.get().uri("/api/member/nutrition-plan").header(HttpHeaders.AUTHORIZATION, BEARER))
 				.hasStatus(HttpStatus.OK)
@@ -125,7 +125,7 @@ class MemberTrainingControllerTest {
 				UUID.randomUUID(), dayId, "Gün 1", LocalDate.now(), null, List.of()));
 
 		var request = new SaveWorkoutLogRequest(dayId, LocalDate.now(), null, List.of(
-				new SaveWorkoutLogRequest.SetEntry(UUID.randomUUID(), 1, 10, new BigDecimal("60.0"))));
+				new SaveWorkoutLogRequest.SetEntry(UUID.randomUUID(), 1, 10, new BigDecimal("60.0"), null)));
 
 		assertThat(mvc.post().uri("/api/member/workout-logs")
 				.header(HttpHeaders.AUTHORIZATION, BEARER)

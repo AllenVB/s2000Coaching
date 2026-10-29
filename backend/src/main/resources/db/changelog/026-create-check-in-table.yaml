@@ -1,0 +1,53 @@
+databaseChangeLog:
+  - changeSet:
+      id: 041-create-check-in-table
+      author: s2000
+      comment: >-
+        The weekly check-in: how the week felt (sleep, stress, energy, hunger on 1-5 scales,
+        how closely the diet was followed) and a free note, answered by the coach on the same
+        row. One per member per week, keyed by the week's Monday, so re-submitting a week
+        replaces it. Health data under KVKK: written only after the member's consent.
+      changes:
+        - createTable:
+            tableName: check_in
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: member_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_check_in_member
+                    references: member(id)
+              - column:
+                  name: week_start
+                  type: date
+                  constraints:
+                    nullable: false
+              - column: { name: sleep, type: int, constraints: { nullable: false } }
+              - column: { name: stress, type: int, constraints: { nullable: false } }
+              - column: { name: energy, type: int, constraints: { nullable: false } }
+              - column: { name: hunger, type: int, constraints: { nullable: false } }
+              - column: { name: diet_adherence_percent, type: int }
+              - column: { name: note, type: text }
+              - column: { name: coach_reply, type: text }
+              - column: { name: coach_replied_at, type: timestamp with time zone }
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false
+        - addUniqueConstraint:
+            tableName: check_in
+            columnNames: member_id, week_start
+            constraintName: uk_check_in_member_week

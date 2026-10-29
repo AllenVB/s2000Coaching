@@ -1,7 +1,6 @@
 import { useState } from 'react'
 
 import { useCreateNutritionTemplate, useDeleteNutritionPlan, useNutritionTemplates } from '@/api/nutritionApi'
-import { MacroSummary } from '@/components/nutrition/MacroSummary'
 import { NutritionPlanEditor } from '@/components/nutrition/NutritionPlanEditor'
 import { Button } from '@/components/ui/Button'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
@@ -25,7 +24,7 @@ export function NutritionTemplatesSection() {
       return
     }
     createTemplate.mutate(
-      { name: trimmed, targetCalories: calories.trim() === '' ? null : Number(calories) },
+      { input: { name: trimmed, targetCalories: calories.trim() === '' ? null : Number(calories) } },
       {
         onSuccess: (template) => {
           setName('')
@@ -110,7 +109,6 @@ export function NutritionTemplatesSection() {
 
             {openId === template.id ? (
               <div className="mt-5 space-y-5 border-t border-border pt-5">
-                <MacroSummary plan={template} />
                 <NutritionPlanEditor plan={template} />
               </div>
             ) : null}

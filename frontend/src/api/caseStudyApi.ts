@@ -3,12 +3,15 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAdminAuth } from '@/context/AdminAuthContext'
 import { adminHeaders } from '@/lib/adminSession'
 import { apiFetch, apiUpload } from '@/lib/api'
+import type { PhotoPose } from '@/types/member'
 import type {
   BodyAnalysis,
   CaseStudy,
+  CaseStudyPhoto,
   CsvPreview,
   DataKind,
   ImportResult,
+  PeriodPhotos,
   PublicCaseStudy,
   PublicCaseStudySummary,
   UpsertCaseStudyInput,
@@ -215,4 +218,100 @@ function replaceInList(
   queryClient.setQueryData<CaseStudy[]>(ADMIN_KEY, (old) =>
     (old ?? []).map((study) => (study.id === updated.id ? updated : study)),
   )
+}
+
+// --- photos (coach) --------------------------------------------------------------------
+
+const photosKey = (id: string) => ['admin-case-study-photos', id]
+const photoPeriodsKey = (id: string) => ['admin-case-study-photo-periods', id]
+
+export function useCaseStudyPhotos(id: string) {
+  const { token } = useAdminAuth()
+
+  return useQuery({
+    queryKey: photosKey(id),
+    queryFn: () =>
+      apiFetch<CaseStudyPhoto[]>(`/api/admin/case-studies/${id}/photos`, {
+        headers: adminHeaders(token!),
+      }),
+    enabled: Boolean(token),
+  })
+}
+
+/** The pairing exactly as the public page would show it, before photos are switched on. */
+export function useCaseStudyPhotoPeriods(id: string) {
+  const { token } = useAdminAuth()
+
+  return useQuery({
+    queryKey: photoPeriodsKey(id),
+    queryFn: () =>
+      apiFetch<PeriodPhotos[]>(`/api/admin/case-studies/${id}/photo-periods`, {
+        headers: adminHeaders(token!),
+      }),
+    enabled: Boolean(token),
+    staleTime: 0,
+  })
+}
+
+function invalidatePhotos(queryClient: ReturnType<typeof useQueryClient>, id: string) {
+  queryClient.invalidateQueries({ queryKey: photosKey(id) })
+  queryClient.invalidateQueries({ queryKey: photoPeriodsKey(id) })
+  queryClient.invalidateQueries({ queryKey: ADMIN_KEY })
+  queryClient.invalidateQueries({ queryKey: PUBLIC_KEY })
+}
+
+export function useUploadCaseStudyPhoto(id: string) {
+  const { token } = useAdminAuth()
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ file, takenOn, pose }: { file: File; takenOn: string; pose: PhotoPose }) => {
+      const body = new FormData()
+      body.append('file', file)
+      body.append('takenOn', takenOn)
+      body.append('pose', pose)
+      return apiUpload<CaseStudyPhoto>(
+        `/api/admin/case-studies/${id}/photos`,
+        body,
+        adminHeaders(token!),
+      )
+    },
+    onSuccess: () => invalidatePhotos(queryClient, id),
+  })
+}
+
+export function useDeleteCaseStudyPhoto(id: string) {
+  const { token } = useAdminAuth()
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (photoId: string) =>
+      apiFetch<void>(`/api/admin/case-study-photos/${photoId}`, {
+        method: 'DELETE',
+        headers: adminHeaders(token!),
+      }),
+    onSuccess: () => invalidatePhotos(queryClient, id),
+  })
+}
+
+/** Its own switch, apart from publishing the data; turning it on needs an explicit confirmation. */
+export function useSetCaseStudyPhotosPublished(id: string) {
+  const { token } = useAdminAuth()
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (published: boolean) =>
+      apiFetch<CaseStudy>(
+        `/api/admin/case-studies/${id}/photos/${published ? 'publish' : 'unpublish'}`,
+        {
+          method: 'POST',
+          headers: adminHeaders(token!),
+          ...(published ? { body: JSON.stringify({ confirmed: true }) } : {}),
+        },
+      ),
+    onSuccess: (updated) => {
+      replaceInList(queryClient, updated)
+      queryClient.invalidateQueries({ queryKey: PUBLIC_KEY })
+    },
+  })
 }

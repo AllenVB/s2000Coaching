@@ -13,6 +13,31 @@ export interface Member {
   verifiedAt: string | null
   /** When the member accepted health-data processing; null until they do. */
   healthDataConsentAt: string | null
+  /** Whether reminder e-mails (renewal, weekly check-in, measurement) are wanted. */
+  remindersEnabled: boolean
+}
+
+/**
+ * What happened to a mailed code. SENT means the mail server took it, not that it reached an
+ * inbox. NOT_CONFIGURED is the development fallback, where the code is only in the server log.
+ */
+export type MailDelivery = 'SENT' | 'NOT_CONFIGURED' | 'FAILED'
+
+/** The member exists whatever `inviteDelivery` says; a failed mail is fixed by resending. */
+export interface CreateMemberResponse {
+  member: Member
+  inviteDelivery: MailDelivery
+}
+
+export interface ResendCodeResponse {
+  delivery: MailDelivery
+}
+
+export interface MailTestResponse {
+  delivery: MailDelivery
+  to: string
+  /** The mail server's own reason when delivery is FAILED. */
+  detail: string | null
 }
 
 export interface CreateMemberInput {

@@ -4,6 +4,7 @@ import { useAdminAuth } from '@/context/AdminAuthContext'
 import { adminHeaders } from '@/lib/adminSession'
 import { apiFetch } from '@/lib/api'
 import type { CoachSession } from '@/types/coach'
+import type { MailTestResponse } from '@/types/member'
 
 export function useCoachLogin() {
   const { signIn } = useAdminAuth()
@@ -45,5 +46,18 @@ export function useCoachLogout() {
   return useMutation({
     mutationFn: ({ token }: { token: string }) =>
       apiFetch<void>('/api/admin/auth/logout', { method: 'POST', headers: adminHeaders(token) }),
+  })
+}
+
+/** Mails the signed-in coach a test message and reports what the mail server said. */
+export function useSendTestMail() {
+  const { token } = useAdminAuth()
+
+  return useMutation({
+    mutationFn: () =>
+      apiFetch<MailTestResponse>('/api/admin/mail/test', {
+        method: 'POST',
+        headers: adminHeaders(token!),
+      }),
   })
 }

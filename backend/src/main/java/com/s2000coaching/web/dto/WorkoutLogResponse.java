@@ -22,7 +22,7 @@ public record WorkoutLogResponse(
 				log.getNote(),
 				log.getSets().stream()
 						.map(set -> new SetLogResponse(set.getPlanExercise().getId(), set.getSetNumber(),
-								set.getReps(), set.getWeightKg()))
+								set.getReps(), set.getWeightKg(), set.getRpe()))
 						.toList());
 	}
 }

@@ -1,3 +1,5 @@
+import type { PhotoPose } from '@/types/member'
+
 export type Sex = 'ERKEK' | 'KADIN'
 
 /**
@@ -123,6 +125,8 @@ export interface PublicCaseStudy {
   sex: Sex | null
   updatedAt: string
   analysis: BodyAnalysis
+  /** Null means the coach has not switched photos on; an empty list means shown, none matched. */
+  photoPeriods: PeriodPhotos[] | null
 }
 
 export interface CaseStudy {
@@ -134,8 +138,10 @@ export interface CaseStudy {
   sex: Sex | null
   birthYear: number | null
   published: boolean
+  photosPublished: boolean
   measurementCount: number
   intakeCount: number
+  photoCount: number
   createdAt: string
   updatedAt: string
 }
@@ -198,4 +204,35 @@ export const PERIOD_LABELS: Record<Period['label'], string> = {
   KILO_ALMA: 'Kilo alma',
   KILO_VERME: 'Kilo verme',
   SABIT: 'Sabit',
+}
+
+export interface CaseStudyPhoto {
+  id: string
+  takenOn: string
+  pose: PhotoPose
+  sizeBytes: number
+  createdAt: string
+}
+
+/** Photo date minus boundary date: negative is before the boundary, positive after. */
+export interface PhotoMatch {
+  photoId: string
+  takenOn: string
+  daysFromTarget: number
+}
+
+/** One pose within one period; a missing side comes with the reason in `note`. */
+export interface PosePair {
+  pose: PhotoPose
+  start: PhotoMatch | null
+  end: PhotoMatch | null
+  note: string | null
+}
+
+export interface PeriodPhotos {
+  start: string
+  end: string
+  label: Period['label']
+  poses: PosePair[]
+  note: string | null
 }

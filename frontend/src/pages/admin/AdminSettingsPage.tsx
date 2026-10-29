@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react'
 
-import { useChangeCoachPassword } from '@/api/coachAuthApi'
+import { useChangeCoachPassword, useSendTestMail } from '@/api/coachAuthApi'
 import { PageHeading } from '@/components/ui/PageHeading'
 import { Field, inputClasses } from '@/components/ui/FormField'
 import { useAdminAuth } from '@/context/AdminAuthContext'
@@ -32,17 +32,68 @@ export function AdminSettingsPage() {
 
         <PasswordSection />
 
-        <section className="rounded-2xl border border-border bg-surface p-6">
-          <h2 className="text-sm font-bold uppercase tracking-wider text-text-primary">E-Posta Gönderimi</h2>
-          <p className="mt-2 text-xs leading-relaxed text-text-secondary">
-            Onay ve giriş kodları SMTP üzerinden gönderilir. Sunucuda{' '}
-            <code className="text-text-primary">MAIL_HOST</code> tanımlı değilse kodlar yalnızca uygulama
-            loguna yazılır ve üyelere e-posta ulaşmaz. Aynı adrese kod isteme sıklığı sınırlıdır: iki kod
-            arasında en az bir dakika, saatte en fazla beş kod.
-          </p>
-        </section>
+        <MailSection />
       </div>
     </>
+  )
+}
+
+function MailSection() {
+  const sendTest = useSendTestMail()
+  const result = sendTest.data
+
+  return (
+    <section className="rounded-2xl border border-border bg-surface p-6">
+      <h2 className="text-sm font-bold uppercase tracking-wider text-text-primary">E-Posta Gönderimi</h2>
+      <p className="mt-2 text-xs leading-relaxed text-text-secondary">
+        Onay ve giriş kodları SMTP üzerinden gönderilir. Sunucuda{' '}
+        <code className="text-text-primary">MAIL_HOST</code> tanımlı değilse kodlar yalnızca uygulama
+        loguna yazılır ve üyelere e-posta ulaşmaz. Aynı adrese kod isteme sıklığı sınırlıdır: iki kod
+        arasında en az bir dakika, saatte en fazla beş kod.
+      </p>
+      <p className="mt-2 text-xs leading-relaxed text-text-secondary">
+        İlk üyeyi davet etmeden önce ayarların çalıştığını buradan görün: kendi adresinize bir test e-postası
+        gider.
+      </p>
+
+      <Button
+        type="button"
+        variant="secondary"
+        className="mt-4"
+        onClick={() => sendTest.mutate()}
+        disabled={sendTest.isPending}
+      >
+        {sendTest.isPending ? 'Gönderiliyor…' : 'Test E-postası Gönder'}
+      </Button>
+
+      <div className="mt-3" aria-live="polite">
+        {sendTest.isError ? <p className="text-xs text-error">{sendTest.error.message}</p> : null}
+        {result?.delivery === 'SENT' ? (
+          <p className="text-xs leading-relaxed text-success">
+            E-posta sunucuya iletildi: <strong>{result.to}</strong>. Gelen kutunuza (ve spam klasörüne) bakın;
+            ulaştıysa ayarlar çalışıyor.
+          </p>
+        ) : null}
+        {result?.delivery === 'NOT_CONFIGURED' ? (
+          <p className="rounded-lg border border-warning/40 bg-warning/10 p-3 text-xs leading-relaxed text-warning">
+            Sunucuda e-posta tanımlı değil (<code>MAIL_HOST</code> boş); hiçbir e-posta gönderilmiyor.
+          </p>
+        ) : null}
+        {result?.delivery === 'FAILED' ? (
+          <p role="alert" className="rounded-lg border border-error/40 bg-error/10 p-3 text-xs leading-relaxed text-error">
+            <strong>Gönderilemedi.</strong>
+            {result.detail ? (
+              <>
+                {' '}
+                Sunucunun yanıtı: <em>{result.detail}</em>
+              </>
+            ) : null}{' '}
+            Kullanıcı adı/parola, sunucu adı, port (<code>MAIL_PORT</code>) ve gerekiyorsa{' '}
+            <code>MAIL_STARTTLS</code> / <code>MAIL_SSL</code> ayarlarını kontrol edin.
+          </p>
+        ) : null}
+      </div>
+    </section>
   )
 }
 

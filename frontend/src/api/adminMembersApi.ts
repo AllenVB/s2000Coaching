@@ -3,8 +3,9 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAdminAuth } from '@/context/AdminAuthContext'
 import { adminHeaders } from '@/lib/adminSession'
 import { apiFetch } from '@/lib/api'
-import type { AdminDashboard, CoachNote, UpdateMemberInput } from '@/types/admin'
-import type { CreateMemberInput, Member } from '@/types/member'
+import type { AdminDashboard, Attention, CoachNote, UpdateMemberInput } from '@/types/admin'
+import type { BodyAnalysis } from '@/types/caseStudy'
+import type { CreateMemberInput, CreateMemberResponse, Member, ResendCodeResponse } from '@/types/member'
 
 const QUERY_KEY = ['admin-members']
 
@@ -32,12 +33,12 @@ export function useCreateMember() {
 
   return useMutation({
     mutationFn: (input: CreateMemberInput) =>
-      apiFetch<Member>('/api/admin/members', {
+      apiFetch<CreateMemberResponse>('/api/admin/members', {
         method: 'POST',
         headers: adminHeaders(token!),
         body: JSON.stringify(input),
       }),
-    onSuccess: (created) => {
+    onSuccess: ({ member: created }) => {
       queryClient.setQueryData<Member[]>(QUERY_KEY, (old) => [created, ...(old ?? [])])
       queryClient.setQueryData<Member>(memberKey(created.id), created)
       queryClient.invalidateQueries({ queryKey: ['admin-dashboard'] })
@@ -50,7 +51,7 @@ export function useResendVerificationCode() {
 
   return useMutation({
     mutationFn: ({ memberId }: { memberId: string }) =>
-      apiFetch<void>(`/api/admin/members/${memberId}/verification-code`, {
+      apiFetch<ResendCodeResponse>(`/api/admin/members/${memberId}/verification-code`, {
         method: 'POST',
         headers: adminHeaders(token!),
       }),
@@ -183,5 +184,31 @@ export function useDeleteCoachNote(memberId: string) {
         old?.filter((note) => note.id !== noteId),
       )
     },
+  })
+}
+
+/** Who needs the coach today, with the reasons; computed on the server for the whole roster. */
+export function useAttention() {
+  const { token } = useAdminAuth()
+
+  return useQuery({
+    queryKey: ['admin-attention'],
+    queryFn: () => apiFetch<Attention>('/api/admin/attention', { headers: adminHeaders(token!) }),
+    enabled: Boolean(token),
+    // The coach keeps this open; a few minutes old is fine, but not a day old.
+    refetchInterval: 5 * 60 * 1000,
+  })
+}
+
+/** The case-study engine run on one member's check-ins and food log; coach only. */
+export function useMemberAnalysis(memberId: string) {
+  const { token } = useAdminAuth()
+
+  return useQuery({
+    queryKey: ['admin-member-analysis', memberId],
+    queryFn: () =>
+      apiFetch<BodyAnalysis>(`/api/admin/members/${memberId}/analysis`, { headers: adminHeaders(token!) }),
+    enabled: Boolean(token),
+    staleTime: 0,
   })
 }

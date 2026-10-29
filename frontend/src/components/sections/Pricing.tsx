@@ -1,18 +1,23 @@
 import { usePackages } from '@/api/packagesApi'
 import { SectionHeading } from '@/components/ui/SectionHeading'
-import { ClockIcon, CreditCardIcon, ShieldIcon } from '@/components/ui/icons'
-import { trustBadges } from '@/data/content'
+import { ClockIcon, CreditCardIcon } from '@/components/ui/icons'
+import { usePaymentCopy } from '@/hooks/usePaymentCopy'
 import { usePricingCategory } from '@/context/PricingCategoryContext'
 import { setSectionHash } from '@/lib/scroll'
 import type { PackageCategory } from '@/types/package'
 
 import { PricingCard } from './PricingCard'
 
-const badgeIcons = { credit_card: CreditCardIcon, schedule: ClockIcon, lock: ShieldIcon }
+const badgeIcons = { credit_card: CreditCardIcon, schedule: ClockIcon }
 
 export function Pricing() {
   const { category, setCategory } = usePricingCategory()
   const { data: packages, isLoading, isError } = usePackages()
+  const payment = usePaymentCopy()
+  const trustBadges = [
+    { icon: 'credit_card', title: payment.title, caption: payment.caption },
+    { icon: 'schedule', title: '48 Saatte Hazır', caption: 'Form doldurduktan sonra programınız teslim edilir' },
+  ]
 
   const filtered = packages?.filter((pkg) => pkg.category === category) ?? []
 

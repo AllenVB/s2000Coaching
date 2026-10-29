@@ -95,4 +95,26 @@ class ExerciseServiceTest {
 
 		assertThatThrownBy(() -> exerciseService.delete(unknown)).isInstanceOf(NotFoundException.class);
 	}
+
+	@Test
+	void shouldStoreAYouTubeLinkInItsCanonicalForm() {
+		when(exerciseRepository.existsByNameIgnoreCase("Squat")).thenReturn(false);
+		when(exerciseRepository.save(org.mockito.ArgumentMatchers.any()))
+				.thenAnswer(call -> call.getArgument(0));
+
+		var response = exerciseService.create(
+				new UpsertExerciseRequest("Squat", MuscleGroup.BACAK, "youtu.be/dQw4w9WgXcQ?t=1m30s", null));
+
+		assertThat(response.videoUrl()).isEqualTo("https://www.youtube.com/watch?v=dQw4w9WgXcQ&t=90");
+		assertThat(response.video().id()).isEqualTo("dQw4w9WgXcQ");
+		assertThat(response.video().startSeconds()).isEqualTo(90);
+	}
+
+	@Test
+	void shouldRefuseALinkThatIsNotYouTube() {
+		assertThatThrownBy(() -> exerciseService.create(
+				new UpsertExerciseRequest("Squat", MuscleGroup.BACAK, "https://vimeo.com/1", null)))
+				.isInstanceOf(com.s2000coaching.exception.BadRequestException.class)
+				.hasMessageContaining("YouTube");
+	}
 }

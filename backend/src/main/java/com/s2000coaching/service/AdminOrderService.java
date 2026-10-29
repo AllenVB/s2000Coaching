@@ -2,9 +2,13 @@ package com.s2000coaching.service;
 
 import com.s2000coaching.domain.Member;
 import com.s2000coaching.domain.Order;
+import com.s2000coaching.domain.OrderStatus;
+import com.s2000coaching.exception.ConflictException;
 import com.s2000coaching.exception.NotFoundException;
 import com.s2000coaching.repository.OrderRepository;
 import com.s2000coaching.web.dto.OrderSummaryResponse;
+import java.time.Clock;
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
@@ -21,9 +25,13 @@ import org.springframework.transaction.annotation.Transactional;
 public class AdminOrderService {
 
 	private final OrderRepository orderRepository;
+	private final MembershipService membershipService;
+	private final Clock clock;
 
-	public AdminOrderService(OrderRepository orderRepository) {
+	public AdminOrderService(OrderRepository orderRepository, MembershipService membershipService, Clock clock) {
 		this.orderRepository = orderRepository;
+		this.membershipService = membershipService;
+		this.clock = clock;
 	}
 
 	@Transactional(readOnly = true)
@@ -47,6 +55,38 @@ public class AdminOrderService {
 	}
 
 	/**
+	 * The coach saw the transfer arrive. Only a transfer that is still waiting can be confirmed;
+	 * anything else (already paid, cancelled, a card order the provider settles itself) is a
+	 * mistake worth refusing rather than quietly accepting.
+	 */
+	@Transactional
+	public OrderSummaryResponse confirmPayment(String orderNumber) {
+		Order order = require(orderNumber);
+		if (order.getStatus() != OrderStatus.AWAITING_TRANSFER) {
+			throw new ConflictException("Yalnızca havale bekleyen sipariş onaylanabilir.");
+		}
+		order.markPaid(Instant.now(clock));
+		membershipService.grantFor(order);
+		return OrderSummaryResponse.from(order);
+	}
+
+	@Transactional
+	public OrderSummaryResponse cancel(String orderNumber) {
+		Order order = require(orderNumber);
+		if (order.getStatus() != OrderStatus.AWAITING_TRANSFER && order.getStatus() != OrderStatus.AWAITING_PAYMENT
+				&& order.getStatus() != OrderStatus.PENDING) {
+			throw new ConflictException("Bu sipariş artık iptal edilemez.");
+		}
+		order.setStatus(OrderStatus.CANCELLED);
+		return OrderSummaryResponse.from(order);
+	}
+
+	private Order require(String orderNumber) {
+		return orderRepository.findByOrderNumber(orderNumber)
+				.orElseThrow(() -> new NotFoundException("Sipariş bulunamadı: " + orderNumber));
+	}
+
+	/**
 	 * Attaches every unlinked order placed with the member's address, so a buyer's order
 	 * history is there from the moment they become a member.
 	 *
@@ -55,7 +95,13 @@ public class AdminOrderService {
 	@Transactional
 	public int linkOrdersTo(Member member) {
 		List<Order> orders = orderRepository.findAllByEmailIgnoreCaseAndMemberIsNull(member.getEmail());
-		orders.forEach(order -> order.setMember(member));
+		orders.forEach(order -> {
+			order.setMember(member);
+			// A buyer who paid before becoming a member gets the period they paid for now.
+			if (order.getStatus() == OrderStatus.PAID) {
+				membershipService.grantFor(order);
+			}
+		});
 		return orders.size();
 	}
 

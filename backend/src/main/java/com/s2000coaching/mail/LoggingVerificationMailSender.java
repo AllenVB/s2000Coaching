@@ -14,8 +14,9 @@ public class LoggingVerificationMailSender implements VerificationMailSender {
 	private static final Logger log = LoggerFactory.getLogger(LoggingVerificationMailSender.class);
 
 	@Override
-	public void sendVerificationCode(Member member, String code, VerificationPurpose purpose) {
+	public MailDelivery sendVerificationCode(Member member, String code, VerificationPurpose purpose) {
 		log.warn("SMTP yapılandırılmadı (spring.mail.host boş). {} kodu e-posta ile GÖNDERİLMEDİ — "
 				+ "alıcı: {}, amaç: {}, kod: {}", purpose, member.getEmail(), purpose, code);
+		return MailDelivery.NOT_CONFIGURED;
 	}
 }

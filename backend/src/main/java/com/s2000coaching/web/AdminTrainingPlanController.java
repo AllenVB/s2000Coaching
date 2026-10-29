@@ -39,10 +39,13 @@ public class AdminTrainingPlanController {
 		return trainingPlanService.listTemplates();
 	}
 
+	/** {@code blank=true} skips the standard days "Gün 1" to "Gün 5" and creates an empty template. */
 	@PostMapping("/api/admin/training-plan-templates")
 	public ResponseEntity<TrainingPlanResponse> createTemplate(
+			@RequestParam(defaultValue = "false") boolean blank,
 			@Valid @RequestBody UpsertTrainingPlanRequest request) {
-		return ResponseEntity.status(HttpStatus.CREATED).body(trainingPlanService.createTemplate(request));
+		return ResponseEntity.status(HttpStatus.CREATED)
+				.body(trainingPlanService.createTemplate(request, blank));
 	}
 
 	@GetMapping("/api/admin/members/{memberId}/training-plans")
@@ -50,14 +53,18 @@ public class AdminTrainingPlanController {
 		return trainingPlanService.listForMember(memberId);
 	}
 
-	/** {@code templateId} copies that template's days and exercises into the new plan. */
+	/**
+	 * {@code templateId} copies that template's days and exercises into the new plan. Without
+	 * one the plan starts with empty "Gün 1" to "Gün 5"; {@code blank=true} starts with no days.
+	 */
 	@PostMapping("/api/admin/members/{memberId}/training-plans")
 	public ResponseEntity<TrainingPlanResponse> createForMember(
 			@PathVariable UUID memberId,
 			@RequestParam(required = false) UUID templateId,
+			@RequestParam(defaultValue = "false") boolean blank,
 			@Valid @RequestBody UpsertTrainingPlanRequest request) {
 		return ResponseEntity.status(HttpStatus.CREATED)
-				.body(trainingPlanService.createForMember(memberId, request, templateId));
+				.body(trainingPlanService.createForMember(memberId, request, templateId, blank));
 	}
 
 	@GetMapping("/api/admin/members/{memberId}/workout-logs")

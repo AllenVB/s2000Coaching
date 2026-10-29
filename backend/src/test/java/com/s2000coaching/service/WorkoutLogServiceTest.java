@@ -17,6 +17,8 @@ import com.s2000coaching.domain.TrainingPlanExercise;
 import com.s2000coaching.domain.WorkoutLog;
 import com.s2000coaching.exception.BadRequestException;
 import com.s2000coaching.exception.NotFoundException;
+import com.s2000coaching.repository.SessionTopWeight;
+import com.s2000coaching.repository.SetLogRepository;
 import com.s2000coaching.repository.TrainingPlanRepository;
 import com.s2000coaching.repository.WorkoutLogRepository;
 import com.s2000coaching.web.dto.SaveWorkoutLogRequest;
@@ -41,6 +43,9 @@ class WorkoutLogServiceTest {
 	private WorkoutLogRepository workoutLogRepository;
 
 	@Mock
+	private SetLogRepository setLogRepository;
+
+	@Mock
 	private TrainingPlanRepository planRepository;
 
 	@Mock
@@ -54,7 +59,8 @@ class WorkoutLogServiceTest {
 
 	@BeforeEach
 	void setUp() {
-		workoutLogService = new WorkoutLogService(workoutLogRepository, planRepository, trainingPlanService);
+		workoutLogService = new WorkoutLogService(workoutLogRepository, setLogRepository, planRepository,
+				trainingPlanService);
 		member = new Member(UUID.randomUUID(), "sporcu@example.com", "Ahmet Yılmaz", "+905551112233", 182,
 				new BigDecimal("84.50"), "5 yıl fitness", MemberStatus.ACTIVE, Instant.now());
 		plan = new TrainingPlan(UUID.randomUUID(), member, "Plan", null, true, Instant.now());
@@ -68,7 +74,7 @@ class WorkoutLogServiceTest {
 
 	private SaveWorkoutLogRequest request(int reps, String weight) {
 		return new SaveWorkoutLogRequest(day.getId(), TODAY, "  iyi  ", List.of(
-				new SaveWorkoutLogRequest.SetEntry(planExercise.getId(), 1, reps, new BigDecimal(weight))));
+				new SaveWorkoutLogRequest.SetEntry(planExercise.getId(), 1, reps, new BigDecimal(weight), null)));
 	}
 
 	@Test
@@ -127,7 +133,7 @@ class WorkoutLogServiceTest {
 		when(workoutLogRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
 		var request = new SaveWorkoutLogRequest(day.getId(), TODAY, null, List.of(
-				new SaveWorkoutLogRequest.SetEntry(UUID.randomUUID(), 1, 10, new BigDecimal("60.0"))));
+				new SaveWorkoutLogRequest.SetEntry(UUID.randomUUID(), 1, 10, new BigDecimal("60.0"), null)));
 
 		assertThatThrownBy(() -> workoutLogService.save(member, request))
 				.isInstanceOf(BadRequestException.class)
@@ -140,8 +146,12 @@ class WorkoutLogServiceTest {
 		previous.getSets().add(new SetLog(UUID.randomUUID(), previous, planExercise, 1, 9,
 				new BigDecimal("72.5")));
 		when(planRepository.findByMemberIdAndActiveTrue(member.getId())).thenReturn(Optional.of(plan));
-		when(workoutLogRepository.findAllByMemberIdAndDayIdOrderByPerformedOnDesc(
-				eq(member.getId()), eq(day.getId()))).thenReturn(List.of(previous));
+		when(workoutLogRepository.findLatestPerDay(eq(member.getId()), eq(List.of(day.getId()))))
+				.thenReturn(List.of(previous));
+		when(setLogRepository.topWeightPerSession(eq(member.getId()), eq(List.of(planExercise.getId()))))
+				.thenReturn(List.of(
+						new SessionTopWeight(planExercise.getId(), TODAY.minusDays(7), new BigDecimal("70.0")),
+						new SessionTopWeight(planExercise.getId(), TODAY.minusDays(3), new BigDecimal("72.5"))));
 
 		var response = workoutLogService.findActivePlan(member.getId()).orElseThrow();
 
@@ -149,6 +159,9 @@ class WorkoutLogServiceTest {
 			assertThat(dayResponse.lastPerformedOn()).isEqualTo(TODAY.minusDays(3));
 			assertThat(dayResponse.exercises().get(0).lastPerformed()).singleElement()
 					.satisfies(set -> assertThat(set.weightKg()).isEqualByComparingTo("72.5"));
+			assertThat(dayResponse.exercises().get(0).weightHistory())
+					.extracting(entry -> entry.sessionNumber())
+					.containsExactly(1, 2);
 		});
 	}
 
@@ -157,5 +170,22 @@ class WorkoutLogServiceTest {
 		when(planRepository.findByMemberIdAndActiveTrue(member.getId())).thenReturn(Optional.empty());
 
 		assertThat(workoutLogService.findActivePlan(member.getId())).isEmpty();
+	}
+
+	/** A member who leaves the effort blank stays unrated; it must not be stored as "easy". */
+	@Test
+	void shouldStoreTheEffortRatingOnlyWhenGiven() {
+		when(trainingPlanService.getDayOrThrow(day.getId())).thenReturn(day);
+		when(workoutLogRepository.findByMemberIdAndDayIdAndPerformedOn(member.getId(), day.getId(), TODAY))
+				.thenReturn(Optional.empty());
+		when(workoutLogRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+		var response = workoutLogService.save(member, new SaveWorkoutLogRequest(day.getId(), TODAY, null, List.of(
+				new SaveWorkoutLogRequest.SetEntry(planExercise.getId(), 1, 8, new BigDecimal("60.0"),
+						new BigDecimal("8.5")),
+				new SaveWorkoutLogRequest.SetEntry(planExercise.getId(), 2, 8, new BigDecimal("60.0"), null))));
+
+		assertThat(response.sets().get(0).rpe()).isEqualByComparingTo("8.5");
+		assertThat(response.sets().get(1).rpe()).isNull();
 	}
 }

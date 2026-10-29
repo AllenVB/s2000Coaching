@@ -15,6 +15,14 @@ import java.util.Map;
 import java.util.UUID;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import com.s2000coaching.domain.PhotoPose;
+import com.s2000coaching.service.CaseStudyPhotoService;
+import com.s2000coaching.service.PhotoPairing.PeriodPhotos;
+import com.s2000coaching.web.dto.CaseStudyPhotoResponse;
+import com.s2000coaching.web.dto.PublishPhotosRequest;
+import java.time.LocalDate;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -43,12 +51,14 @@ import tools.jackson.databind.ObjectMapper;
 public class AdminCaseStudyController {
 
 	private final CaseStudyService caseStudyService;
+	private final CaseStudyPhotoService photoService;
 	private final CaseStudyImportService importService;
 	private final ObjectMapper objectMapper;
 
-	public AdminCaseStudyController(CaseStudyService caseStudyService,
+	public AdminCaseStudyController(CaseStudyService caseStudyService, CaseStudyPhotoService photoService,
 			CaseStudyImportService importService, ObjectMapper objectMapper) {
 		this.caseStudyService = caseStudyService;
+		this.photoService = photoService;
 		this.importService = importService;
 		this.objectMapper = objectMapper;
 	}
@@ -135,6 +145,51 @@ public class AdminCaseStudyController {
 	public ResponseEntity<Void> clearData(@PathVariable UUID id, @RequestParam("kind") DataKind kind) {
 		caseStudyService.clearData(id, kind == DataKind.MEASUREMENTS);
 		return ResponseEntity.noContent().build();
+	}
+
+	// --- photos -------------------------------------------------------------------------
+
+	@GetMapping("/api/admin/case-studies/{id}/photos")
+	public List<CaseStudyPhotoResponse> photos(@PathVariable UUID id) {
+		return photoService.list(id);
+	}
+
+	@PostMapping(value = "/api/admin/case-studies/{id}/photos",
+			consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+	public CaseStudyPhotoResponse uploadPhoto(@PathVariable UUID id,
+			@RequestParam("file") MultipartFile file,
+			@RequestParam("takenOn") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate takenOn,
+			@RequestParam("pose") PhotoPose pose) throws IOException {
+		return photoService.upload(id, takenOn, pose, file.getBytes());
+	}
+
+	@DeleteMapping("/api/admin/case-study-photos/{photoId}")
+	public ResponseEntity<Void> deletePhoto(@PathVariable UUID photoId) {
+		photoService.delete(photoId);
+		return ResponseEntity.noContent().build();
+	}
+
+	@GetMapping("/api/admin/case-study-photos/{photoId}/content")
+	public ResponseEntity<InputStreamResource> photoContent(@PathVariable UUID photoId) {
+		return CaseStudyController.imageResponse(photoService.readAsCoach(photoId));
+	}
+
+	/** The pairing exactly as the public page would show it, before photos are switched on. */
+	@GetMapping("/api/admin/case-studies/{id}/photo-periods")
+	public List<PeriodPhotos> photoPeriods(@PathVariable UUID id) {
+		return caseStudyService.photoPeriodsForCoach(id);
+	}
+
+	/** Separate from {@code /publish}: showing the numbers is not consent to show the body. */
+	@PostMapping("/api/admin/case-studies/{id}/photos/publish")
+	public CaseStudyResponse publishPhotos(@PathVariable UUID id,
+			@Valid @RequestBody PublishPhotosRequest request) {
+		return caseStudyService.setPhotosPublished(id, true);
+	}
+
+	@PostMapping("/api/admin/case-studies/{id}/photos/unpublish")
+	public CaseStudyResponse unpublishPhotos(@PathVariable UUID id) {
+		return caseStudyService.setPhotosPublished(id, false);
 	}
 
 	private Map<String, Integer> parseMapping(String mappingJson) {

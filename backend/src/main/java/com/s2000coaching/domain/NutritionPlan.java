@@ -9,6 +9,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -53,6 +54,10 @@ public class NutritionPlan {
 	@Column(name = "target_fat_g")
 	private Integer targetFatG;
 
+	/** Daily water target in litres; null when the coach has not set one. */
+	@Column(name = "water_liters", precision = 3, scale = 1)
+	private BigDecimal waterLiters;
+
 	@Column(name = "created_at", nullable = false)
 	private Instant createdAt;
 
@@ -75,6 +80,14 @@ public class NutritionPlan {
 		this.active = active;
 		this.createdAt = createdAt;
 		this.updatedAt = createdAt;
+	}
+
+	public BigDecimal getWaterLiters() {
+		return waterLiters;
+	}
+
+	public void setWaterLiters(BigDecimal waterLiters) {
+		this.waterLiters = waterLiters;
 	}
 
 	public UUID getId() {

@@ -1,10 +1,12 @@
 import { Button } from '@/components/ui/Button'
 import { CartIcon, CloseIcon, TrashIcon } from '@/components/ui/icons'
 import { useCart } from '@/context/CartContext'
+import { usePaymentCopy } from '@/hooks/usePaymentCopy'
 import { formatMinor } from '@/lib/money'
 
 export function CartDrawer() {
   const { selectedPackage, isDrawerOpen, closeDrawer, removeFromCart, openCheckout } = useCart()
+  const payment = usePaymentCopy()
 
   return (
     <>
@@ -91,7 +93,7 @@ export function CartDrawer() {
             <Button className="w-full" onClick={openCheckout}>
               Ödemeye Geç
             </Button>
-            <div className="text-center text-[11px] text-text-muted">Test modu — simülasyon ile onaylanır</div>
+            <div className="text-center text-[11px] text-text-muted">{payment.cartNote}</div>
           </div>
         ) : null}
       </aside>

@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 
 import { useAdminDashboard } from '@/api/adminMembersApi'
+import { AttentionPanel } from '@/components/admin/AttentionPanel'
 import { MemberStatusBadge } from '@/components/member/MemberStatusBadge'
 import { PageHeading } from '@/components/ui/PageHeading'
 import { useSignOutOn401 } from '@/hooks/useAdminSession'
@@ -41,6 +42,8 @@ export function AdminDashboardPage() {
               tone={data.pendingMembers.length > 0 ? 'warning' : 'default'}
             />
           </div>
+
+          <AttentionPanel />
 
           <MemberCallout
             title="Onay Bekleyen Üyeler"

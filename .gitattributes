@@ -1,0 +1,10 @@
+# Windows batch files must keep CRLF line endings. cmd.exe resolves `goto :label` by
+# scanning the file, and with bare LF endings it can miss labels, so a script that works
+# on the author's machine aborts on someone else's. This pins the endings no matter what
+# core.autocrlf says on the machine that checks the files out (or a ZIP download).
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# And the opposite for shell scripts: a CRLF shebang line stops them from running at all.
+*.sh text eol=lf
+backend/gradlew text eol=lf

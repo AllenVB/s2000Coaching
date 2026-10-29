@@ -1,8 +1,9 @@
 import { planTotals, type NutritionPlan } from '@/types/nutrition'
 
 /**
- * Target beside what the listed foods actually add up to. Showing both is the point: the gap
- * is what tells the coach the plan is not finished.
+ * Target beside what the listed foods actually add up to, when the foods carry macros. A plan
+ * written as amounts only (the usual table) has nothing to add up, so no "planned 0" is shown
+ * — that would read as a mistake rather than as "not counted".
  */
 export function MacroSummary({ plan }: { plan: NutritionPlan }) {
   const totals = planTotals(plan)
@@ -38,16 +39,19 @@ function MacroCell({
   target: number | null
   actual: number
 }) {
+  // No target and nothing counted is "not set", not zero.
+  const shown = target ?? (actual > 0 ? actual : null)
+
   return (
     <div className="rounded-xl border border-border bg-surface-elevated p-3.5">
       <span className="block text-[11px] font-semibold uppercase tracking-wider text-text-muted">
         {label}
       </span>
       <span className="mt-1 block font-display text-xl font-bold text-text-primary">
-        {target ?? actual}
-        <span className="ml-1 text-xs font-medium text-text-muted">{unit}</span>
+        {shown ?? '—'}
+        {shown !== null ? <span className="ml-1 text-xs font-medium text-text-muted">{unit}</span> : null}
       </span>
-      {target !== null ? (
+      {target !== null && actual > 0 ? (
         <span className="mt-0.5 block text-[11px] text-text-secondary">
           planlanan {actual} {unit}
         </span>

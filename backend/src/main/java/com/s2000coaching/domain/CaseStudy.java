@@ -50,6 +50,14 @@ public class CaseStudy {
 	@Column(nullable = false)
 	private boolean published;
 
+	/**
+	 * Photos are published separately from the data. Agreeing to show numbers is not agreeing
+	 * to show a body, so this is a distinct, deliberate switch and is only honoured while
+	 * {@link #published} is also true.
+	 */
+	@Column(name = "photos_published", nullable = false)
+	private boolean photosPublished;
+
 	@Column(name = "created_at", nullable = false)
 	private Instant createdAt;
 
@@ -126,6 +134,14 @@ public class CaseStudy {
 
 	public void setPublished(boolean published) {
 		this.published = published;
+	}
+
+	public boolean isPhotosPublished() {
+		return photosPublished;
+	}
+
+	public void setPhotosPublished(boolean photosPublished) {
+		this.photosPublished = photosPublished;
 	}
 
 	public Instant getCreatedAt() {

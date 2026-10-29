@@ -6,6 +6,7 @@ import { AdminDashboardPage } from '@/pages/admin/AdminDashboardPage'
 import { AdminMessagesPage } from '@/pages/admin/AdminMessagesPage'
 import { AdminOrdersPage } from '@/pages/admin/AdminOrdersPage'
 import { AdminSettingsPage } from '@/pages/admin/AdminSettingsPage'
+import { StoriesPage } from '@/pages/admin/StoriesPage'
 import { CaseStudiesPage } from '@/pages/admin/CaseStudiesPage'
 import { ExerciseCatalogPage } from '@/pages/admin/ExerciseCatalogPage'
 import { MemberDetailPage } from '@/pages/admin/MemberDetailPage'
@@ -13,6 +14,9 @@ import { MemberListPage } from '@/pages/admin/MemberListPage'
 import { NewMemberPage } from '@/pages/admin/NewMemberPage'
 import { PlanTemplatesPage } from '@/pages/admin/PlanTemplatesPage'
 import { MemberNotesTab } from '@/pages/admin/tabs/MemberNotesTab'
+import { MemberFormChecksTab } from '@/pages/admin/tabs/MemberFormChecksTab'
+import { MemberAnalysisTab } from '@/pages/admin/tabs/MemberAnalysisTab'
+import { MemberCheckInsTab } from '@/pages/admin/tabs/MemberCheckInsTab'
 import { MemberMeasurementsTab } from '@/pages/admin/tabs/MemberMeasurementsTab'
 import { MemberPhotosTab } from '@/pages/admin/tabs/MemberPhotosTab'
 import { MemberMessagesTab } from '@/pages/admin/tabs/MemberMessagesTab'
@@ -22,6 +26,10 @@ import { MemberProfileTab } from '@/pages/admin/tabs/MemberProfileTab'
 import { LandingPage } from '@/pages/LandingPage'
 import { MemberHistoryPage } from '@/pages/member/MemberHistoryPage'
 import { MemberPhotosPage } from '@/pages/member/MemberPhotosPage'
+import { MemberStoryPage } from '@/pages/member/MemberStoryPage'
+import { MemberFormCheckPage } from '@/pages/member/MemberFormCheckPage'
+import { MemberQuestionnairePage } from '@/pages/member/MemberQuestionnairePage'
+import { MemberCheckInPage } from '@/pages/member/MemberCheckInPage'
 import { MemberMeasurementsPage } from '@/pages/member/MemberMeasurementsPage'
 import { MemberMessagesPage } from '@/pages/member/MemberMessagesPage'
 import { MemberNutritionPage } from '@/pages/member/MemberNutritionPage'
@@ -42,6 +50,10 @@ export default function App() {
         <Route path="antrenman/:dayId" element={<MemberWorkoutDayPage />} />
         <Route path="beslenme" element={<MemberNutritionPage />} />
         <Route path="olcumler" element={<MemberMeasurementsPage />} />
+        <Route path="haftalik" element={<MemberCheckInPage />} />
+        <Route path="anket" element={<MemberQuestionnairePage />} />
+        <Route path="form-kontrol" element={<MemberFormCheckPage />} />
+        <Route path="hikayem" element={<MemberStoryPage />} />
         <Route path="gecmis" element={<MemberHistoryPage />} />
         <Route path="fotograflar" element={<MemberPhotosPage />} />
         <Route path="mesajlar" element={<MemberMessagesPage />} />
@@ -57,6 +69,9 @@ export default function App() {
           <Route path="antrenman" element={<MemberTrainingTab />} />
           <Route path="beslenme" element={<MemberNutritionTab />} />
           <Route path="olcumler" element={<MemberMeasurementsTab />} />
+          <Route path="haftalik" element={<MemberCheckInsTab />} />
+          <Route path="analiz" element={<MemberAnalysisTab />} />
+          <Route path="form-kontrol" element={<MemberFormChecksTab />} />
           <Route path="fotograflar" element={<MemberPhotosTab />} />
           <Route path="mesajlar" element={<MemberMessagesTab />} />
           <Route path="notlar" element={<MemberNotesTab />} />
@@ -65,6 +80,7 @@ export default function App() {
         <Route path="hareketler" element={<ExerciseCatalogPage />} />
         <Route path="sablonlar" element={<PlanTemplatesPage />} />
         <Route path="vaka-calismalari" element={<CaseStudiesPage />} />
+        <Route path="hikayeler" element={<StoriesPage />} />
         <Route path="siparisler" element={<AdminOrdersPage />} />
         <Route path="ayarlar" element={<AdminSettingsPage />} />
       </Route>

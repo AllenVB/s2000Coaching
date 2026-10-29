@@ -1,0 +1,52 @@
+# One host serves the site and the API. For a real domain Caddy fetches and renews the HTTPS
+# certificate by itself (ports 80 and 443 must reach this machine and the domain's DNS must
+# point here). For a trial on your own machine use SITE_ADDRESS=localhost: Caddy then issues a
+# certificate from its own authority, which the browser will warn about once.
+{$SITE_ADDRESS:localhost} {
+	encode zstd gzip
+
+	header {
+		# HTTPS only, for a year, once the browser has seen it.
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "microphone=(), geolocation=()"
+		# What the pages may load. Everything is the site's own except: Google Fonts, the stock
+		# photos on the public page, and YouTube's cookie-less player for exercise videos.
+		# `unsafe-inline` is for styles only; scripts run only from the site itself.
+		Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://images.unsplash.com; connect-src 'self'; frame-src https://www.youtube-nocookie.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'; manifest-src 'self'; worker-src 'self'"
+		-Server
+	}
+
+	handle /api/* {
+		# A little above the backend's own 10 MB limit, so the backend's message is the one shown.
+		request_body {
+			max_size 12MB
+		}
+		reverse_proxy backend:10002
+	}
+
+	# Built files carry a hash in their name, so they never change under the same name.
+	handle /assets/* {
+		root * /srv
+		header Cache-Control "public, max-age=31536000, immutable"
+		file_server
+	}
+
+	# Everything else is the single-page app. These must not be cached: index.html names the
+	# current build, and the service worker is how a phone finds out there is a new one.
+	handle {
+		root * /srv
+		header Cache-Control "no-cache"
+		try_files {path} /index.html
+		file_server
+	}
+
+	# A file that is not there is answered as an error, and an error must never be remembered:
+	# the long-lived header above would otherwise stick to the 404 for a build not uploaded yet.
+	handle_errors {
+		header Cache-Control "no-store"
+		respond "{err.status_code} {err.status_text}" {err.status_code}
+	}
+}

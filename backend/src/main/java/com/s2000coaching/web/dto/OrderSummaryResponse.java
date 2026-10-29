@@ -2,6 +2,7 @@ package com.s2000coaching.web.dto;
 
 import com.s2000coaching.domain.Order;
 import com.s2000coaching.domain.OrderStatus;
+import com.s2000coaching.domain.PaymentMethod;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -16,7 +17,9 @@ public record OrderSummaryResponse(
 		long priceMinor,
 		OrderStatus status,
 		Instant createdAt,
-		UUID memberId) {
+		UUID memberId,
+		PaymentMethod paymentMethod,
+		Instant paidAt) {
 
 	public static OrderSummaryResponse from(Order order) {
 		return new OrderSummaryResponse(
@@ -29,6 +32,8 @@ public record OrderSummaryResponse(
 				order.getPriceMinor(),
 				order.getStatus(),
 				order.getCreatedAt(),
-				order.getMember() == null ? null : order.getMember().getId());
+				order.getMember() == null ? null : order.getMember().getId(),
+				order.getPaymentMethod(),
+				order.getPaidAt());
 	}
 }

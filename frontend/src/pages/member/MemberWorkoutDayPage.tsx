@@ -1,19 +1,24 @@
 import { useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 
-import { useMyTrainingPlan, useSaveWorkoutLog } from '@/api/trainingApi'
+import { useMyTrainingPlan, useMyTrainingStats, useSaveWorkoutLog } from '@/api/trainingApi'
+import { RestTimer } from '@/components/training/RestTimer'
+import { ExerciseVideo } from '@/components/training/ExerciseVideo'
+import { WeightStrip } from '@/components/training/WeightStrip'
 import { Button } from '@/components/ui/Button'
 import { inputClasses, textareaClasses } from '@/components/ui/FormField'
 import { ArrowLeftIcon, CheckIcon } from '@/components/ui/icons'
 import { formatDate } from '@/lib/date'
 import type { PlanExercise } from '@/types/training'
+import { todayIso } from '@/lib/date'
 
 interface SetEntry {
   reps: string
   weightKg: string
+  rpe: string
 }
 
-const today = () => new Date().toISOString().slice(0, 10)
+const today = todayIso
 
 /**
  * The screen used in the gym: every exercise and every set on one page, pre-filled with last
@@ -23,6 +28,7 @@ export function MemberWorkoutDayPage() {
   const { dayId } = useParams<{ dayId: string }>()
   const { data: plan, isLoading } = useMyTrainingPlan()
   const saveLog = useSaveWorkoutLog()
+  const { data: stats } = useMyTrainingStats()
 
   const day = plan?.days.find((candidate) => candidate.id === dayId)
 
@@ -42,6 +48,9 @@ export function MemberWorkoutDayPage() {
         return {
           reps: previous ? String(previous.reps) : '',
           weightKg: previous?.weightKg != null ? String(previous.weightKg) : targetAsText(planExercise),
+          // Effort is a fresh judgement each session; carrying last time's number over would
+          // record a rating the member never gave.
+          rpe: '',
         }
       })
     })
@@ -86,6 +95,7 @@ export function MemberWorkoutDayPage() {
           setNumber,
           reps: Number(entry.reps),
           weightKg: entry.weightKg.trim() === '' ? null : Number(entry.weightKg),
+          rpe: entry.rpe.trim() === '' ? null : Number(entry.rpe),
         })),
     )
 
@@ -122,6 +132,24 @@ export function MemberWorkoutDayPage() {
               <p className="mb-3 text-xs leading-relaxed text-text-secondary">{planExercise.note}</p>
             ) : null}
 
+            <WeightStrip
+              history={planExercise.weightHistory ?? []}
+              performedOn={performedOn}
+              liveWeightKg={
+                // Until the member changes something the fields only echo last session, which is
+                // not a weight they lifted today.
+                isUntouched(values[planExercise.id], initialEntries?.[planExercise.id])
+                  ? null
+                  : liveTopWeight(values[planExercise.id] ?? [])
+              }
+            />
+
+            <SuggestionLine suggestion={stats?.exercises.find((s) => s.exerciseId === planExercise.exercise.id)?.suggestion} />
+
+            <div className="mb-3">
+              <ExerciseVideo exercise={planExercise.exercise} />
+            </div>
+
             <ul className="space-y-2">
               {(values[planExercise.id] ?? []).map((entry, index) => (
                 <li key={index} className="flex items-center gap-2">
@@ -134,9 +162,9 @@ export function MemberWorkoutDayPage() {
                     type="number"
                     inputMode="numeric"
                     min={0}
-                    placeholder="tekrar"
+                    placeholder={planExercise.setReps?.[index] ? `hedef ${planExercise.setReps[index]}` : 'tekrar'}
                     aria-label={`${planExercise.exercise.name} ${index + 1}. set tekrar`}
-                    className={`${inputClasses} flex-1`}
+                    className={`${inputClasses} min-w-0 flex-1`}
                   />
                   <input
                     value={entry.weightKg}
@@ -147,11 +175,29 @@ export function MemberWorkoutDayPage() {
                     min={0}
                     placeholder="kg"
                     aria-label={`${planExercise.exercise.name} ${index + 1}. set kilo`}
-                    className={`${inputClasses} flex-1`}
+                    className={`${inputClasses} min-w-0 flex-1`}
+                  />
+                  <input
+                    value={entry.rpe}
+                    onChange={(event) => setValue(planExercise.id, index, 'rpe', event.target.value)}
+                    type="number"
+                    inputMode="decimal"
+                    step="0.5"
+                    min={1}
+                    max={10}
+                    placeholder="RPE"
+                    aria-label={`${planExercise.exercise.name} ${index + 1}. set zorluk (1-10)`}
+                    className={`${inputClasses.replace('w-full', 'w-16')} shrink-0`}
                   />
                 </li>
               ))}
             </ul>
+
+            {planExercise.restSeconds ? (
+              <div className="mt-3">
+                <RestTimer seconds={planExercise.restSeconds} />
+              </div>
+            ) : null}
           </section>
         ))}
 
@@ -179,7 +225,13 @@ export function MemberWorkoutDayPage() {
         </section>
 
         {saveLog.isError ? <p className="text-xs text-error">Kaydedilemedi: {saveLog.error.message}</p> : null}
-        {saveLog.isSuccess ? (
+        {saveLog.isSuccess && 'queued' in saveLog.data ? (
+          <p className="rounded-xl border border-warning/40 bg-warning/10 p-3.5 text-xs leading-relaxed text-warning">
+            Bağlantı yok: antrenmanınız telefonunuza kaydedildi ve internet gelince otomatik gönderilecek.
+            Uygulamayı bu cihazda açık tutmanız yeterli.
+          </p>
+        ) : null}
+        {saveLog.isSuccess && !('queued' in saveLog.data) ? (
           <p className="flex items-center gap-1.5 text-xs text-success">
             <CheckIcon className="h-3.5 w-3.5" /> Antrenmanınız kaydedildi.
           </p>
@@ -193,6 +245,26 @@ export function MemberWorkoutDayPage() {
   )
 }
 
+/** What to do next time, with the reasoning; silent when there is nothing to base it on. */
+function SuggestionLine({
+  suggestion,
+}: {
+  suggestion: { kind: 'INCREASE' | 'HOLD' | 'INSUFFICIENT'; text: string } | undefined
+}) {
+  if (!suggestion || suggestion.kind === 'INSUFFICIENT') {
+    return null
+  }
+  return (
+    <p
+      className={`mb-3 rounded-lg px-3 py-2 text-xs leading-relaxed ${
+        suggestion.kind === 'INCREASE' ? 'bg-success/10 text-success' : 'bg-surface-elevated text-text-secondary'
+      }`}
+    >
+      {suggestion.text}
+    </p>
+  )
+}
+
 function BackLink() {
   return (
     <Link
@@ -203,6 +275,22 @@ function BackLink() {
       Antrenman
     </Link>
   )
+}
+
+function isUntouched(current: SetEntry[] | undefined, initial: SetEntry[] | undefined): boolean {
+  return JSON.stringify(current ?? []) === JSON.stringify(initial ?? [])
+}
+
+/**
+ * The heaviest weight among the sets that would be saved (the ones with reps), which is what
+ * today's slot in the weight strip shows; null while no such set has a weight.
+ */
+function liveTopWeight(entries: SetEntry[]): number | null {
+  const weights = entries
+    .filter((entry) => entry.reps.trim() !== '' && entry.weightKg.trim() !== '')
+    .map((entry) => Number(entry.weightKg))
+    .filter((weight) => Number.isFinite(weight))
+  return weights.length > 0 ? Math.max(...weights) : null
 }
 
 function targetAsText(planExercise: PlanExercise): string {

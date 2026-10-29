@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { todayIso } from '@/lib/date'
 
 /** Blank optional number inputs arrive as NaN via `valueAsNumber`; treat those as "not measured". */
 const optionalCm = (min: number, max: number, label: string) =>
@@ -14,7 +15,7 @@ export const measurementSchema = z.object({
   measuredOn: z
     .string()
     .min(1, 'Tarih zorunlu')
-    .refine((value) => value <= new Date().toISOString().slice(0, 10), {
+    .refine((value) => value <= todayIso(), {
       message: 'İleri bir tarih seçilemez',
     }),
   weightKg: z

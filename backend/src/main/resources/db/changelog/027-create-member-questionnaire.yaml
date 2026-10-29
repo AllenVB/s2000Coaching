@@ -1,0 +1,38 @@
+databaseChangeLog:
+  - changeSet:
+      id: 042-create-member-questionnaire
+      author: s2000
+      comment: >-
+        The starting questionnaire: the seven standard PAR-Q readiness questions (stored as a
+        7-character Y/N string, in question order), plus the member's goal, how many days a
+        week they can train, where, and any injuries. One per member; filling it in again
+        replaces it. Health data under KVKK: written only after the member's consent.
+      changes:
+        - createTable:
+            tableName: member_questionnaire
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: member_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    unique: true
+                    uniqueConstraintName: uk_member_questionnaire_member
+                    foreignKeyName: fk_member_questionnaire_member
+                    references: member(id)
+              - column: { name: parq_answers, type: varchar(7), constraints: { nullable: false } }
+              - column: { name: goal, type: varchar(30), constraints: { nullable: false } }
+              - column: { name: training_days_per_week, type: int, constraints: { nullable: false } }
+              - column: { name: equipment, type: varchar(20), constraints: { nullable: false } }
+              - column: { name: injuries, type: text }
+              - column:
+                  name: completed_at
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false

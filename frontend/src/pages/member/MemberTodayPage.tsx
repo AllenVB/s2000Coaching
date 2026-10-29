@@ -2,17 +2,20 @@ import { Link } from 'react-router-dom'
 
 import type { TrainingPlan } from '@/types/training'
 
+import { useMyStories } from '@/api/storyApi'
+import { useMyQuestionnaire } from '@/api/questionnaireApi'
 import { useMyMeasurements } from '@/api/measurementsApi'
 import { useMyNutritionPlan } from '@/api/nutritionApi'
 import { useMyTrainingPlan } from '@/api/trainingApi'
 import { useMyUnreadMessages } from '@/api/messagesApi'
 import { AskCoachCard } from '@/components/member/AskCoachCard'
+import { RenewalNotice } from '@/components/member/MembershipCard'
 import { MeasurementReminder } from '@/components/member/MeasurementReminder'
 import { TodayMacrosCard } from '@/components/member/TodayMacrosCard'
 import { ComingSoonCard, PageHeading } from '@/components/ui/PageHeading'
 import { useMemberProfileSync } from '@/hooks/useMemberProfileSync'
 import { formatDate } from '@/lib/date'
-import { AppleIcon, CameraIcon, ChartIcon, DumbbellIcon, HistoryIcon } from '@/components/ui/icons'
+import { AppleIcon, CameraIcon, ChartIcon, ClipboardIcon, DumbbellIcon, HistoryIcon, PlayIcon } from '@/components/ui/icons'
 
 /** The member's landing screen: what to do today, then the shortcuts into each section. */
 export function MemberTodayPage() {
@@ -21,6 +24,9 @@ export function MemberTodayPage() {
   const { data: nutritionPlan } = useMyNutritionPlan()
   const { data: measurements } = useMyMeasurements()
   const { data: unread } = useMyUnreadMessages()
+  const { data: questionnaire } = useMyQuestionnaire()
+  const { data: stories } = useMyStories()
+  const waitingStory = stories?.find((story) => story.status === 'AWAITING_CONSENT')
 
   if (!member) {
     return null
@@ -40,6 +46,42 @@ export function MemberTodayPage() {
       ) : null}
 
       <div className="space-y-6">
+        <RenewalNotice />
+
+        {waitingStory ? (
+          <section className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-primary/30 bg-primary/5 p-5">
+            <div>
+              <h2 className="text-sm font-bold uppercase tracking-wider text-text-primary">Hikâyeniz Onayınızı Bekliyor</h2>
+              <p className="mt-1 text-xs leading-relaxed text-text-secondary">
+                Koçunuz başarı hikâyenizi sitede paylaşmak istiyor. Önce okuyun; onay vermek tamamen sizin kararınız.
+              </p>
+            </div>
+            <Link
+              to="/uye/hikayem"
+              className="inline-flex h-10 items-center justify-center rounded-xl bg-primary px-4 text-xs font-semibold uppercase tracking-wide text-canvas transition-colors hover:bg-primary-hover"
+            >
+              Hikâyeyi Gör
+            </Link>
+          </section>
+        ) : null}
+
+        {questionnaire && !questionnaire.answers ? (
+          <section className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-primary/30 bg-primary/5 p-5">
+            <div>
+              <h2 className="text-sm font-bold uppercase tracking-wider text-text-primary">Başlangıç Anketi</h2>
+              <p className="mt-1 text-xs leading-relaxed text-text-secondary">
+                Koçunuzun size uygun ve güvenli bir program yazabilmesi için kısa bir sağlık ve hedef anketi.
+              </p>
+            </div>
+            <Link
+              to="/uye/anket"
+              className="inline-flex h-10 items-center justify-center rounded-xl bg-primary px-4 text-xs font-semibold uppercase tracking-wide text-canvas transition-colors hover:bg-primary-hover"
+            >
+              Anketi Doldur
+            </Link>
+          </section>
+        ) : null}
+
         {/* Only once the list has loaded: an empty array while loading would claim the
             member has never checked in. */}
         {measurements ? <MeasurementReminder measurements={measurements} /> : null}
@@ -55,10 +97,12 @@ export function MemberTodayPage() {
 
         <AskCoachCard unread={unread?.unread ?? 0} />
 
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-7">
           <ShortcutCard to="/uye/antrenman" label="Antrenman" icon={DumbbellIcon} />
           <ShortcutCard to="/uye/beslenme" label="Beslenme" icon={AppleIcon} />
           <ShortcutCard to="/uye/olcumler" label="Ölçümler" icon={ChartIcon} />
+          <ShortcutCard to="/uye/haftalik" label="Haftalık" icon={ClipboardIcon} />
+          <ShortcutCard to="/uye/form-kontrol" label="Form Kontrolü" icon={PlayIcon} />
           <ShortcutCard to="/uye/gecmis" label="Geçmiş" icon={HistoryIcon} />
           <ShortcutCard to="/uye/fotograflar" label="Fotoğraflar" icon={CameraIcon} />
         </div>

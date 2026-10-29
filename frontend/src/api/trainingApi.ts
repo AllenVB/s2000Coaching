@@ -1,13 +1,16 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useEffect } from 'react'
 
 import { useAdminAuth } from '@/context/AdminAuthContext'
 import { useMemberAuth } from '@/context/MemberAuthContext'
 import { adminHeaders } from '@/lib/adminSession'
 import { apiFetch } from '@/lib/api'
+import { cachePlan, enqueueWorkoutLog, flushPendingLogs, isNetworkError, readCachedPlan } from '@/lib/offline'
 import { memberHeaders } from '@/lib/memberSession'
 import type {
   Exercise,
   SaveWorkoutLogInput,
+  TrainingStats,
   TrainingPlan,
   UpsertExerciseInput,
   UpsertPlanExerciseInput,
@@ -57,7 +60,14 @@ export function useUpdateExercise() {
         headers: adminHeaders(token!),
         body: JSON.stringify(input),
       }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: EXERCISES_KEY }),
+    // Plans embed the exercise, so a new video has to reach them too — the coach's plan
+    // editor and the member's own plan would otherwise keep showing the old one.
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: EXERCISES_KEY })
+      queryClient.invalidateQueries({ queryKey: TEMPLATES_KEY })
+      queryClient.invalidateQueries({ queryKey: ['admin-member-plans'] })
+      queryClient.invalidateQueries({ queryKey: ['member-training-plan'] })
+    },
   })
 }
 
@@ -118,8 +128,8 @@ export function useCreateTemplate() {
   const invalidate = useInvalidatePlans()
 
   return useMutation({
-    mutationFn: (input: UpsertPlanInput) =>
-      apiFetch<TrainingPlan>('/api/admin/training-plan-templates', {
+    mutationFn: ({ input, blank }: { input: UpsertPlanInput; blank?: boolean }) =>
+      apiFetch<TrainingPlan>(`/api/admin/training-plan-templates${blank ? '?blank=true' : ''}`, {
         method: 'POST',
         headers: adminHeaders(token!),
         body: JSON.stringify(input),
@@ -133,11 +143,23 @@ export function useCreateMemberPlan(memberId: string) {
   const invalidate = useInvalidatePlans()
 
   return useMutation({
-    mutationFn: ({ input, templateId }: { input: UpsertPlanInput; templateId?: string }) =>
-      apiFetch<TrainingPlan>(
-        `/api/admin/members/${memberId}/training-plans${templateId ? `?templateId=${templateId}` : ''}`,
-        { method: 'POST', headers: adminHeaders(token!), body: JSON.stringify(input) },
-      ),
+    // Without a template the server starts the plan with empty Gün 1–5; `blank` opts out.
+    mutationFn: ({
+      input,
+      templateId,
+      blank,
+    }: {
+      input: UpsertPlanInput
+      templateId?: string
+      blank?: boolean
+    }) => {
+      const query = templateId ? `?templateId=${templateId}` : blank ? '?blank=true' : ''
+      return apiFetch<TrainingPlan>(`/api/admin/members/${memberId}/training-plans${query}`, {
+        method: 'POST',
+        headers: adminHeaders(token!),
+        body: JSON.stringify(input),
+      })
+    },
     onSuccess: invalidate,
   })
 }
@@ -229,6 +251,22 @@ export function useAddPlanExercise() {
   })
 }
 
+/** Replaces the whole prescription, so a cell edit has to send the row's other fields back. */
+export function useUpdatePlanExercise() {
+  const { token } = useAdminAuth()
+  const invalidate = useInvalidatePlans()
+
+  return useMutation({
+    mutationFn: ({ planExerciseId, input }: { planExerciseId: string; input: UpsertPlanExerciseInput }) =>
+      apiFetch<TrainingPlan>(`/api/admin/training-plan-exercises/${planExerciseId}`, {
+        method: 'PUT',
+        headers: adminHeaders(token!),
+        body: JSON.stringify(input),
+      }),
+    onSuccess: invalidate,
+  })
+}
+
 export function useDeletePlanExercise() {
   const { token } = useAdminAuth()
   const invalidate = useInvalidatePlans()
@@ -265,10 +303,25 @@ export function useMyTrainingPlan() {
     queryKey: ['member-training-plan'],
     // 204 means "no plan assigned yet", which is not an error — but react-query rejects
     // `undefined` as data, so it is normalised to null.
-    queryFn: () =>
-      apiFetch<TrainingPlan | null>('/api/member/training-plan', {
-        headers: memberHeaders(session!.token),
-      }).then((plan) => plan ?? null),
+    // react-query would pause this while the browser reports offline, never reaching the
+    // fallback below; 'always' lets the request run and fail, which is how offline is detected.
+    networkMode: 'always',
+    queryFn: async () => {
+      try {
+        const plan = (await apiFetch<TrainingPlan | null>('/api/member/training-plan', {
+          headers: memberHeaders(session!.token),
+        })) ?? null
+        cachePlan(session!.member.id, plan)
+        return plan
+      } catch (error) {
+        // No connection: the last plan this phone loaded is better than a blank screen.
+        const cached = isNetworkError(error) ? readCachedPlan(session!.member.id) : null
+        if (cached) {
+          return cached
+        }
+        throw error
+      }
+    },
     enabled: Boolean(session),
   })
 }
@@ -289,16 +342,93 @@ export function useSaveWorkoutLog() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (input: SaveWorkoutLogInput) =>
-      apiFetch<WorkoutLog>('/api/member/workout-logs', {
-        method: 'POST',
-        headers: memberHeaders(session!.token),
-        body: JSON.stringify(input),
-      }),
+    // Must run while offline: the failure is what sends the workout to the on-phone queue.
+    networkMode: 'always',
+    mutationFn: async (input: SaveWorkoutLogInput): Promise<WorkoutLog | { queued: true }> => {
+      try {
+        return await apiFetch<WorkoutLog>('/api/member/workout-logs', {
+          method: 'POST',
+          headers: memberHeaders(session!.token),
+          body: JSON.stringify(input),
+        })
+      } catch (error) {
+        if (isNetworkError(error)) {
+          enqueueWorkoutLog(session!.member.id, input)
+          return { queued: true }
+        }
+        throw error
+      }
+    },
     onSuccess: () => {
       // The plan carries "last performed", so it has to be refetched alongside the logs.
       queryClient.invalidateQueries({ queryKey: ['member-training-plan'] })
       queryClient.invalidateQueries({ queryKey: ['member-workout-logs'] })
+      queryClient.invalidateQueries({ queryKey: ['member-training-stats'] })
     },
   })
+}
+
+/** Records, weekly volume and next-session suggestions for the signed-in member. */
+export function useMyTrainingStats() {
+  const { session } = useMemberAuth()
+
+  return useQuery({
+    queryKey: ['member-training-stats'],
+    queryFn: () =>
+      apiFetch<TrainingStats>('/api/member/training-stats', { headers: memberHeaders(session!.token) }),
+    enabled: Boolean(session),
+  })
+}
+
+export function useMemberTrainingStats(memberId: string) {
+  const { token } = useAdminAuth()
+
+  return useQuery({
+    queryKey: ['admin-member-training-stats', memberId],
+    queryFn: () =>
+      apiFetch<TrainingStats>(`/api/admin/members/${memberId}/training-stats`, { headers: adminHeaders(token!) }),
+    enabled: Boolean(token),
+  })
+}
+
+/** Sends workouts saved while offline as soon as there is a connection again. */
+export function useFlushPendingWorkouts() {
+  const { session } = useMemberAuth()
+  const queryClient = useQueryClient()
+
+  useEffect(() => {
+    if (!session) {
+      return
+    }
+    const memberId = session.member.id
+    const token = session.token
+    let running = false
+
+    const flush = async () => {
+      if (running) {
+        return
+      }
+      running = true
+      try {
+        const delivered = await flushPendingLogs(memberId, (input) =>
+          apiFetch<WorkoutLog>('/api/member/workout-logs', {
+            method: 'POST',
+            headers: memberHeaders(token),
+            body: JSON.stringify(input),
+          }),
+        )
+        if (delivered > 0) {
+          queryClient.invalidateQueries({ queryKey: ['member-training-plan'] })
+          queryClient.invalidateQueries({ queryKey: ['member-workout-logs'] })
+          queryClient.invalidateQueries({ queryKey: ['member-training-stats'] })
+        }
+      } finally {
+        running = false
+      }
+    }
+
+    void flush()
+    window.addEventListener('online', flush)
+    return () => window.removeEventListener('online', flush)
+  }, [session, queryClient])
 }

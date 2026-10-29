@@ -15,7 +15,9 @@ import com.s2000coaching.exception.BadRequestException;
 import com.s2000coaching.exception.NotFoundException;
 import com.s2000coaching.repository.CaseStudyIntakeRepository;
 import com.s2000coaching.repository.CaseStudyMeasurementRepository;
+import com.s2000coaching.repository.CaseStudyPhotoRepository;
 import com.s2000coaching.repository.CaseStudyRepository;
+import com.s2000coaching.storage.PhotoStorage;
 import com.s2000coaching.web.dto.PublicCaseStudyResponse;
 import com.s2000coaching.web.dto.UpsertCaseStudyRequest;
 import java.math.BigDecimal;
@@ -46,12 +48,19 @@ class CaseStudyServiceTest {
 	@Mock
 	private CaseStudyIntakeRepository intakeRepository;
 
+	@Mock
+	private CaseStudyPhotoRepository photoRepository;
+
+	@Mock
+	private PhotoStorage photoStorage;
+
 	private CaseStudyService service;
 	private CaseStudy study;
 
 	@BeforeEach
 	void setUp() {
-		service = new CaseStudyService(studyRepository, measurementRepository, intakeRepository);
+		service = new CaseStudyService(studyRepository, measurementRepository, intakeRepository,
+				photoRepository, photoStorage);
 		study = new CaseStudy(UUID.randomUUID(), "kendi-verim", "Kendi Verim", Instant.now());
 	}
 
@@ -192,7 +201,7 @@ class CaseStudyServiceTest {
 		void shouldNotExposeTheBirthYearPublicly() {
 			assertThat(PublicCaseStudyResponse.class.getRecordComponents())
 					.extracting(java.lang.reflect.RecordComponent::getName)
-					.contains("heightCm", "sex", "analysis")
+					.contains("heightCm", "sex", "analysis", "photoPeriods")
 					.doesNotContain("birthYear", "id");
 		}
 
@@ -213,6 +222,89 @@ class CaseStudyServiceTest {
 			assertThat(summaries.get(0).lastDate()).isEqualTo(LocalDate.of(2025, 12, 29));
 			assertThat(summaries.get(0).measurementDays()).isEqualTo(2);
 			assertThat(summaries.get(0).intakeDays()).isEqualTo(120);
+		}
+	}
+
+	@Nested
+	class Photos {
+
+		private com.s2000coaching.domain.CaseStudyPhoto photo(String key) {
+			return new com.s2000coaching.domain.CaseStudyPhoto(UUID.randomUUID(), study.getId(),
+					LocalDate.of(2025, 1, 1), com.s2000coaching.domain.PhotoPose.ON, key, "image/jpeg",
+					10, Instant.now());
+		}
+
+		private void publishedWithOneMeasurement() {
+			study.setPublished(true);
+			when(studyRepository.findBySlugAndPublishedIsTrue("kendi-verim")).thenReturn(Optional.of(study));
+			when(measurementRepository.findAllByCaseStudyIdOrderByMeasuredOnAsc(study.getId()))
+					.thenReturn(List.of(measurement(LocalDate.of(2025, 1, 6), "80.00")));
+			when(intakeRepository.findAllByCaseStudyIdOrderByConsumedOnAsc(study.getId()))
+					.thenReturn(List.of());
+		}
+
+		/** Data published, photos not: the public response must carry no photo section at all. */
+		@Test
+		void shouldOmitPhotosUntilTheyAreSwitchedOnSeparately() {
+			publishedWithOneMeasurement();
+
+			assertThat(service.readPublished("kendi-verim").photoPeriods()).isNull();
+			verify(photoRepository, never()).findAllByCaseStudyIdOrderByTakenOnAsc(any());
+		}
+
+		@Test
+		void shouldIncludePhotoPeriodsOnceSwitchedOn() {
+			publishedWithOneMeasurement();
+			study.setPhotosPublished(true);
+			when(photoRepository.findAllByCaseStudyIdOrderByTakenOnAsc(study.getId()))
+					.thenReturn(List.of(photo("a")));
+
+			assertThat(service.readPublished("kendi-verim").photoPeriods()).isNotNull();
+		}
+
+		@Test
+		void shouldRefuseToSwitchOnPhotosWhenThereAreNone() {
+			studyExists();
+			when(photoRepository.countByCaseStudyId(study.getId())).thenReturn(0L);
+
+			assertThatThrownBy(() -> service.setPhotosPublished(study.getId(), true))
+					.isInstanceOf(BadRequestException.class);
+			assertThat(study.isPhotosPublished()).isFalse();
+		}
+
+		@Test
+		void shouldSwitchPhotosOffWithoutAnyPhotoCheck() {
+			studyExists();
+			study.setPhotosPublished(true);
+
+			service.setPhotosPublished(study.getId(), false);
+
+			assertThat(study.isPhotosPublished()).isFalse();
+		}
+
+		@Test
+		void shouldDeletePhotoFilesWhenTheStudyIsDeleted() {
+			studyExists();
+			when(photoRepository.findAllByCaseStudyIdOrderByTakenOnAsc(study.getId()))
+					.thenReturn(List.of(photo("k1"), photo("k2")));
+
+			service.delete(study.getId());
+
+			verify(photoStorage).delete("k1");
+			verify(photoStorage).delete("k2");
+			verify(photoRepository).deleteAllByCaseStudyId(study.getId());
+		}
+
+		@Test
+		void shouldStillDeleteTheStudyWhenAFileCannotBeRemoved() {
+			studyExists();
+			when(photoRepository.findAllByCaseStudyIdOrderByTakenOnAsc(study.getId()))
+					.thenReturn(List.of(photo("k1")));
+			org.mockito.Mockito.doThrow(new RuntimeException("disk")).when(photoStorage).delete("k1");
+
+			service.delete(study.getId());
+
+			verify(studyRepository).delete(study);
 		}
 	}
 

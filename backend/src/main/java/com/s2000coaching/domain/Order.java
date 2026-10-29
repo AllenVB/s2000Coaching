@@ -50,6 +50,18 @@ public class Order {
 	@Column(name = "created_at", nullable = false)
 	private Instant createdAt;
 
+	@Enumerated(EnumType.STRING)
+	@Column(name = "payment_method", nullable = false, length = 20)
+	private PaymentMethod paymentMethod = PaymentMethod.MOCK;
+
+	/** When the money was confirmed received; null until then. */
+	@Column(name = "paid_at")
+	private Instant paidAt;
+
+	/** The provider's token or the bank-transfer reference, whichever applies. */
+	@Column(name = "payment_reference", length = 200)
+	private String paymentReference;
+
 	/**
 	 * The member this order belongs to, once one exists for the buyer's e-mail. Null for an
 	 * order whose buyer has not been turned into a member yet, which is what the management
@@ -132,5 +144,31 @@ public class Order {
 
 	public Instant getCreatedAt() {
 		return createdAt;
+	}
+
+	public PaymentMethod getPaymentMethod() {
+		return paymentMethod;
+	}
+
+	public void setPaymentMethod(PaymentMethod paymentMethod) {
+		this.paymentMethod = paymentMethod;
+	}
+
+	public Instant getPaidAt() {
+		return paidAt;
+	}
+
+	public String getPaymentReference() {
+		return paymentReference;
+	}
+
+	public void setPaymentReference(String paymentReference) {
+		this.paymentReference = paymentReference;
+	}
+
+	/** Records that the money arrived. */
+	public void markPaid(Instant at) {
+		this.status = OrderStatus.PAID;
+		this.paidAt = at;
 	}
 }

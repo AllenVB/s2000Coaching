@@ -32,6 +32,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -94,7 +95,7 @@ class TrainingPlanServiceTest {
 			when(planRepository.findAllByMemberIdOrderByCreatedAtDesc(member.getId())).thenReturn(List.of());
 
 			var response = trainingPlanService.createForMember(member.getId(),
-					new UpsertTrainingPlanRequest("Ekim Bloğu", null), template.getId());
+					new UpsertTrainingPlanRequest("Ekim Bloğu", null), template.getId(), false);
 
 			assertThat(response.active()).isTrue();
 			assertThat(response.template()).isFalse();
@@ -119,9 +120,155 @@ class TrainingPlanServiceTest {
 			when(planRepository.findById(otherMembersPlan.getId())).thenReturn(Optional.of(otherMembersPlan));
 
 			assertThatThrownBy(() -> trainingPlanService.createForMember(member.getId(),
-					new UpsertTrainingPlanRequest("Kopya", null), otherMembersPlan.getId()))
+					new UpsertTrainingPlanRequest("Kopya", null), otherMembersPlan.getId(), false))
 					.isInstanceOf(BadRequestException.class)
 					.hasMessageContaining("Yalnızca şablonlar");
+		}
+	}
+
+	@Nested
+	class StandardDays {
+
+		private TrainingPlan create(boolean blank) {
+			when(memberService.requireMember(member.getId())).thenReturn(member);
+			when(planRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+			when(planRepository.findAllByMemberIdOrderByCreatedAtDesc(member.getId())).thenReturn(List.of());
+			trainingPlanService.createForMember(member.getId(), new UpsertTrainingPlanRequest("Ekim", null),
+					null, blank);
+			ArgumentCaptor<TrainingPlan> saved = ArgumentCaptor.forClass(TrainingPlan.class);
+			verify(planRepository).save(saved.capture());
+			return saved.getValue();
+		}
+
+		@Test
+		void shouldStartWithFiveEmptyDaysInOrder() {
+			TrainingPlan plan = create(false);
+
+			assertThat(plan.getDays()).extracting(TrainingPlanDay::getName)
+					.containsExactly("Gün 1", "Gün 2", "Gün 3", "Gün 4", "Gün 5");
+			assertThat(plan.getDays()).extracting(TrainingPlanDay::getDayOrder).containsExactly(1, 2, 3, 4, 5);
+			assertThat(plan.getDays()).allSatisfy(day -> assertThat(day.getExercises()).isEmpty());
+		}
+
+		@Test
+		void shouldStartEmptyWhenBlankIsAsked() {
+			assertThat(create(true).getDays()).isEmpty();
+		}
+
+		@Test
+		void shouldGiveATemplateTheSameDays() {
+			when(planRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+			var response = trainingPlanService.createTemplate(new UpsertTrainingPlanRequest("PPL", null), false);
+
+			assertThat(response.days()).extracting(day -> day.name())
+					.containsExactly("Gün 1", "Gün 2", "Gün 3", "Gün 4", "Gün 5");
+		}
+
+		@Test
+		void shouldCopyATemplateInsteadOfAddingDaysOnTopOfIt() {
+			TrainingPlan template = templateWithOneExercise();
+			when(memberService.requireMember(member.getId())).thenReturn(member);
+			when(planRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+			when(planRepository.findById(template.getId())).thenReturn(Optional.of(template));
+			when(planRepository.findAllByMemberIdOrderByCreatedAtDesc(member.getId())).thenReturn(List.of());
+
+			var response = trainingPlanService.createForMember(member.getId(),
+					new UpsertTrainingPlanRequest("Ekim", null), template.getId(), false);
+
+			assertThat(response.days()).hasSize(1);
+		}
+	}
+
+	@Test
+	void shouldCarryPerSetTargetsIntoACopiedPlan() {
+		TrainingPlan template = templateWithOneExercise();
+		template.getDays().get(0).getExercises().get(0).setSetReps("8|8|6");
+		when(memberService.requireMember(member.getId())).thenReturn(member);
+		when(planRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+		when(planRepository.findById(template.getId())).thenReturn(Optional.of(template));
+		when(planRepository.findAllByMemberIdOrderByCreatedAtDesc(member.getId())).thenReturn(List.of());
+
+		var response = trainingPlanService.createForMember(member.getId(),
+				new UpsertTrainingPlanRequest("Kopya", null), template.getId(), false);
+
+		assertThat(response.days().get(0).exercises().get(0).setReps()).containsExactly("8", "8", "6");
+	}
+
+	@Nested
+	class PerSetReps {
+
+		private TrainingPlanDay day;
+
+		@BeforeEach
+		void day() {
+			TrainingPlan plan = new TrainingPlan(UUID.randomUUID(), member, "Plan", null, true, Instant.now());
+			day = new TrainingPlanDay(UUID.randomUUID(), plan, 1, "Gün 1", null);
+			plan.getDays().add(day);
+			when(dayRepository.findById(day.getId())).thenReturn(Optional.of(day));
+			when(exerciseService.requireExercise(squat.getId())).thenReturn(squat);
+		}
+
+		private void add(String... setReps) {
+			trainingPlanService.addExercise(day.getId(),
+					new UpsertPlanExerciseRequest(squat.getId(), null, null, List.of(setReps), null, null, null));
+		}
+
+		@Test
+		void shouldDeriveSetCountAndRepsFromTheSetsThatAreFilled() {
+			add("30", " 25 ", "20", "");
+
+			TrainingPlanExercise saved = day.getExercises().get(0);
+			assertThat(saved.getSetCount()).isEqualTo(3);
+			assertThat(saved.getReps()).isEqualTo("30-25-20");
+			assertThat(saved.getSetReps()).isEqualTo("30|25|20");
+		}
+
+		@Test
+		void shouldAcceptASingleSet() {
+			add("12", "", "", "");
+
+			assertThat(day.getExercises().get(0).getSetCount()).isEqualTo(1);
+			assertThat(day.getExercises().get(0).getReps()).isEqualTo("12");
+		}
+
+		@Test
+		void shouldRefuseAGapBetweenSets() {
+			assertThatThrownBy(() -> add("30", "", "20", ""))
+					.isInstanceOf(BadRequestException.class)
+					.hasMessageContaining("Set 2 boş");
+			assertThat(day.getExercises()).isEmpty();
+		}
+
+		@Test
+		void shouldRefuseAnExerciseWithNoRepsAtAll() {
+			assertThatThrownBy(() -> add("", "", "", ""))
+					.isInstanceOf(BadRequestException.class)
+					.hasMessageContaining("Set 1");
+		}
+
+		@Test
+		void shouldKeepTheOlderCountAndFreeTextShapeWorking() {
+			trainingPlanService.addExercise(day.getId(),
+					new UpsertPlanExerciseRequest(squat.getId(), 3, " 8-10 ", null, null, null));
+
+			TrainingPlanExercise saved = day.getExercises().get(0);
+			assertThat(saved.getSetCount()).isEqualTo(3);
+			assertThat(saved.getReps()).isEqualTo("8-10");
+			assertThat(saved.getSetReps()).isNull();
+		}
+
+		@Test
+		void shouldReplaceThePerSetTargetsWhenEdited() {
+			add("30", "25", "20");
+			TrainingPlanExercise saved = day.getExercises().get(0);
+			when(planExerciseRepository.findById(saved.getId())).thenReturn(Optional.of(saved));
+
+			trainingPlanService.updateExercise(saved.getId(),
+					new UpsertPlanExerciseRequest(squat.getId(), null, null, List.of("12", "10"), null, null, null));
+
+			assertThat(saved.getSetCount()).isEqualTo(2);
+			assertThat(saved.getSetReps()).isEqualTo("12|10");
 		}
 	}
 

@@ -6,6 +6,10 @@ import com.s2000coaching.exception.BadRequestException;
 import com.s2000coaching.exception.NotFoundException;
 import com.s2000coaching.repository.CaseStudyIntakeRepository;
 import com.s2000coaching.repository.CaseStudyMeasurementRepository;
+import com.s2000coaching.repository.CaseStudyPhotoRepository;
+import com.s2000coaching.domain.CaseStudyPhoto;
+import com.s2000coaching.storage.PhotoStorage;
+import com.s2000coaching.service.PhotoPairing.PeriodPhotos;
 import com.s2000coaching.repository.CaseStudyRepository;
 import com.s2000coaching.service.analysis.BodyAnalysis;
 import com.s2000coaching.service.analysis.BodyAnalyzer;
@@ -20,6 +24,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,15 +33,22 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class CaseStudyService {
 
+	private static final Logger log = LoggerFactory.getLogger(CaseStudyService.class);
+
 	private static final int MAX_SLUG_LENGTH = 120;
 
 	private final CaseStudyRepository studyRepository;
 	private final CaseStudyMeasurementRepository measurementRepository;
 	private final CaseStudyIntakeRepository intakeRepository;
+	private final CaseStudyPhotoRepository photoRepository;
+	private final PhotoStorage photoStorage;
 
 	public CaseStudyService(CaseStudyRepository studyRepository,
 			CaseStudyMeasurementRepository measurementRepository,
-			CaseStudyIntakeRepository intakeRepository) {
+			CaseStudyIntakeRepository intakeRepository,
+			CaseStudyPhotoRepository photoRepository, PhotoStorage photoStorage) {
+		this.photoRepository = photoRepository;
+		this.photoStorage = photoStorage;
 		this.studyRepository = studyRepository;
 		this.measurementRepository = measurementRepository;
 		this.intakeRepository = intakeRepository;
@@ -87,10 +100,54 @@ public class CaseStudyService {
 		return describe(study);
 	}
 
+	/**
+	 * Switches the public photos on or off, separately from {@link #setPublished}. Turning them
+	 * on needs at least one photo, and takes effect publicly only while the study is also
+	 * published — the page says so, so the coach is never surprised by which switch did what.
+	 */
+	@Transactional
+	public CaseStudyResponse setPhotosPublished(UUID id, boolean photosPublished) {
+		CaseStudy study = require(id);
+		if (photosPublished && photoRepository.countByCaseStudyId(id) == 0) {
+			throw new BadRequestException("Yayınlamak için en az bir fotoğraf yüklenmiş olmalı.");
+		}
+		study.setPhotosPublished(photosPublished);
+		study.touch(Instant.now());
+		return describe(study);
+	}
+
+	/** Internal: switches off without the checks, for when the last photo is deleted. */
+	@Transactional
+	public void setPhotosPublishedUnchecked(UUID id, boolean photosPublished) {
+		require(id).setPhotosPublished(photosPublished);
+	}
+
+	/** What the public page would pair up, before the coach decides to show photos. */
+	@Transactional(readOnly = true)
+	public List<PeriodPhotos> photoPeriodsForCoach(UUID id) {
+		CaseStudy study = require(id);
+		return pairPhotos(study, analyze(study));
+	}
+
+	@Transactional(readOnly = true)
+	public CaseStudy requirePublished(String slug) {
+		return studyRepository.findBySlugAndPublishedIsTrue(slug)
+				.orElseThrow(() -> new NotFoundException("Yayınlanmış vaka çalışması bulunamadı."));
+	}
+
 	@Transactional
 	public void delete(UUID id) {
 		CaseStudy study = require(id);
-		// Children first: the rows reference the study, so removing it alone would fail.
+		// Children first: the rows reference the study, so removing it alone would fail. The
+		// photo files go too: a body photo must not outlive the study it was published with.
+		for (CaseStudyPhoto photo : photoRepository.findAllByCaseStudyIdOrderByTakenOnAsc(id)) {
+			try {
+				photoStorage.delete(photo.getStorageKey());
+			} catch (RuntimeException e) {
+				log.warn("Vaka fotoğrafı dosyası silinemedi: {}", photo.getStorageKey(), e);
+			}
+		}
+		photoRepository.deleteAllByCaseStudyId(id);
 		intakeRepository.deleteAllByCaseStudyId(id);
 		measurementRepository.deleteAllByCaseStudyId(id);
 		studyRepository.delete(study);
@@ -153,9 +210,10 @@ public class CaseStudyService {
 	 */
 	@Transactional(readOnly = true)
 	public PublicCaseStudyResponse readPublished(String slug) {
-		CaseStudy study = studyRepository.findBySlugAndPublishedIsTrue(slug)
-				.orElseThrow(() -> new NotFoundException("Yayınlanmış vaka çalışması bulunamadı."));
-		return PublicCaseStudyResponse.from(study, analyze(study));
+		CaseStudy study = requirePublished(slug);
+		BodyAnalysis analysis = analyze(study);
+		return PublicCaseStudyResponse.from(study, analysis,
+				study.isPhotosPublished() ? pairPhotos(study, analysis) : null);
 	}
 
 	// --- internals ----------------------------------------------------------------------
@@ -172,6 +230,11 @@ public class CaseStudyService {
 				LocalDate.now().getYear());
 	}
 
+	private List<PeriodPhotos> pairPhotos(CaseStudy study, BodyAnalysis analysis) {
+		return PhotoPairing.pair(analysis.longTermPeriods(),
+				photoRepository.findAllByCaseStudyIdOrderByTakenOnAsc(study.getId()));
+	}
+
 	private void apply(CaseStudy study, UpsertCaseStudyRequest request) {
 		study.setSummary(request.summary());
 		study.setHeightCm(request.heightCm());
@@ -181,7 +244,8 @@ public class CaseStudyService {
 
 	private CaseStudyResponse describe(CaseStudy study) {
 		return CaseStudyResponse.from(study, measurementRepository.countByCaseStudyId(study.getId()),
-				intakeRepository.countByCaseStudyId(study.getId()));
+				intakeRepository.countByCaseStudyId(study.getId()),
+				photoRepository.countByCaseStudyId(study.getId()));
 	}
 
 	private String uniqueSlug(String title) {

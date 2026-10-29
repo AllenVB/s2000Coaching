@@ -2,6 +2,8 @@ import { useState } from 'react'
 
 import { usePublicCaseStudy, usePublishedCaseStudies } from '@/api/caseStudyApi'
 import { AnalysisReport } from '@/components/caseStudy/AnalysisReport'
+import { PeriodPhotos } from '@/components/caseStudy/PeriodPhotos'
+import { PublicCaseStudyPhotoSourceProvider } from '@/context/PhotoSourceContext'
 
 /**
  * The published analysis of my own body data, at the end of Tecrübelerim.
@@ -67,7 +69,24 @@ export function CaseStudySection() {
       ) : isError || !study ? (
         <p className="text-sm italic text-text-muted">Analiz şu an yüklenemedi.</p>
       ) : (
-        <AnalysisReport analysis={study.analysis} />
+        <>
+          <AnalysisReport analysis={study.analysis} />
+          {study.photoPeriods ? (
+            <section className="mt-12">
+              <h4 className="mb-2 font-display text-lg font-bold uppercase tracking-tight text-text-primary">
+                Fotoğraflar
+              </h4>
+              <p className="mb-6 max-w-3xl text-xs leading-relaxed text-text-muted">
+                Her dönemin başına ve sonuna en yakın tarihli fotoğraf, aynı duruşta yan yana.
+                Fotoğraflar dönem sınırlarında değil, yazan tarihte çekildi; aradaki fark her
+                birinin altında belirtilir.
+              </p>
+              <PublicCaseStudyPhotoSourceProvider slug={study.slug}>
+                <PeriodPhotos periods={study.photoPeriods} />
+              </PublicCaseStudyPhotoSourceProvider>
+            </section>
+          ) : null}
+        </>
       )}
     </div>
   )
