@@ -161,6 +161,20 @@ zorunlu değil: besinleri makro yazmadan da reçete edebilirsiniz.
 
 Üye `/uye/beslenme` sayfasında günlük hedeflerini ve öğünlerini görür.
 
+## Plan çıktısı (yazdır / PDF)
+
+Koçun elle hazırladığı plan kâğıdının yerini tutar. Koç: üye sayfasındaki **Plan Çıktısı** düğmesi
+(`/yonetim/uyeler/:id/cikti`); üye: Antrenman ve Beslenme sayfalarındaki **Yazdır / PDF** (`/uye/cikti`).
+Sayfa üyenin **aktif** planlarından yatay A4 bir belge çizer: üye bilgileri ve günlük hedefler, öğün ve
+supplement tabloları (miktarı yazılmamış kalem elle doldurulacak boş bırakılır), her gün için set 1–4
+tablosu ve her hareket için **boş "Antrenman 1–10" ağırlık kutuları**. **Yazdır / PDF** düğmesi tarayıcının
+yazdırma penceresini açar; yazıcı olarak "PDF olarak kaydet"i seçince dosya olur. Menü, başlık ve düğmeler
+çıktıya girmez.
+
+Belge yalnızca sistemde olanı basar: ölçüm yoksa üye kartında yalnızca boy ve başlangıç kilosu vardır; her
+ölçünün **en son** değeri alınır; VKİ boy ve güncel kilodan hesaplanan düz formüldür (yağ oranı, FFMI ya
+da bakım kalorisi gibi veri girilmeyen değerler uydurulmaz). Hareketsiz günler basılmaz.
+
 ## Mesajlaşma
 
 Üye başına tek bir yazışma dizisi, iki taraflı: üye `/uye/mesajlar`, koç üye detayındaki **Mesajlar**

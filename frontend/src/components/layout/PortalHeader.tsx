@@ -13,7 +13,7 @@ export function PortalHeader({
   action?: ReactNode
 }) {
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-border bg-canvas/90 backdrop-blur-md">
+    <header className="sticky top-0 z-40 w-full print:hidden border-b border-border bg-canvas/90 backdrop-blur-md">
       <div className="mx-auto flex min-h-[72px] max-w-[1280px] flex-wrap items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
         <div className="flex items-center gap-3">
           <Link
