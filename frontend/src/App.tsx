@@ -3,6 +3,7 @@ import { Route, Routes } from 'react-router-dom'
 import { AdminAreaLayout } from '@/components/layout/AdminAreaLayout'
 import { MemberAreaLayout } from '@/components/layout/MemberAreaLayout'
 import { AdminDashboardPage } from '@/pages/admin/AdminDashboardPage'
+import { AdminMessagesPage } from '@/pages/admin/AdminMessagesPage'
 import { AdminOrdersPage } from '@/pages/admin/AdminOrdersPage'
 import { AdminSettingsPage } from '@/pages/admin/AdminSettingsPage'
 import { StoriesPage } from '@/pages/admin/StoriesPage'
@@ -75,6 +76,7 @@ export default function App() {
           <Route path="mesajlar" element={<MemberMessagesTab />} />
           <Route path="notlar" element={<MemberNotesTab />} />
         </Route>
+        <Route path="mesajlar" element={<AdminMessagesPage />} />
         <Route path="hareketler" element={<ExerciseCatalogPage />} />
         <Route path="sablonlar" element={<PlanTemplatesPage />} />
         <Route path="vaka-calismalari" element={<CaseStudiesPage />} />

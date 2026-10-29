@@ -1,6 +1,8 @@
+import { useMemo } from 'react'
 import { Outlet } from 'react-router-dom'
 
 import { useMemberLogout } from '@/api/memberAuthApi'
+import { useMyUnreadMessages } from '@/api/messagesApi'
 import { PortalHeader } from '@/components/layout/PortalHeader'
 import { PortalSidebarNav, PortalTabBar, type PortalNavItem } from '@/components/layout/PortalNav'
 import { MemberLogin } from '@/components/member/MemberLogin'
@@ -48,6 +50,15 @@ export function MemberAreaLayout() {
 function MemberAreaShell() {
   const { session, signOut } = useMemberAuth()
   const logout = useMemberLogout()
+  const { data: unread } = useMyUnreadMessages()
+
+  const items = useMemo(
+    () =>
+      navItems.map((item) =>
+        item.to === '/uye/mesajlar' ? { ...item, badge: unread?.unread ?? 0 } : item,
+      ),
+    [unread],
+  )
   useFlushPendingWorkouts()
   const online = useOnlineStatus()
 
@@ -94,7 +105,7 @@ function MemberAreaShell() {
       <div className="mx-auto flex w-full max-w-[1280px] gap-8 px-4 pb-24 pt-8 sm:px-6 lg:px-8 lg:pb-14">
         <aside className="hidden w-56 shrink-0 lg:block">
           <div className="sticky top-24 rounded-2xl border border-border bg-surface p-3">
-            <PortalSidebarNav items={navItems} />
+            <PortalSidebarNav items={items} />
           </div>
         </aside>
         <main className="min-w-0 flex-1">
@@ -102,7 +113,7 @@ function MemberAreaShell() {
         </main>
       </div>
 
-      <PortalTabBar items={navItems} />
+      <PortalTabBar items={items} />
     </>
   )
 }

@@ -7,6 +7,8 @@ import { useMyQuestionnaire } from '@/api/questionnaireApi'
 import { useMyMeasurements } from '@/api/measurementsApi'
 import { useMyNutritionPlan } from '@/api/nutritionApi'
 import { useMyTrainingPlan } from '@/api/trainingApi'
+import { useMyUnreadMessages } from '@/api/messagesApi'
+import { AskCoachCard } from '@/components/member/AskCoachCard'
 import { RenewalNotice } from '@/components/member/MembershipCard'
 import { MeasurementReminder } from '@/components/member/MeasurementReminder'
 import { TodayMacrosCard } from '@/components/member/TodayMacrosCard'
@@ -21,6 +23,7 @@ export function MemberTodayPage() {
   const { data: plan } = useMyTrainingPlan()
   const { data: nutritionPlan } = useMyNutritionPlan()
   const { data: measurements } = useMyMeasurements()
+  const { data: unread } = useMyUnreadMessages()
   const { data: questionnaire } = useMyQuestionnaire()
   const { data: stories } = useMyStories()
   const waitingStory = stories?.find((story) => story.status === 'AWAITING_CONSENT')
@@ -91,6 +94,8 @@ export function MemberTodayPage() {
         )}
 
         {nutritionPlan ? <TodayMacrosCard plan={nutritionPlan} /> : null}
+
+        <AskCoachCard unread={unread?.unread ?? 0} />
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-7">
           <ShortcutCard to="/uye/antrenman" label="Antrenman" icon={DumbbellIcon} />
