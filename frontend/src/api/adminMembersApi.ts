@@ -5,7 +5,7 @@ import { adminHeaders } from '@/lib/adminSession'
 import { apiFetch } from '@/lib/api'
 import type { AdminDashboard, Attention, CoachNote, UpdateMemberInput } from '@/types/admin'
 import type { BodyAnalysis } from '@/types/caseStudy'
-import type { CreateMemberInput, Member } from '@/types/member'
+import type { CreateMemberInput, CreateMemberResponse, Member, ResendCodeResponse } from '@/types/member'
 
 const QUERY_KEY = ['admin-members']
 
@@ -33,12 +33,12 @@ export function useCreateMember() {
 
   return useMutation({
     mutationFn: (input: CreateMemberInput) =>
-      apiFetch<Member>('/api/admin/members', {
+      apiFetch<CreateMemberResponse>('/api/admin/members', {
         method: 'POST',
         headers: adminHeaders(token!),
         body: JSON.stringify(input),
       }),
-    onSuccess: (created) => {
+    onSuccess: ({ member: created }) => {
       queryClient.setQueryData<Member[]>(QUERY_KEY, (old) => [created, ...(old ?? [])])
       queryClient.setQueryData<Member>(memberKey(created.id), created)
       queryClient.invalidateQueries({ queryKey: ['admin-dashboard'] })
@@ -51,7 +51,7 @@ export function useResendVerificationCode() {
 
   return useMutation({
     mutationFn: ({ memberId }: { memberId: string }) =>
-      apiFetch<void>(`/api/admin/members/${memberId}/verification-code`, {
+      apiFetch<ResendCodeResponse>(`/api/admin/members/${memberId}/verification-code`, {
         method: 'POST',
         headers: adminHeaders(token!),
       }),

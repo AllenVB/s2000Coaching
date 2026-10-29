@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/Button'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { Field, inputClasses, textareaClasses } from '@/components/ui/FormField'
 import { createMemberSchema, type CreateMemberFormValues } from '@/schemas/memberSchema'
-import type { Member } from '@/types/member'
+import type { MailDelivery, Member } from '@/types/member'
 
 /**
  * Member creation. Submitting only opens the confirmation prompt — nothing is sent until the
@@ -17,7 +17,7 @@ export function CreateMemberForm({
   onCreated,
   prefill,
 }: {
-  onCreated: (member: Member) => void
+  onCreated: (member: Member, inviteDelivery: MailDelivery) => void
   /** Name, e-mail and phone carried over from an order, so they are not retyped. */
   prefill?: { email: string; fullName: string; phone: string }
 }) {
@@ -50,10 +50,10 @@ export function CreateMemberForm({
       return
     }
     createMember.mutate(confirming, {
-      onSuccess: (member) => {
+      onSuccess: ({ member, inviteDelivery }) => {
         setConfirming(null)
         reset()
-        onCreated(member)
+        onCreated(member, inviteDelivery)
       },
     })
   }
