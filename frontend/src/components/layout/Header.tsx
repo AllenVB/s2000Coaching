@@ -89,9 +89,15 @@ export function Header() {
               {link.label}
             </a>
           ))}
-          {/* The sign-in is a different kind of destination from the marketing anchors, so it
-              sits behind a divider instead of among them. */}
+          {/* Pages of their own (the calculators, the sign-in) are different from the anchors on
+              this page, so they sit behind a divider instead of among them. */}
           <span className="h-5 w-px bg-border-strong" aria-hidden />
+          <Link
+            to="/hesaplayicilar"
+            className="whitespace-nowrap text-sm font-medium text-text-secondary transition-colors hover:text-text-primary"
+          >
+            Hesaplayıcılar
+          </Link>
           <Link
             to={accountLink.to}
             className="whitespace-nowrap text-sm font-semibold text-text-primary transition-colors hover:text-primary"
@@ -148,6 +154,13 @@ export function Header() {
                 {link.label}
               </a>
             ))}
+            <Link
+              to="/hesaplayicilar"
+              onClick={() => setMobileMenuOpen(false)}
+              className="py-1 text-sm font-medium text-text-secondary hover:text-text-primary"
+            >
+              Hesaplayıcılar
+            </Link>
             <Link
               to={accountLink.to}
               onClick={() => setMobileMenuOpen(false)}

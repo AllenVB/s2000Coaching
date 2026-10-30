@@ -16,7 +16,9 @@ klasörlerdeki `DESIGN.md`).
 | Yol | Sayfa | Erişim |
 | --- | --- | --- |
 | `/` | Tanıtım sitesi, paketler ve checkout | Herkese açık |
-| `/uye` | Üye alanı | E-posta koduyla giriş yapan üyeler |
+| `/hesaplayicilar` | Kalori (Mifflin–St Jeor), makro ve VKİ hesaplayıcıları | Herkese açık; girilenler tarayıcıdan çıkmaz, kaydedilmez |
+| `/giris` | Tek giriş sayfası (üyeler ve koç) | Herkese açık |
+| `/uye` | Üye alanı | Giriş yapmış üyeler |
 | `/yonetim` | Yönetim paneli | E-posta + şifre ile giriş yapan koç hesapları |
 
 **Üye alanı** (masaüstünde sol menü, telefonda alt sekme çubuğu): `/uye` bugün · `/uye/antrenman` (ve
@@ -516,6 +518,27 @@ tabloyu düzenler (ay değiştirilemez), çöp kutusu siler. Kurallar:
   karışmaz; ikisi ayrı tablolarda tutulur.
 
 Koçun **Yeni Üye** formunda telefon artık isteğe bağlıdır; cinsiyet ve yaş girilebilir.
+
+## Site ayarları (sosyal bağlantılar, rakamlar, yasal sayfalar)
+
+Koç, **Yönetim → Ayarlar** altında herkese açık sitenin üç şeyini kod değiştirmeden düzenler
+(`site_setting` tablosu; satırı olmayan ayar "ayarlanmadı" demektir, sistem boşluğu kendi uydurduğu bir
+değerle doldurmaz):
+
+- **Sosyal bağlantılar** (Instagram, YouTube, WhatsApp): sitenin altında yalnızca doldurulanlar görünür.
+  Girdi doğrulanır ve normalleştirilir: Instagram kullanıcı adı ya da `instagram.com` adresi, YouTube
+  `youtube.com`/`youtu.be`, WhatsApp telefon numarası (`0555…` → `https://wa.me/90555…`) ya da `wa.me`.
+  Yalnızca `https` ve ilgili ağın kendi alan adı kabul edilir; üç bağlantı birlikte kontrol edilir, biri
+  hatalıysa hiçbiri yazılmaz. Bağlantılar yeni sekmede `noopener noreferrer` ile açılır.
+- **Ana sayfa rakamları** (kahramanın altındaki dört kart): henüz düzenlenmediyse sitenin hazır (örnek)
+  değerleri görünür; koç kendi değerlerini yazar, kart siler ya da **Hazır değerlere dön** der. Kartların
+  hepsi silinip kaydedilirse bölüm görünmez. Yazılan rakamların doğruluğu koçun sorumluluğundadır.
+- **Yasal sayfalar** (`/yasal/kullanim-kosullari`, `/kvkk`, `/mesafeli-satis`, `/iade`): metni koç hukuk
+  danışmanının onayladığı haliyle yapıştırır; sistem metin yazmaz. Yazılmamış bir sayfa "henüz
+  yayınlanmadı" der, metin silinip kaydedilirse yayından kalkar. Metin düz paragraflar olarak gösterilir
+  (işaretleme çalıştırılmaz). Alt bilgideki bağlantılar ve ödeme penceresindeki onay cümlesi bu sayfalara gider.
+
+Herkese açık uçlar `GET /api/site` ve `GET /api/site/legal/{slug}`; üye verisi okumazlar.
 
 ## Tecrübelerim
 

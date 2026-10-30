@@ -1,10 +1,26 @@
+import { usePublicSite } from '@/api/siteApi'
 import { trustStats } from '@/data/content'
 
+/**
+ * The four figures under the hero. The coach can write their own under Ayarlar (or hide them); until
+ * then the built-in ones show. While the setting is still loading the cards keep their place but
+ * stay invisible, so a coach who changed them is not shown the old ones for a moment.
+ */
 export function TrustStats() {
+  const { data: site, isPending } = usePublicSite()
+  const stats = site?.stats ?? trustStats
+
+  if (!isPending && stats.length === 0) {
+    return null
+  }
+
   return (
     <section className="border-b border-border py-16 sm:py-20">
-      <div className="mx-auto grid max-w-[1280px] grid-cols-1 gap-6 px-4 sm:grid-cols-2 sm:px-6 lg:grid-cols-4 lg:px-8">
-        {trustStats.map((stat) => (
+      <div
+        className={`mx-auto grid max-w-[1280px] grid-cols-1 gap-6 px-4 sm:grid-cols-2 sm:px-6 lg:grid-cols-4 lg:px-8 ${isPending ? 'invisible' : ''}`}
+        aria-busy={isPending}
+      >
+        {stats.map((stat) => (
           <div
             key={stat.label}
             className="flex flex-col justify-between rounded-3xl border border-border bg-surface p-6 transition-colors hover:border-primary/40"

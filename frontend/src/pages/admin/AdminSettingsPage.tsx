@@ -1,3 +1,4 @@
+import { SiteSettingsEditor } from '@/components/admin/SiteSettingsEditor'
 import { PasswordChecklist } from '@/components/ui/PasswordChecklist'
 import { PasswordInput } from '@/components/ui/PasswordInput'
 import { isStrongPassword } from '@/lib/password'
@@ -36,6 +37,8 @@ export function AdminSettingsPage() {
         <PasswordSection />
 
         <MailSection />
+
+        <SiteSettingsEditor />
       </div>
     </>
   )
