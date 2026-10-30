@@ -247,7 +247,14 @@ export function CheckoutModal() {
                       className="mt-0.5 rounded border-border-strong bg-surface text-primary focus:ring-0"
                     />
                     <label htmlFor="kvkk-consent" className="text-[11px] leading-tight text-text-muted">
-                      Mesafeli Satış Sözleşmesi ve KVKK Onam Metnini okudum, kabul ediyorum.
+                      <a href="/yasal/mesafeli-satis" target="_blank" rel="noopener noreferrer" className="underline hover:text-text-primary">
+                        Mesafeli Satış Sözleşmesi
+                      </a>{' '}
+                      ve{' '}
+                      <a href="/yasal/kvkk" target="_blank" rel="noopener noreferrer" className="underline hover:text-text-primary">
+                        KVKK Aydınlatma Metnini
+                      </a>{' '}
+                      okudum, kabul ediyorum.
                     </label>
                   </div>
                   {errors.kvkkConsent ? <p className="text-[11px] text-error">{errors.kvkkConsent.message}</p> : null}

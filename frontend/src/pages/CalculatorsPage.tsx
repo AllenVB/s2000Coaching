@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 
+import { SimplePublicHeader } from '@/components/layout/SimplePublicHeader'
 import { Button } from '@/components/ui/Button'
 import { Field, inputClasses } from '@/components/ui/FormField'
 import {
@@ -56,27 +57,7 @@ export function CalculatorsPage() {
 
   return (
     <div className="min-h-screen">
-      <header className="w-full border-b border-border bg-canvas/90">
-        <div className="mx-auto flex min-h-[72px] max-w-[1280px] items-center justify-between gap-4 px-4 py-3 sm:px-6 lg:px-8">
-          <Link to="/" className="flex items-center gap-3" aria-label="Ana sayfaya dön">
-            <span className="flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-surface font-display text-sm font-black tracking-wider text-primary">
-              FC
-            </span>
-            <span className="flex flex-col leading-none">
-              <span className="font-display text-base font-bold uppercase tracking-wider text-text-primary">S2000</span>
-              <span className="mt-0.5 text-[10px] font-semibold uppercase tracking-[0.22em] text-primary">Coaching</span>
-            </span>
-          </Link>
-          <div className="flex items-center gap-4">
-            <Link to="/" className="text-xs font-medium text-text-secondary transition-colors hover:text-text-primary">
-              Ana sayfa
-            </Link>
-            <Link to="/giris" className="text-xs font-semibold text-text-primary transition-colors hover:text-primary">
-              Giriş Yap
-            </Link>
-          </div>
-        </div>
-      </header>
+      <SimplePublicHeader />
 
       <main className="mx-auto w-full max-w-[920px] px-4 py-10 sm:px-6 sm:py-14">
         <h1 className="font-display text-3xl font-extrabold uppercase tracking-tight text-text-primary sm:text-4xl">

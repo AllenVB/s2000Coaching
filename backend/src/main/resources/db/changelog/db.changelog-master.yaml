@@ -82,3 +82,5 @@ databaseChangeLog:
       file: db/changelog/037-dynamic-training-plans.yaml
   - include:
       file: db/changelog/038-nutrition-day-types.yaml
+  - include:
+      file: db/changelog/039-create-site-setting.yaml

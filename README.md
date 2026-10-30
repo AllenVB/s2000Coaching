@@ -519,6 +519,27 @@ tabloyu düzenler (ay değiştirilemez), çöp kutusu siler. Kurallar:
 
 Koçun **Yeni Üye** formunda telefon artık isteğe bağlıdır; cinsiyet ve yaş girilebilir.
 
+## Site ayarları (sosyal bağlantılar, rakamlar, yasal sayfalar)
+
+Koç, **Yönetim → Ayarlar** altında herkese açık sitenin üç şeyini kod değiştirmeden düzenler
+(`site_setting` tablosu; satırı olmayan ayar "ayarlanmadı" demektir, sistem boşluğu kendi uydurduğu bir
+değerle doldurmaz):
+
+- **Sosyal bağlantılar** (Instagram, YouTube, WhatsApp): sitenin altında yalnızca doldurulanlar görünür.
+  Girdi doğrulanır ve normalleştirilir: Instagram kullanıcı adı ya da `instagram.com` adresi, YouTube
+  `youtube.com`/`youtu.be`, WhatsApp telefon numarası (`0555…` → `https://wa.me/90555…`) ya da `wa.me`.
+  Yalnızca `https` ve ilgili ağın kendi alan adı kabul edilir; üç bağlantı birlikte kontrol edilir, biri
+  hatalıysa hiçbiri yazılmaz. Bağlantılar yeni sekmede `noopener noreferrer` ile açılır.
+- **Ana sayfa rakamları** (kahramanın altındaki dört kart): henüz düzenlenmediyse sitenin hazır (örnek)
+  değerleri görünür; koç kendi değerlerini yazar, kart siler ya da **Hazır değerlere dön** der. Kartların
+  hepsi silinip kaydedilirse bölüm görünmez. Yazılan rakamların doğruluğu koçun sorumluluğundadır.
+- **Yasal sayfalar** (`/yasal/kullanim-kosullari`, `/kvkk`, `/mesafeli-satis`, `/iade`): metni koç hukuk
+  danışmanının onayladığı haliyle yapıştırır; sistem metin yazmaz. Yazılmamış bir sayfa "henüz
+  yayınlanmadı" der, metin silinip kaydedilirse yayından kalkar. Metin düz paragraflar olarak gösterilir
+  (işaretleme çalıştırılmaz). Alt bilgideki bağlantılar ve ödeme penceresindeki onay cümlesi bu sayfalara gider.
+
+Herkese açık uçlar `GET /api/site` ve `GET /api/site/legal/{slug}`; üye verisi okumazlar.
+
 ## Tecrübelerim
 
 Herkese açık, salt okunur bir bölüm: kategoriler ve altındaki tecrübe kartları veritabanından

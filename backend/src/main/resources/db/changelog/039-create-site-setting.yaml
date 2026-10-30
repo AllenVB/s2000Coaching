@@ -1,0 +1,19 @@
+databaseChangeLog:
+  - changeSet:
+      id: 055-create-site-setting
+      author: s2000
+      comment: >-
+        What the coach edits about the public site without a deployment: the social links, the four
+        figures at the top of the home page, and the text of the legal pages. One row per setting; a
+        missing row means "not set" (the site then shows its built-in default, or leaves the link out,
+        or says the legal text is not published yet) — never an invented value.
+      changes:
+        - createTable:
+            tableName: site_setting
+            columns:
+              - column:
+                  name: setting_key
+                  type: varchar(60)
+                  constraints: { primaryKey: true, nullable: false }
+              - column: { name: setting_value, type: text, constraints: { nullable: false } }
+              - column: { name: updated_at, type: timestamp with time zone, constraints: { nullable: false } }

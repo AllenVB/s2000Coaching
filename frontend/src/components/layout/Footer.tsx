@@ -1,6 +1,7 @@
 import type { MouseEvent } from 'react'
 import { Link } from 'react-router-dom'
 
+import { usePublicSite } from '@/api/siteApi'
 import { usePricingCategory } from '@/context/PricingCategoryContext'
 import { isPlainLeftClick, navigateToSection } from '@/lib/scroll'
 import type { PackageCategory } from '@/types/package'
@@ -25,15 +26,23 @@ const platform: FooterLink[] = [
   { label: 'Sıkça Sorulan Sorular', href: '#sss', targetId: 'sss' },
   { label: 'Hesaplayıcılar', href: '/hesaplayicilar', targetId: '', to: '/hesaplayicilar' },
 ]
+/** The four legal pages; the coach writes their text under Ayarlar, and an unwritten one says so. */
 const legal: FooterLink[] = [
-  { label: 'Kullanım Koşulları', href: '#paketler', targetId: 'paketler' },
-  { label: 'KVKK & Aydınlatma Metni', href: '#paketler', targetId: 'paketler' },
-  { label: 'Mesafeli Satış Sözleşmesi', href: '#paketler', targetId: 'paketler' },
-  { label: 'İptal ve İade Koşulları', href: '#paketler', targetId: 'paketler' },
+  { label: 'Kullanım Koşulları', href: '/yasal/kullanim-kosullari', targetId: '', to: '/yasal/kullanim-kosullari' },
+  { label: 'KVKK & Aydınlatma Metni', href: '/yasal/kvkk', targetId: '', to: '/yasal/kvkk' },
+  { label: 'Mesafeli Satış Sözleşmesi', href: '/yasal/mesafeli-satis', targetId: '', to: '/yasal/mesafeli-satis' },
+  { label: 'İptal ve İade Koşulları', href: '/yasal/iade', targetId: '', to: '/yasal/iade' },
 ]
 
 export function Footer() {
   const { setCategory } = usePricingCategory()
+  const { data: site } = usePublicSite()
+  // Only the links the coach has set: an empty icon that goes nowhere is worse than none.
+  const socials = [
+    { label: 'Instagram', href: site?.social.instagram },
+    { label: 'YouTube', href: site?.social.youtube },
+    { label: 'WhatsApp', href: site?.social.whatsapp },
+  ].filter((link): link is { label: string; href: string } => Boolean(link.href))
 
   return (
     <footer className="ember-wash w-full border-t border-border bg-canvas py-16">
@@ -71,15 +80,17 @@ export function Footer() {
         <div className="flex flex-col items-center justify-between gap-4 pt-8 text-xs text-text-muted sm:flex-row">
           <span>© 2026 S2000 Coaching. Tüm hakları saklıdır.</span>
           <div className="flex items-center gap-6">
-            <a href="#" className="hover:text-text-primary transition-colors">
-              Instagram
-            </a>
-            <a href="#" className="hover:text-text-primary transition-colors">
-              YouTube
-            </a>
-            <a href="#" className="hover:text-text-primary transition-colors">
-              WhatsApp
-            </a>
+            {socials.map((link) => (
+              <a
+                key={link.label}
+                href={link.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-text-primary transition-colors"
+              >
+                {link.label}
+              </a>
+            ))}
           </div>
         </div>
       </div>
