@@ -1,11 +1,10 @@
 import { useMemo } from 'react'
-import { Outlet } from 'react-router-dom'
+import { Navigate, Outlet } from 'react-router-dom'
 
 import { useMemberLogout } from '@/api/memberAuthApi'
 import { useMyUnreadMessages } from '@/api/messagesApi'
 import { PortalHeader } from '@/components/layout/PortalHeader'
 import { PortalSidebarNav, PortalTabBar, type PortalNavItem } from '@/components/layout/PortalNav'
-import { MemberLogin } from '@/components/member/MemberLogin'
 import { useFlushPendingWorkouts } from '@/api/trainingApi'
 import { clearCachedPlan } from '@/lib/offline'
 import { useOnlineStatus } from '@/hooks/useOnlineStatus'
@@ -64,14 +63,7 @@ function MemberAreaShell() {
   const online = useOnlineStatus()
 
   if (!session) {
-    return (
-      <>
-        <PortalHeader eyebrow="Üye Alanı" title="S2000 Coaching" />
-        <main className="mx-auto w-full max-w-[1280px] px-4 py-10 sm:px-6 sm:py-14 lg:px-8">
-          <MemberLogin />
-        </main>
-      </>
-    )
+    return <Navigate to="/giris" replace />
   }
 
   const handleLogout = () => {

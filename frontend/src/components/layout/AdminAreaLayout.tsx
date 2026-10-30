@@ -1,9 +1,8 @@
 import { useMemo } from 'react'
-import { Outlet } from 'react-router-dom'
+import { Navigate, Outlet } from 'react-router-dom'
 
 import { useCoachUnreadMessages } from '@/api/messagesApi'
 
-import { AdminTokenGate } from '@/components/admin/AdminTokenGate'
 import { PortalHeader } from '@/components/layout/PortalHeader'
 import { PortalSidebarNav, PortalTabBar, type PortalNavItem } from '@/components/layout/PortalNav'
 import { AdminAuthProvider, useAdminAuth } from '@/context/AdminAuthContext'
@@ -54,15 +53,9 @@ function AdminAreaShell() {
     [unread],
   )
 
+  // There is one sign-in page for everybody; management has no entrance of its own.
   if (!token) {
-    return (
-      <>
-        <PortalHeader eyebrow="Yönetim" title="S2000 Coaching" />
-        <main className="mx-auto w-full max-w-[1280px] px-4 py-10 sm:px-6 sm:py-14 lg:px-8">
-          <AdminTokenGate />
-        </main>
-      </>
-    )
+    return <Navigate to="/giris" replace />
   }
 
   return (
