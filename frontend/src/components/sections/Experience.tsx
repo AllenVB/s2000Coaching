@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 
 import { useExperienceCategories } from '@/api/experienceApi'
-import { CaseStudySection } from '@/components/caseStudy/CaseStudySection'
 import { SectionHeading } from '@/components/ui/SectionHeading'
 
 export function Experience() {
@@ -128,7 +127,6 @@ export function Experience() {
           </div>
         )}
 
-        <CaseStudySection />
       </div>
     </section>
   )

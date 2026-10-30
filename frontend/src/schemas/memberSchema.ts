@@ -3,7 +3,19 @@ import { z } from 'zod'
 export const createMemberSchema = z.object({
   email: z.string().trim().email('Geçerli bir e-posta adresi girin').max(255),
   fullName: z.string().trim().min(2, 'Ad soyad en az 2 karakter olmalı').max(160),
-  phone: z.string().trim().min(10, 'Geçerli bir telefon numarası girin').max(40),
+  // Optional: a member who signed up on their own was never asked for one.
+  phone: z
+    .string()
+    .trim()
+    .max(40)
+    .refine((value) => value === '' || value.length >= 10, { message: 'Geçerli bir telefon numarası girin' }),
+  gender: z.enum(['', 'FEMALE', 'MALE', 'OTHER']),
+  age: z
+    .string()
+    .trim()
+    .refine((value) => value === '' || (/^\d+$/.test(value) && Number(value) >= 14 && Number(value) <= 100), {
+      message: 'Yaş 14 ile 100 arasında olmalı',
+    }),
   // Registered with `valueAsNumber`, so an empty input arrives as NaN and fails the
   // number check with the message below.
   heightCm: z

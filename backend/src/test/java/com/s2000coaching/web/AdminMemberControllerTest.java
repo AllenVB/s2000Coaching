@@ -67,8 +67,8 @@ class AdminMemberControllerTest {
 	}
 
 	private static CreateMemberRequest validRequest() {
-		return new CreateMemberRequest("sporcu@example.com", "Ahmet Yılmaz", "+905551112233", 182,
-				new BigDecimal("84.50"), "5 yıl fitness");
+		return new CreateMemberRequest("sporcu@example.com", "Ahmet Yılmaz", "+905551112233", null, null,
+				182, new BigDecimal("84.50"), "5 yıl fitness");
 	}
 
 	private static MemberResponse response(UUID id, MemberStatus status) {
@@ -124,8 +124,8 @@ class AdminMemberControllerTest {
 
 	@Test
 	void shouldReturn400WhenMeasurementsAreOutOfRange() {
-		var invalid = new CreateMemberRequest("sporcu@example.com", "Ahmet Yılmaz", "+905551112233", 40,
-				new BigDecimal("4.0"), "5 yıl fitness");
+		var invalid = new CreateMemberRequest("sporcu@example.com", "Ahmet Yılmaz", "+905551112233", null, null,
+				40, new BigDecimal("4.0"), "5 yıl fitness");
 
 		assertThat(mvc.post().uri("/api/admin/members")
 				.header(HttpHeaders.AUTHORIZATION, BEARER)
