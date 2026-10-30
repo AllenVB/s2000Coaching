@@ -58,6 +58,22 @@ public class Member {
 	@Column(name = "reminders_enabled", nullable = false)
 	private boolean remindersEnabled = true;
 
+	/** bcrypt; null until the member sets one (coach-created members start without). */
+	@Column(name = "password_hash", length = 100)
+	private String passwordHash;
+
+	@Enumerated(EnumType.STRING)
+	@Column(length = 10)
+	private MemberGender gender;
+
+	private Integer age;
+
+	@Column(name = "failed_login_attempts", nullable = false)
+	private int failedLoginAttempts;
+
+	@Column(name = "login_locked_until")
+	private Instant loginLockedUntil;
+
 	protected Member() {
 	}
 
@@ -164,5 +180,55 @@ public class Member {
 		if (this.healthDataConsentAt == null) {
 			this.healthDataConsentAt = grantedAt;
 		}
+	}
+
+	public String getPasswordHash() {
+		return passwordHash;
+	}
+
+	public void setPasswordHash(String passwordHash) {
+		this.passwordHash = passwordHash;
+	}
+
+	public boolean hasPassword() {
+		return passwordHash != null;
+	}
+
+	public MemberGender getGender() {
+		return gender;
+	}
+
+	public void setGender(MemberGender gender) {
+		this.gender = gender;
+	}
+
+	public Integer getAge() {
+		return age;
+	}
+
+	public void setAge(Integer age) {
+		this.age = age;
+	}
+
+	public void setEmail(String email) {
+		this.email = email;
+	}
+
+	public boolean isLoginLockedAt(Instant now) {
+		return loginLockedUntil != null && loginLockedUntil.isAfter(now);
+	}
+
+	/** Counts a wrong password and locks sign-in for {@code lockFor} once the limit is reached. */
+	public void registerFailedLogin(Instant now, java.time.Duration lockFor, int maxAttempts) {
+		failedLoginAttempts++;
+		if (failedLoginAttempts >= maxAttempts) {
+			loginLockedUntil = now.plus(lockFor);
+			failedLoginAttempts = 0;
+		}
+	}
+
+	public void registerSuccessfulLogin() {
+		failedLoginAttempts = 0;
+		loginLockedUntil = null;
 	}
 }

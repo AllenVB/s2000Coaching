@@ -23,6 +23,11 @@ set "ADMIN_EMAIL=koc@s2000coaching.com"
 set "ADMIN_PASSWORD=Demo1234Parola"
 set "ADMIN_NAME=S2000 Koc"
 
+rem Yerel ortamda e-posta sunucusu yok; kayit olan uyenin e-postasini dogrulamasi beklenirse kod
+rem yalnizca loglar\backend.log icinde gorunur. Bu yuzden burada dogrulama kapali: hesap acilir
+rem acilmaz giris yapilir. Gercek sunucuda (deploy\) bu ayar ACIK kalir.
+set "REGISTRATION_VERIFY_EMAIL=false"
+
 if exist "%~dp0yerel-ayarlar.bat" (
     call "%~dp0yerel-ayarlar.bat"
     echo       Yerel ayarlar okundu: yerel-ayarlar.bat

@@ -15,6 +15,10 @@ set "ADMIN_EMAIL=ornek@ornek.com"
 set "ADMIN_PASSWORD=BurayaKendiSifreniz"
 set "ADMIN_NAME=Ad Soyad"
 
+rem     Bu hesap, veritabaninda yoksa baslarken olusturulur (daha once baska bir koc hesabi
+rem     olsa bile). Varsa dokunulmaz: sifreyi sonradan Ayarlar sayfasindan degistirdiysen
+rem     buradaki degisikligin etkisi olmaz. En az 10 karakter. Bu dosyayi kimseyle paylasma.
+
 rem --- E-posta gonderimi (istege bagli).
 rem     MAIL_HOST tanimli degilse dogrulama kodlari e-posta ile GITMEZ, backend
 rem     penceresine WARN satiri olarak yazilir; gelistirme icin istenen budur.

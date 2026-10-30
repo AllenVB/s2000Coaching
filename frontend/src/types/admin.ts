@@ -1,3 +1,4 @@
+import type { MemberGender } from '@/types/member'
 import type { Member } from '@/types/member'
 
 export interface CoachNote {
@@ -42,7 +43,10 @@ export interface AdminDashboard {
 }
 
 export interface UpdateMemberInput {
+  email: string
   fullName: string
+  gender: MemberGender | null
+  age: number | null
   phone: string
   heightCm: number
   weightKg: number

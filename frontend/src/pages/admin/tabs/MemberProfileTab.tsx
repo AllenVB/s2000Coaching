@@ -7,6 +7,7 @@ import {
   useCompleteRegistration,
   useDeleteMember,
   useResendVerificationCode,
+  useSetMemberPassword,
   useUpdateMember,
 } from '@/api/adminMembersApi'
 import { useMemberOrders } from '@/api/ordersAdminApi'
@@ -23,6 +24,7 @@ import { formatMinor } from '@/lib/money'
 import { ORDER_STATUS, TONE_CLASSES } from '@/lib/orderStatus'
 import { useMemberDetail } from '@/pages/admin/MemberDetailPage'
 import { updateMemberSchema, type UpdateMemberFormValues } from '@/schemas/memberSchema'
+import { GENDERS } from '@/types/member'
 
 export function MemberProfileTab() {
   const { member } = useMemberDetail()
@@ -41,7 +43,10 @@ export function MemberProfileTab() {
     resolver: zodResolver(updateMemberSchema),
     // `values` (not `defaultValues`) so the form follows the member after a refetch.
     values: {
+      email: member.email,
       fullName: member.fullName,
+      gender: member.gender ?? '',
+      age: member.age !== null ? String(member.age) : '',
       phone: member.phone,
       heightCm: member.heightCm,
       weightKg: member.weightKg,
@@ -58,12 +63,33 @@ export function MemberProfileTab() {
           Üye Bilgileri
         </h2>
 
-        <form className="space-y-4" onSubmit={handleSubmit((values) => updateMember.mutate(values))}>
+        <form className="space-y-4" onSubmit={handleSubmit(({ gender, age, ...values }) =>
+            updateMember.mutate({ ...values, gender: gender === '' ? null : gender, age: age === '' ? null : Number(age) }),
+          )}>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <Field label="Ad Soyad *" error={errors.fullName?.message}>
               <input {...register('fullName')} type="text" className={inputClasses} />
             </Field>
-            <Field label="Telefon *" error={errors.phone?.message}>
+            <Field label="E-Posta *" error={errors.email?.message} hint="Üyenin giriş adresi; başkasında kayıtlı olamaz.">
+              <input {...register('email')} type="email" className={inputClasses} />
+            </Field>
+          </div>
+
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <Field label="Cinsiyet" error={errors.gender?.message}>
+              <select {...register('gender')} className={inputClasses}>
+                <option value="">Belirtilmemiş</option>
+                {GENDERS.map((gender) => (
+                  <option key={gender.value} value={gender.value}>
+                    {gender.label}
+                  </option>
+                ))}
+              </select>
+            </Field>
+            <Field label="Yaş" error={errors.age?.message}>
+              <input {...register('age')} type="text" inputMode="numeric" className={inputClasses} />
+            </Field>
+            <Field label="Telefon" error={errors.phone?.message}>
               <input {...register('phone')} type="tel" className={inputClasses} />
             </Field>
           </div>
@@ -98,10 +124,6 @@ export function MemberProfileTab() {
             <textarea {...register('sportsBackground')} rows={4} className={textareaClasses} />
           </Field>
 
-          <p className="text-[11px] text-text-muted">
-            E-posta adresi buradan değiştirilemez; hesabı tanımlayan ve kodların gittiği adres odur.
-          </p>
-
           {updateMember.isError ? (
             <p className="text-xs text-error">Kaydedilemedi: {updateMember.error.message}</p>
           ) : null}
@@ -121,6 +143,8 @@ export function MemberProfileTab() {
           </div>
         </form>
       </section>
+
+      <SetPasswordCard memberId={member.id} hasPassword={member.hasPassword} />
 
       <MemberQuestionnaireCard memberId={member.id} />
 
@@ -273,6 +297,54 @@ function PendingVerificationCard({ memberId }: { memberId: string }) {
       </form>
 
       {resendCode.isError ? <p className="mt-2 text-[11px] text-error">{resendCode.error.message}</p> : null}
+    </section>
+  )
+}
+
+/**
+ * The coach choosing a password for a member who forgot theirs or has none. It is never shown
+ * back — only replaced — and the member's current sessions end when it is set.
+ */
+function SetPasswordCard({ memberId, hasPassword }: { memberId: string; hasPassword: boolean }) {
+  const setPassword = useSetMemberPassword(memberId)
+  const [value, setValue] = useState('')
+  const tooShort = value.length > 0 && value.length < 8
+
+  return (
+    <section className="rounded-2xl border border-border bg-surface p-6">
+      <h2 className="text-sm font-bold uppercase tracking-wider text-text-primary">Şifre</h2>
+      <p className="mt-2 text-xs leading-relaxed text-text-secondary">
+        {hasPassword ? 'Üyenin şifresi var; göremezsiniz, yalnızca yenisini belirleyebilirsiniz.' : 'Üyenin henüz şifresi yok; e-posta koduyla giriyor.'}{' '}
+        Belirlediğinizde üyenin açık oturumları kapanır; yeni şifreyi ona kendiniz iletin.
+      </p>
+      <form
+        className="mt-4 flex flex-wrap items-start gap-2"
+        onSubmit={(event) => {
+          event.preventDefault()
+          if (value.length >= 8) {
+            setPassword.mutate(value, { onSuccess: () => setValue('') })
+          }
+        }}
+      >
+        <div>
+          <input
+            value={value}
+            onChange={(event) => setValue(event.target.value)}
+            type="text"
+            autoComplete="off"
+            maxLength={64}
+            placeholder="Yeni şifre (en az 8 karakter)"
+            aria-label="Yeni şifre"
+            className={`${inputClasses} w-64`}
+          />
+          {tooShort ? <p className="mt-1 text-[11px] text-error">En az 8 karakter olmalı.</p> : null}
+        </div>
+        <Button type="submit" variant="secondary" disabled={setPassword.isPending || value.length < 8}>
+          {setPassword.isPending ? 'Kaydediliyor…' : 'Şifreyi Belirle'}
+        </Button>
+      </form>
+      {setPassword.isError ? <p className="mt-2 text-xs text-error">{setPassword.error.message}</p> : null}
+      {setPassword.isSuccess ? <p className="mt-2 text-xs text-success">Şifre belirlendi; üyenin oturumları kapandı.</p> : null}
     </section>
   )
 }

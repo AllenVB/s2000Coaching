@@ -9,10 +9,12 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.s2000coaching.service.MemberAuthService;
 import com.s2000coaching.service.MemberService;
 import com.s2000coaching.domain.MemberStatus;
 import com.s2000coaching.exception.UnauthorizedException;
 import com.s2000coaching.service.CoachAuthService;
+import com.s2000coaching.domain.MemberGender;
 import com.s2000coaching.mail.MailDelivery;
 import com.s2000coaching.web.dto.CreateMemberRequest;
 import com.s2000coaching.web.dto.CreateMemberResponse;
@@ -47,6 +49,9 @@ class AdminMemberControllerTest {
 	@MockitoBean
 	private MemberService memberService;
 
+	@MockitoBean
+	private MemberAuthService memberAuthService;
+
 	/** The /api/admin/** interceptor resolves the coach session through this. */
 	@MockitoBean
 	private CoachAuthService coachAuthService;
@@ -69,7 +74,7 @@ class AdminMemberControllerTest {
 	private static MemberResponse response(UUID id, MemberStatus status) {
 		return new MemberResponse(id, "sporcu@example.com", "Ahmet Yılmaz", "+905551112233", 182,
 				new BigDecimal("84.50"), "5 yıl fitness", status, Instant.now(),
-				status == MemberStatus.ACTIVE ? Instant.now() : null, null, true);
+				status == MemberStatus.ACTIVE ? Instant.now() : null, null, true, MemberGender.MALE, 25, true);
 	}
 
 	@Test
@@ -159,8 +164,8 @@ class AdminMemberControllerTest {
 	@Test
 	void shouldUpdateAMember() {
 		UUID memberId = UUID.randomUUID();
-		var request = new UpdateMemberRequest("Mehmet Demir", "+905559998877", 175, new BigDecimal("79.00"),
-				"Yüzme");
+		var request = new UpdateMemberRequest("mehmet@example.com", "Mehmet Demir", MemberGender.MALE, 30,
+				"+905559998877", 175, new BigDecimal("79.00"), "Yüzme");
 		when(memberService.updateMember(eq(memberId), any())).thenReturn(response(memberId, MemberStatus.ACTIVE));
 
 		assertThat(mvc.put().uri("/api/admin/members/" + memberId)
@@ -174,8 +179,8 @@ class AdminMemberControllerTest {
 	@Test
 	void shouldRejectAnUpdateWithoutTheAdminToken() {
 		UUID memberId = UUID.randomUUID();
-		var request = new UpdateMemberRequest("Mehmet Demir", "+905559998877", 175, new BigDecimal("79.00"),
-				"Yüzme");
+		var request = new UpdateMemberRequest("mehmet@example.com", "Mehmet Demir", MemberGender.MALE, 30,
+				"+905559998877", 175, new BigDecimal("79.00"), "Yüzme");
 
 		assertThat(mvc.put().uri("/api/admin/members/" + memberId)
 				.contentType(MediaType.APPLICATION_JSON)
@@ -204,5 +209,31 @@ class AdminMemberControllerTest {
 				.hasStatus(HttpStatus.NO_CONTENT);
 
 		verify(memberService).deleteMember(memberId);
+	}
+
+	@Test
+	void shouldLetTheCoachSetAMembersPassword() {
+		UUID memberId = UUID.randomUUID();
+
+		assertThat(mvc.put().uri("/api/admin/members/" + memberId + "/password")
+				.header(HttpHeaders.AUTHORIZATION, BEARER)
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{\"newPassword\":\"koc-verdi-1\"}"))
+				.hasStatus(HttpStatus.NO_CONTENT);
+		verify(memberAuthService).setPasswordAsCoach(memberId, "koc-verdi-1");
+	}
+
+	@Test
+	void shouldRefuseAWeakPasswordAndAMissingToken() {
+		UUID memberId = UUID.randomUUID();
+
+		assertThat(mvc.put().uri("/api/admin/members/" + memberId + "/password")
+				.header(HttpHeaders.AUTHORIZATION, BEARER)
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{\"newPassword\":\"kisa\"}")).hasStatus(HttpStatus.BAD_REQUEST);
+		assertThat(mvc.put().uri("/api/admin/members/" + memberId + "/password")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{\"newPassword\":\"koc-verdi-1\"}")).hasStatus(HttpStatus.UNAUTHORIZED);
+		verify(memberAuthService, never()).setPasswordAsCoach(any(), any());
 	}
 }

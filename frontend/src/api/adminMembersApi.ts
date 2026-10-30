@@ -140,6 +140,20 @@ export function useUpdateMember(memberId: string) {
   })
 }
 
+/** The coach choosing a password for a member; the member's own sessions end. */
+export function useSetMemberPassword(memberId: string) {
+  const { token } = useAdminAuth()
+
+  return useMutation({
+    mutationFn: (newPassword: string) =>
+      apiFetch<void>(`/api/admin/members/${memberId}/password`, {
+        method: 'PUT',
+        headers: adminHeaders(token!),
+        body: JSON.stringify({ newPassword }),
+      }),
+  })
+}
+
 export function useCoachNotes(memberId: string) {
   const { token } = useAdminAuth()
 

@@ -10,6 +10,7 @@ import static org.mockito.Mockito.when;
 
 import com.s2000coaching.domain.Member;
 import com.s2000coaching.mail.MailDelivery;
+import com.s2000coaching.domain.MemberGender;
 import com.s2000coaching.domain.MemberStatus;
 import com.s2000coaching.domain.VerificationPurpose;
 import com.s2000coaching.exception.BadRequestException;
@@ -226,18 +227,47 @@ class MemberServiceTest {
 	class Updating {
 
 		@Test
-		void shouldTrimEditableFieldsAndLeaveEmailAlone() {
+		void shouldLetTheCoachChangeEverythingIncludingNameGenderAndEmail() {
+			Member member = pendingMember();
+			when(memberRepository.findById(member.getId())).thenReturn(Optional.of(member));
+			when(memberRepository.existsByEmail("yeni@example.com")).thenReturn(false);
+
+			var response = memberService.updateMember(member.getId(), new UpdateMemberRequest(
+					"  Yeni@Example.COM ", "  Mehmet Demir ", MemberGender.FEMALE, 31, " +905559998877 ", 175,
+					new BigDecimal("79.00"), "  Yüzme  "));
+
+			assertThat(response.fullName()).isEqualTo("Mehmet Demir");
+			assertThat(response.email()).isEqualTo("yeni@example.com");
+			assertThat(response.gender()).isEqualTo(MemberGender.FEMALE);
+			assertThat(response.age()).isEqualTo(31);
+			assertThat(response.phone()).isEqualTo("+905559998877");
+			assertThat(response.heightCm()).isEqualTo(175);
+			assertThat(response.weightKg()).isEqualByComparingTo("79.00");
+			assertThat(response.sportsBackground()).isEqualTo("Yüzme");
+		}
+
+		@Test
+		void shouldRefuseAnEmailThatBelongsToAnotherMember() {
+			Member member = pendingMember();
+			when(memberRepository.findById(member.getId())).thenReturn(Optional.of(member));
+			when(memberRepository.existsByEmail("baskasi@example.com")).thenReturn(true);
+
+			assertThatThrownBy(() -> memberService.updateMember(member.getId(), new UpdateMemberRequest(
+					"baskasi@example.com", "Ad Soyad", null, null, null, 180, new BigDecimal("80.00"), "Fitness")))
+					.isInstanceOf(ConflictException.class);
+			assertThat(member.getEmail()).isEqualTo("sporcu@example.com");
+		}
+
+		@Test
+		void shouldKeepTheAddressWhenOnlyItsCaseOrSpacingDiffers() {
 			Member member = pendingMember();
 			when(memberRepository.findById(member.getId())).thenReturn(Optional.of(member));
 
-			var response = memberService.updateMember(member.getId(), new UpdateMemberRequest(
-					"  Mehmet Demir ", " +905559998877 ", 175, new BigDecimal("79.00"), "  Yüzme  "));
+			memberService.updateMember(member.getId(), new UpdateMemberRequest(
+					" Sporcu@Example.com ", "Ad Soyad", null, null, "", 180, new BigDecimal("80.00"), "Fitness"));
 
-			assertThat(response.fullName()).isEqualTo("Mehmet Demir");
-			assertThat(response.phone()).isEqualTo("+905559998877");
-			assertThat(response.heightCm()).isEqualTo(175);
-			assertThat(response.sportsBackground()).isEqualTo("Yüzme");
-			assertThat(response.email()).isEqualTo("sporcu@example.com");
+			verify(memberRepository, never()).existsByEmail(any());
+			assertThat(member.getEmail()).isEqualTo("sporcu@example.com");
 		}
 
 		@Test
@@ -246,39 +276,40 @@ class MemberServiceTest {
 			when(memberRepository.findById(unknown)).thenReturn(Optional.empty());
 
 			assertThatThrownBy(() -> memberService.updateMember(unknown, new UpdateMemberRequest(
-					"Ad Soyad", "+905551112233", 180, new BigDecimal("80.00"), "Fitness")))
+					"a@example.com", "Ad Soyad", null, null, "+905551112233", 180, new BigDecimal("80.00"), "Fitness")))
 					.isInstanceOf(NotFoundException.class);
 		}
 
 		@Test
-		void shouldLetAMemberEditTheirOwnContactDetails() {
+		void shouldLetAMemberEditTheirOwnDetailsButNotTheirNameOrGender() {
+			Member member = pendingMember();
+			member.setGender(MemberGender.MALE);
+			String name = member.getFullName();
+			when(memberRepository.findById(member.getId())).thenReturn(Optional.of(member));
+
+			var response = memberService.updateOwnProfile(member.getId(), new UpdateOwnProfileRequest(
+					33, " +905559998877 ", 175, new BigDecimal("79.50"), "  Yüzme  "));
+
+			assertThat(response.age()).isEqualTo(33);
+			assertThat(response.phone()).isEqualTo("+905559998877");
+			assertThat(response.heightCm()).isEqualTo(175);
+			assertThat(response.weightKg()).isEqualByComparingTo("79.50");
+			assertThat(response.sportsBackground()).isEqualTo("Yüzme");
+			// The form has no way to name these, so they come out as they went in.
+			assertThat(response.fullName()).isEqualTo(name);
+			assertThat(response.gender()).isEqualTo(MemberGender.MALE);
+			assertThat(response.email()).isEqualTo("sporcu@example.com");
+		}
+
+		@Test
+		void shouldStoreAnEmptyPhoneAsEmptyNotNull() {
 			Member member = pendingMember();
 			when(memberRepository.findById(member.getId())).thenReturn(Optional.of(member));
 
 			var response = memberService.updateOwnProfile(member.getId(), new UpdateOwnProfileRequest(
-					"  Mehmet Demir ", " +905559998877 ", 175, "  Yüzme  "));
+					33, null, 175, new BigDecimal("79.50"), "Yüzme"));
 
-			assertThat(response.fullName()).isEqualTo("Mehmet Demir");
-			assertThat(response.phone()).isEqualTo("+905559998877");
-			assertThat(response.heightCm()).isEqualTo(175);
-			assertThat(response.sportsBackground()).isEqualTo("Yüzme");
-		}
-
-		/**
-		 * The starting weight is the baseline every progress chart is drawn against, so the
-		 * member's own form must not be able to move it — only the coach's form can.
-		 */
-		@Test
-		void shouldNotLetAMemberRewriteTheirStartingWeight() {
-			Member member = pendingMember();
-			BigDecimal before = member.getWeightKg();
-			when(memberRepository.findById(member.getId())).thenReturn(Optional.of(member));
-
-			var response = memberService.updateOwnProfile(member.getId(),
-					new UpdateOwnProfileRequest("Mehmet Demir", "+905559998877", 175, "Yüzme"));
-
-			assertThat(response.weightKg()).isEqualByComparingTo(before);
-			assertThat(response.email()).isEqualTo("sporcu@example.com");
+			assertThat(response.phone()).isEmpty();
 		}
 	}
 

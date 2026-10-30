@@ -26,6 +26,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
@@ -40,12 +42,14 @@ class MemberAuthServiceTest {
 	@Mock
 	private VerificationCodeService verificationCodeService;
 
+	private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(4);
+
 	private MemberAuthService memberAuthService;
 
 	@BeforeEach
 	void setUp() {
 		memberAuthService = new MemberAuthService(memberRepository, sessionRepository, verificationCodeService,
-				Duration.ofDays(14));
+				passwordEncoder, Duration.ofDays(14), Duration.ofMinutes(15), true);
 	}
 
 	private static Member member(MemberStatus status) {

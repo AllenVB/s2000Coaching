@@ -97,8 +97,17 @@ public class MemberService {
 	@Transactional
 	public MemberResponse updateMember(UUID memberId, UpdateMemberRequest request) {
 		Member member = getOrThrow(memberId);
+		String email = normalizeEmail(request.email());
+		if (!email.equals(member.getEmail())) {
+			if (memberRepository.existsByEmail(email)) {
+				throw new ConflictException("Bu e-posta ile kayıtlı bir üye zaten var: " + email);
+			}
+			member.setEmail(email);
+		}
 		member.setFullName(request.fullName().trim());
-		member.setPhone(request.phone().trim());
+		member.setGender(request.gender());
+		member.setAge(request.age());
+		member.setPhone(blankToEmpty(request.phone()));
 		member.setHeightCm(request.heightCm());
 		member.setWeightKg(request.weightKg());
 		member.setSportsBackground(request.sportsBackground().trim());
@@ -107,16 +116,21 @@ public class MemberService {
 
 	/**
 	 * The member editing themselves. Narrower than {@link #updateMember}: see
-	 * {@link UpdateOwnProfileRequest} for which fields are withheld and why.
+	 * {@link UpdateOwnProfileRequest} for which fields are withheld.
 	 */
 	@Transactional
 	public MemberResponse updateOwnProfile(UUID memberId, UpdateOwnProfileRequest request) {
 		Member member = getOrThrow(memberId);
-		member.setFullName(request.fullName().trim());
-		member.setPhone(request.phone().trim());
+		member.setAge(request.age());
+		member.setPhone(blankToEmpty(request.phone()));
 		member.setHeightCm(request.heightCm());
+		member.setWeightKg(request.weightKg());
 		member.setSportsBackground(request.sportsBackground().trim());
 		return MemberResponse.from(member);
+	}
+
+	private static String blankToEmpty(String value) {
+		return value == null ? "" : value.trim();
 	}
 
 	/**

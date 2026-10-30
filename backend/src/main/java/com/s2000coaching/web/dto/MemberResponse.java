@@ -1,6 +1,7 @@
 package com.s2000coaching.web.dto;
 
 import com.s2000coaching.domain.Member;
+import com.s2000coaching.domain.MemberGender;
 import com.s2000coaching.domain.MemberStatus;
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -18,7 +19,11 @@ public record MemberResponse(
 		Instant createdAt,
 		Instant verifiedAt,
 		Instant healthDataConsentAt,
-		boolean remindersEnabled) {
+		boolean remindersEnabled,
+		MemberGender gender,
+		Integer age,
+		/** Whether a password is set; false means the member still signs in with an e-mailed code. */
+		boolean hasPassword) {
 
 	public static MemberResponse from(Member member) {
 		return new MemberResponse(
@@ -33,6 +38,9 @@ public record MemberResponse(
 				member.getCreatedAt(),
 				member.getVerifiedAt(),
 				member.getHealthDataConsentAt(),
-				member.isRemindersEnabled());
+				member.isRemindersEnabled(),
+				member.getGender(),
+				member.getAge(),
+				member.hasPassword());
 	}
 }
