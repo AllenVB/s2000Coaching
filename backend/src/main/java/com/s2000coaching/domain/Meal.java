@@ -44,6 +44,11 @@ public class Meal {
 	@Column(nullable = false, length = 12)
 	private MealKind kind = MealKind.MEAL;
 
+	/** Whether this belongs to the training-day or the rest-day half of the plan; fixed once made. */
+	@Enumerated(EnumType.STRING)
+	@Column(name = "day_type", nullable = false, length = 10, updatable = false)
+	private NutritionDayType dayType = NutritionDayType.TRAINING;
+
 	@OneToMany(mappedBy = "meal", cascade = CascadeType.ALL, orphanRemoval = true)
 	@OrderBy("displayOrder asc")
 	private List<MealItem> items = new ArrayList<>();
@@ -58,6 +63,14 @@ public class Meal {
 		this.name = name;
 		this.timeHint = timeHint;
 		this.note = note;
+	}
+
+	public NutritionDayType getDayType() {
+		return dayType;
+	}
+
+	public void setDayType(NutritionDayType dayType) {
+		this.dayType = dayType;
 	}
 
 	public MealKind getKind() {

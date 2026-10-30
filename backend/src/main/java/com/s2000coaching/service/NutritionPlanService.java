@@ -3,6 +3,7 @@ package com.s2000coaching.service;
 import com.s2000coaching.domain.Meal;
 import com.s2000coaching.domain.MealItem;
 import com.s2000coaching.domain.MealKind;
+import com.s2000coaching.domain.NutritionDayType;
 import com.s2000coaching.domain.Member;
 import com.s2000coaching.domain.NutritionPlan;
 import com.s2000coaching.exception.BadRequestException;
@@ -141,6 +142,7 @@ public class NutritionPlanService {
 		Meal meal = new Meal(UUID.randomUUID(), plan, nextOrder, request.name().trim(),
 				blankToNull(request.timeHint()), blankToNull(request.note()));
 		meal.setKind(kindOrMeal(request.kind()));
+		meal.setDayType(request.dayType() == null ? NutritionDayType.TRAINING : request.dayType());
 		plan.getMeals().add(meal);
 		plan.setUpdatedAt(Instant.now());
 		return NutritionPlanResponse.from(plan);
@@ -209,6 +211,7 @@ public class NutritionPlanService {
 			Meal meal = new Meal(UUID.randomUUID(), target, sourceMeal.getDisplayOrder(),
 					sourceMeal.getName(), sourceMeal.getTimeHint(), sourceMeal.getNote());
 			meal.setKind(sourceMeal.getKind());
+			meal.setDayType(sourceMeal.getDayType());
 			target.getMeals().add(meal);
 
 			for (MealItem sourceItem : sourceMeal.getItems()) {
@@ -225,6 +228,10 @@ public class NutritionPlanService {
 		plan.setTargetProteinG(request.targetProteinG());
 		plan.setTargetCarbsG(request.targetCarbsG());
 		plan.setTargetFatG(request.targetFatG());
+		plan.setRestTargetCalories(request.restTargetCalories());
+		plan.setRestTargetProteinG(request.restTargetProteinG());
+		plan.setRestTargetCarbsG(request.restTargetCarbsG());
+		plan.setRestTargetFatG(request.restTargetFatG());
 		plan.setWaterLiters(request.waterLiters());
 		plan.setUpdatedAt(Instant.now());
 	}

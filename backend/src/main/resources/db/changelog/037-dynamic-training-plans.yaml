@@ -1,0 +1,21 @@
+databaseChangeLog:
+  - changeSet:
+      id: 053-dynamic-training-plans
+      author: s2000
+      comment: >-
+        Exercise names are now typed by the coach while writing a plan, so a catalogue entry made that way
+        has no muscle group (the column stops being mandatory), and a plan may have up to ten sets per
+        exercise, whose per-set rep targets ("8|8|10|10|...") need more room than before.
+      changes:
+        - dropNotNullConstraint:
+            tableName: exercise
+            columnName: muscle_group
+            columnDataType: varchar(20)
+        - modifyDataType:
+            tableName: training_plan_exercise
+            columnName: reps
+            newDataType: varchar(200)
+        - modifyDataType:
+            tableName: training_plan_exercise
+            columnName: set_reps
+            newDataType: varchar(200)

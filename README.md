@@ -166,12 +166,22 @@ planı olabilir ama yalnızca biri **aktiftir**; üye alanında görünen odur.
 kez yapılıyorsa hedef kilo yazar. Aynı gün ve tarihe tekrar kaydetmek o seansı düzeltir, ikinci kayıt
 açmaz. Üyenin "Bugün" sayfası en uzun süredir yapılmamış günü **Sıradaki Antrenman** olarak önerir.
 
-**Standart şema.** Şablon seçmeden plan oluşturduğunuzda plan boş **Gün 1 – Gün 5** ile açılır
-(`günsüz boş plan` seçeneği bunu atlar). Her gün bir tablodur: hareket ve **Set 1 – Set 4** tekrar hedefi
-(`30-25-20` gibi; yalnızca ilki zorunlu, boşluk bırakıp sonrasını doldurmak reddedilir çünkü setleri
-sessizce yeniden numaralamak olurdu). Hücreler odak kaybedince kaydolur, tablonun altındaki **+** yeni
-hareket ekler. Set sayısı ve tekrar metni bu hücrelerden türetilir; eski biçimde (set sayısı + serbest
-metin) yazılmış hareketler olduğu gibi çalışmaya devam eder.
+**Dinamik plan düzenleyici.** Plan **Gün 1** ile açılır ve seçilidir; diğer günler günlerin yanındaki **+**
+ile tek tek eklenir (**en az 1, en fazla 7 gün**; son gün silinemez). Seçili günde egzersizlerin listesi ve
+altında yeni egzersiz formu durur. **Egzersiz adını koç yazar** (kataloğa bağlı bir seçim kutusu yoktur):
+aynı ad (büyük/küçük harf fark etmez) kataloğdaki kaydı yeniden kullanır, yoksa o anda kataloğa eklenir —
+video bağlantısı ve geçmiş de böylece adla birlikte kalır; kas grubu bu yoldan eklenenlerde boştur
+(Hareketler sayfasından doldurulabilir). Yeni egzersizde **1.set** hazır gelir (tekrar kutusu boş);
+**Set ekle** (+) ile **en fazla 10 ssete** kadar yenisi eklenir, istenmezse yalnızca 1.set ile
+**Egzersizi Kaydet**'e basılır. Sondaki boş setler yok sayılır; ortada boş bırakılıp sonrası doldurulan set
+reddedilir (setleri sessizce yeniden numaralamak olurdu). Kaydedilmiş egzersizler aynı biçimde **Güncelle** ile
+değişir; hedef kg, dinlenme saniyesi ve üyenin göreceği not isteğe bağlıdır. Eski biçimde (set sayısı +
+serbest metin) yazılmış egzersizler olduğu gibi çalışır.
+
+**Üye yalnızca görüntüler.** Üye `/uye/antrenman` gün sayfasında koçun yazdığı setleri (1.set, 2.set …),
+notu ve videoyu salt okunur görür; plan üzerinde hiçbir düzenleme ucu üyeye açık değildir. Gerçekte
+kaldırdığını kaydetmek isterse **Bugünkü Antrenmanımı Kaydet** ile kayıt kutuları açılır (ağırlık takibi,
+RPE ve öneriler bu kayıttan beslenir).
 
 **Antrenman 1 – 10.** Üyenin gün sayfasında her hareketin altında on kutu vardır; kutular üyenin zaten
 kaydettiği seanslardan dolar (o seansın en ağır seti), yani ağırlık tek yerden girilir. Onuncudan sonra
@@ -187,8 +197,17 @@ Antrenmanla aynı kalıp: `/yonetim/sablonlar` sayfasının **Beslenme** sekmesi
 her öğünde besin + miktar + kalori/makro), üye detayındaki **Beslenme** sekmesinden üyeye kopyalanır. Kopya
 yine bağımsızdır ve üyenin yalnızca bir planı aktiftir.
 
+**Antrenman günleri ve dinlenme günleri.** Plan iki yarıdan oluşur: **Antrenman Günleri** ve **Dinlenme
+Günleri**. Her yarının kendi kalori/protein/karbonhidrat/yağ hedefi ve kendi öğünleri/supplement blokları
+vardır (su ve plan notu tüm plan için ortaktır); düzenleyicide ve üyenin sayfasında iki sekmeyle
+değiştirilir, "Bugün" sayfasındaki makro kartı da aynı seçimi sunar (plan bugünün hangi tür olduğunu
+bilmez, üye seçer). Bir öğün hangi yarıya eklendiyse orada kalır. Önceden yazılmış planlarda mevcut her
+öğün ve hedef **antrenman günü** sayılır; dinlenme günü tarafı boş başlar, koç doldurur. Yazdırılan çıktıda
+dinlenme günü yarısı, doluysa, ayrı sayfada çıkar.
+
 **Standart şema.** Şablon seçmeden plan oluşturduğunuzda (Planı Oluştur) plan koçun kendi planlarındaki
-şemayla açılır: Sabah, Öğlen, Antrenman öncesi/sonrası, Akşam, Uyumadan önce öğünleri ve üç supplement
+şemayla açılır (antrenman günü yarısı tam, dinlenme günü yarısı antrenman öncesi/sonrası öğünleri ve
+antrenman sonrası supplementi olmadan): Sabah, Öğlen, Antrenman öncesi/sonrası, Akşam, Uyumadan önce öğünleri ve üç supplement
 bloğu, besinler yazılı, **miktarlar boş**. Miktar, kalori ve su hedefi üyeye özeldir, bu yüzden şemada
 hiç yoktur; boş bir kutu "reçete edilmedi" demektir, "sıfır" değil. Plan her öğün/supplement için bir
 tablodur: besin solda, miktar sağda; miktar kutusuna yazıp Enter'a basınca bir alttakine geçer, tablonun
@@ -200,7 +219,7 @@ Plan düzeyinde **makro hedefi** (kalori/protein/karbonhidrat/yağ) tutulur; ara
 fiili toplamını da gösterir — aradaki fark planın henüz tamamlanmadığını söyleyen şeydir. Makro girmek
 zorunlu değil: besinleri makro yazmadan da reçete edebilirsiniz.
 
-Üye `/uye/beslenme` sayfasında günlük hedeflerini ve öğünlerini görür.
+Üye `/uye/beslenme` sayfasında seçtiği gün türünün hedeflerini ve öğünlerini salt okunur görür.
 
 ## Plan çıktısı (yazdır / PDF)
 

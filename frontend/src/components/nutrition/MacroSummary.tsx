@@ -1,27 +1,23 @@
-import { planTotals, type NutritionPlan } from '@/types/nutrition'
+import { hasTargets, planTotals, targetsOf, type NutritionDayType, type NutritionPlan } from '@/types/nutrition'
 
 /**
  * Target beside what the listed foods actually add up to, when the foods carry macros. A plan
  * written as amounts only (the usual table) has nothing to add up, so no "planned 0" is shown
  * — that would read as a mistake rather than as "not counted".
  */
-export function MacroSummary({ plan }: { plan: NutritionPlan }) {
-  const totals = planTotals(plan)
-  const hasTargets =
-    plan.targetCalories !== null ||
-    plan.targetProteinG !== null ||
-    plan.targetCarbsG !== null ||
-    plan.targetFatG !== null
+export function MacroSummary({ plan, dayType }: { plan: NutritionPlan; dayType: NutritionDayType }) {
+  const totals = planTotals(plan, dayType)
+  const targets = targetsOf(plan, dayType)
 
   return (
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-      <MacroCell label="Kalori" unit="kcal" target={plan.targetCalories} actual={totals.calories} />
-      <MacroCell label="Protein" unit="g" target={plan.targetProteinG} actual={totals.proteinG} />
-      <MacroCell label="Karbonhidrat" unit="g" target={plan.targetCarbsG} actual={totals.carbsG} />
-      <MacroCell label="Yağ" unit="g" target={plan.targetFatG} actual={totals.fatG} />
-      {!hasTargets ? (
+      <MacroCell label="Kalori" unit="kcal" target={targets.calories} actual={totals.calories} />
+      <MacroCell label="Protein" unit="g" target={targets.proteinG} actual={totals.proteinG} />
+      <MacroCell label="Karbonhidrat" unit="g" target={targets.carbsG} actual={totals.carbsG} />
+      <MacroCell label="Yağ" unit="g" target={targets.fatG} actual={totals.fatG} />
+      {!hasTargets(targets) ? (
         <p className="col-span-2 text-[11px] text-text-muted sm:col-span-4">
-          Bu plan için makro hedefi girilmemiş; gösterilen değerler öğünlerin toplamıdır.
+          Bu gün türü için makro hedefi girilmemiş; gösterilen değerler öğünlerin toplamıdır.
         </p>
       ) : null}
     </div>

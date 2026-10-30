@@ -11,14 +11,15 @@ export const MUSCLE_GROUPS = [
 
 export type MuscleGroup = (typeof MUSCLE_GROUPS)[number]['value']
 
-export function muscleGroupLabel(group: MuscleGroup): string {
-  return MUSCLE_GROUPS.find((entry) => entry.value === group)?.label ?? group
+/** Empty for an exercise the coach only typed into a plan, which has no group. */
+export function muscleGroupLabel(group: MuscleGroup | null): string {
+  return group === null ? '' : (MUSCLE_GROUPS.find((entry) => entry.value === group)?.label ?? group)
 }
 
 export interface Exercise {
   id: string
   name: string
-  muscleGroup: MuscleGroup
+  muscleGroup: MuscleGroup | null
   /** The address as stored; for an old entry that is not YouTube it is all there is. */
   videoUrl: string | null
   /** What the player is built from; null when there is no YouTube video. */
@@ -33,7 +34,7 @@ export interface ExerciseVideo {
 
 export interface UpsertExerciseInput {
   name: string
-  muscleGroup: MuscleGroup
+  muscleGroup: MuscleGroup | null
   videoUrl?: string | null
   note?: string | null
 }
@@ -54,7 +55,7 @@ export interface PlanExercise {
   /** Free text: "8-10", "AMRAP", "30-25-20" — the per-set targets joined when there are some. */
   reps: string
   /**
-   * The rep target of set 1, 2, 3, 4 as the coach wrote them; empty for an exercise written with
+   * The rep target of each set as the coach wrote them; empty for an exercise written with
    * one free-text reps. A plan cached on a phone before this existed has no such field at all.
    */
   setReps?: string[]
@@ -75,8 +76,11 @@ export interface WeightEntry {
   topWeightKg: number | null
 }
 
-/** How many sets the editor has cells for. */
-export const MAX_SET_CELLS = 4
+/** Most sets one exercise can have; the server enforces the same number. */
+export const MAX_SETS = 10
+
+/** A programme has between one and seven training days. */
+export const MAX_DAYS = 7
 
 export interface PlanDay {
   id: string
@@ -103,8 +107,11 @@ export interface UpsertPlanInput {
 }
 
 export interface UpsertPlanExerciseInput {
-  exerciseId: string
-  /** The rep target of set 1–4; blank cells after the last filled one are fine, gaps are not. */
+  /** Either an exercise already in the catalogue … */
+  exerciseId?: string
+  /** … or its name as the coach typed it (found or created in the catalogue). */
+  exerciseName?: string
+  /** The rep target of each set, up to ten; blank cells after the last filled one are fine, gaps are not. */
   setReps: string[]
   setCount?: number
   reps?: string

@@ -34,11 +34,11 @@ public class TrainingPlanExercise {
 	@Column(name = "set_count", nullable = false)
 	private int setCount;
 
-	@Column(nullable = false, length = 80)
+	@Column(nullable = false, length = 200)
 	private String reps;
 
 	/** Rep target per set, "30|25|20"; null for exercises written with a single free-text reps. */
-	@Column(name = "set_reps", length = 80)
+	@Column(name = "set_reps", length = 200)
 	private String setReps;
 
 	@Column(name = "target_weight_kg", precision = 6, scale = 2)

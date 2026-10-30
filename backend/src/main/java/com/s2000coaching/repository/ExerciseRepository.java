@@ -10,4 +10,6 @@ public interface ExerciseRepository extends JpaRepository<Exercise, UUID> {
 	List<Exercise> findAllByOrderByNameAsc();
 
 	boolean existsByNameIgnoreCase(String name);
+
+	java.util.Optional<com.s2000coaching.domain.Exercise> findFirstByNameIgnoreCase(String name);
 }

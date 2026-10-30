@@ -1,4 +1,4 @@
-import { splitBlocks, type Meal, type NutritionPlan } from '@/types/nutrition'
+import { dayTypeLabel, splitBlocks, type Meal, type NutritionDayType, type NutritionPlan } from '@/types/nutrition'
 
 /**
  * The plan as the member reads it: one table per block, food on the left and the amount the
@@ -6,14 +6,15 @@ import { splitBlocks, type Meal, type NutritionPlan } from '@/types/nutrition'
  * coach has not written yet shows as a dash rather than an empty cell, so it reads as
  * "not set" and not as "none".
  */
-export function NutritionTable({ plan }: { plan: NutritionPlan }) {
-  const { meals, supplements } = splitBlocks(plan)
+export function NutritionTable({ plan, dayType }: { plan: NutritionPlan; dayType: NutritionDayType }) {
+  const { meals, supplements } = splitBlocks(plan, dayType)
+  const day = dayTypeLabel(dayType).toLowerCase()
 
   return (
     <div className="grid gap-6 lg:grid-cols-[3fr_2fr] lg:items-start">
-      <BlockTable title="Beslenme Programı" blocks={meals} emptyText="Planınıza henüz öğün eklenmedi." />
+      <BlockTable title="Beslenme Programı" blocks={meals} emptyText={`Bu plana ${day} için henüz öğün eklenmedi.`} />
       <div className="space-y-6">
-        <BlockTable title="Supplement Planı" blocks={supplements} emptyText="Bu planda supplement yok." />
+        <BlockTable title="Supplement Planı" blocks={supplements} emptyText={`Bu planda ${day} için supplement yok.`} />
         {plan.waterLiters !== null ? (
           <section className="rounded-2xl border border-border bg-surface p-5">
             <h2 className="text-sm font-bold uppercase tracking-wider text-text-primary">Günlük Su</h2>

@@ -7,7 +7,7 @@ import jakarta.validation.constraints.Size;
 
 public record UpsertExerciseRequest(
 		@NotBlank @Size(max = 120) String name,
-		@NotNull MuscleGroup muscleGroup,
+		MuscleGroup muscleGroup,
 		@Size(max = 500) String videoUrl,
 		@Size(max = 2000) String note) {
 }

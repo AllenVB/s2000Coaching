@@ -9,6 +9,7 @@ import static org.mockito.Mockito.when;
 import com.s2000coaching.domain.Meal;
 import com.s2000coaching.domain.MealItem;
 import com.s2000coaching.domain.MealKind;
+import com.s2000coaching.domain.NutritionDayType;
 import com.s2000coaching.domain.Member;
 import com.s2000coaching.domain.MemberStatus;
 import com.s2000coaching.domain.NutritionPlan;
@@ -134,15 +135,14 @@ class NutritionPlanServiceTest {
 		@Test
 		void shouldListTheFoodsAndLeaveEveryAmountEmpty() {
 			NutritionPlan plan = create(false);
+			List<Meal> training = mealsOf(plan, NutritionDayType.TRAINING);
 
-			assertThat(plan.getMeals()).extracting(Meal::getName).containsExactly(
+			assertThat(training).extracting(Meal::getName).containsExactly(
 					"Sabah", "Öğlen", "Antrenman öncesi", "Antrenman sonrası", "Akşam", "Uyumadan önce",
 					"Sabah kahvaltıdan sonra", "Antrenman sonrası", "Akşam öğünü ile beraber");
-			assertThat(plan.getMeals()).extracting(Meal::getDisplayOrder)
-					.containsExactly(1, 2, 3, 4, 5, 6, 7, 8, 9);
-			assertThat(plan.getMeals().subList(0, 6)).allSatisfy(meal -> assertThat(meal.getKind())
+			assertThat(training.subList(0, 6)).allSatisfy(meal -> assertThat(meal.getKind())
 					.isEqualTo(MealKind.MEAL));
-			assertThat(plan.getMeals().subList(6, 9)).allSatisfy(meal -> assertThat(meal.getKind())
+			assertThat(training.subList(6, 9)).allSatisfy(meal -> assertThat(meal.getKind())
 					.isEqualTo(MealKind.SUPPLEMENT));
 			// The point of the scheme: foods are there, amounts are the coach's to write.
 			assertThat(plan.getMeals().stream().flatMap(meal -> meal.getItems().stream()))
@@ -152,8 +152,23 @@ class NutritionPlanServiceTest {
 						assertThat(item.getAmount()).isNull();
 						assertThat(item.getCalories()).isNull();
 					});
-			assertThat(plan.getMeals().get(0).getItems()).extracting(MealItem::getDisplayOrder)
+			assertThat(training.get(0).getItems()).extracting(MealItem::getDisplayOrder)
 					.containsExactly(1, 2, 3, 4, 5, 6);
+		}
+
+		/** Every order number is used once across both halves, so adding a meal later cannot collide. */
+		@Test
+		void shouldAlsoLayOutARestDayWithoutTheBlocksAroundAWorkout() {
+			NutritionPlan plan = create(false);
+
+			assertThat(mealsOf(plan, NutritionDayType.REST)).extracting(Meal::getName).containsExactly(
+					"Sabah", "Öğlen", "Akşam", "Uyumadan önce", "Sabah kahvaltıdan sonra",
+					"Akşam öğünü ile beraber");
+			assertThat(plan.getMeals()).extracting(Meal::getDisplayOrder).doesNotHaveDuplicates();
+		}
+
+		private static List<Meal> mealsOf(NutritionPlan plan, NutritionDayType dayType) {
+			return plan.getMeals().stream().filter(meal -> meal.getDayType() == dayType).toList();
 		}
 
 		@Test
@@ -177,6 +192,49 @@ class NutritionPlanServiceTest {
 			assertThat(response.meals()).singleElement()
 					.satisfies(meal -> assertThat(meal.kind()).isEqualTo(MealKind.SUPPLEMENT));
 		}
+	}
+
+	@Test
+	void shouldPutANewMealOnTheChosenKindOfDayAndDefaultToTraining() {
+		NutritionPlan plan = new NutritionPlan(UUID.randomUUID(), member, "Plan", null, true, Instant.now());
+		when(planRepository.findById(plan.getId())).thenReturn(Optional.of(plan));
+
+		nutritionPlanService.addMeal(plan.getId(), new com.s2000coaching.web.dto.UpsertMealRequest("Ara", null, null,
+				null, NutritionDayType.REST));
+		nutritionPlanService.addMeal(plan.getId(), new com.s2000coaching.web.dto.UpsertMealRequest("Ara 2", null, null, null));
+
+		assertThat(plan.getMeals()).extracting(Meal::getDayType)
+				.containsExactly(NutritionDayType.REST, NutritionDayType.TRAINING);
+	}
+
+	@Test
+	void shouldKeepTheDayTypeOfAMealWhenItIsEdited() {
+		NutritionPlan plan = new NutritionPlan(UUID.randomUUID(), member, "Plan", null, true, Instant.now());
+		Meal meal = new Meal(UUID.randomUUID(), plan, 1, "Sabah", null, null);
+		meal.setDayType(NutritionDayType.REST);
+		plan.getMeals().add(meal);
+		when(mealRepository.findById(meal.getId())).thenReturn(Optional.of(meal));
+
+		nutritionPlanService.updateMeal(meal.getId(), new com.s2000coaching.web.dto.UpsertMealRequest("Kahvaltı", null,
+				null, null, NutritionDayType.TRAINING));
+
+		assertThat(meal.getName()).isEqualTo("Kahvaltı");
+		assertThat(meal.getDayType()).isEqualTo(NutritionDayType.REST);
+	}
+
+	@Test
+	void shouldStoreSeparateTargetsForRestDays() {
+		NutritionPlan plan = new NutritionPlan(UUID.randomUUID(), member, "Plan", null, true, Instant.now());
+		when(planRepository.findById(plan.getId())).thenReturn(Optional.of(plan));
+
+		var response = nutritionPlanService.updatePlan(plan.getId(), new UpsertNutritionPlanRequest("Plan", null, 2800,
+				180, 350, 80, null, 2200, 170, 220, 70));
+
+		assertThat(response.targetCalories()).isEqualTo(2800);
+		assertThat(response.restTargetCalories()).isEqualTo(2200);
+		assertThat(response.restTargetProteinG()).isEqualTo(170);
+		assertThat(response.restTargetCarbsG()).isEqualTo(220);
+		assertThat(response.restTargetFatG()).isEqualTo(70);
 	}
 
 	@Test
