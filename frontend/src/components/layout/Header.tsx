@@ -6,19 +6,30 @@ import { usePricingCategory } from '@/context/PricingCategoryContext'
 import { navLinks, type NavLink } from '@/data/content'
 import { Button } from '@/components/ui/Button'
 import { CartIcon, CloseIcon, MenuIcon } from '@/components/ui/icons'
+import { readCoachSession } from '@/lib/adminSession'
+import { readMemberSession } from '@/lib/memberSession'
 import { isPlainLeftClick, navigateToSection } from '@/lib/scroll'
 
-/** Cross-page links out of the landing site; handled by the router, not by hash scrolling. */
-const portalLinks = [
-  { label: 'Üye Girişi', to: '/uye' },
-  { label: 'Yönetim', to: '/yonetim' },
-]
+/**
+ * The one way into the member and management areas. Whoever is signed in already sees where
+ * their session leads instead of a sign-in button.
+ */
+function useAccountLink(): { label: string; to: string } {
+  if (readCoachSession()) {
+    return { label: 'Yönetim Paneli', to: '/yonetim' }
+  }
+  if (readMemberSession()) {
+    return { label: 'Hesabım', to: '/uye' }
+  }
+  return { label: 'Giriş Yap', to: '/giris' }
+}
 
 export function Header() {
   const [isMobileMenuOpen, setMobileMenuOpen] = useState(false)
   const { selectedPackage, openDrawer } = useCart()
   const { setCategory } = usePricingCategory()
   const cartCount = selectedPackage ? 1 : 0
+  const accountLink = useAccountLink()
 
   const handleNavLinkClick = (event: MouseEvent<HTMLAnchorElement>, link: NavLink) => {
     if (!isPlainLeftClick(event)) {
@@ -78,18 +89,15 @@ export function Header() {
               {link.label}
             </a>
           ))}
-          {/* The two portal links are a different kind of destination from the marketing
-              anchors, so they sit behind a divider instead of among them. */}
+          {/* The sign-in is a different kind of destination from the marketing anchors, so it
+              sits behind a divider instead of among them. */}
           <span className="h-5 w-px bg-border-strong" aria-hidden />
-          {portalLinks.map((link) => (
-            <Link
-              key={link.to}
-              to={link.to}
-              className="whitespace-nowrap text-sm font-medium text-text-secondary transition-colors hover:text-primary"
-            >
-              {link.label}
-            </Link>
-          ))}
+          <Link
+            to={accountLink.to}
+            className="whitespace-nowrap text-sm font-semibold text-text-primary transition-colors hover:text-primary"
+          >
+            {accountLink.label}
+          </Link>
         </nav>
 
         <div className="flex items-center gap-3">
@@ -140,16 +148,13 @@ export function Header() {
                 {link.label}
               </a>
             ))}
-            {portalLinks.map((link) => (
-              <Link
-                key={link.to}
-                to={link.to}
-                onClick={() => setMobileMenuOpen(false)}
-                className="py-1 text-sm font-medium text-primary hover:text-primary-hover"
-              >
-                {link.label}
-              </Link>
-            ))}
+            <Link
+              to={accountLink.to}
+              onClick={() => setMobileMenuOpen(false)}
+              className="py-1 text-sm font-medium text-primary hover:text-primary-hover"
+            >
+              {accountLink.label}
+            </Link>
           </div>
           <a
             href="#paketler"

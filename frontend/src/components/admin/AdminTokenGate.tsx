@@ -1,12 +1,18 @@
 import { useState } from 'react'
 
 import { useCoachLogin } from '@/api/coachAuthApi'
+import { AuthTabs } from '@/components/auth/AuthTabs'
 import { Button } from '@/components/ui/Button'
 import { Field, inputClasses } from '@/components/ui/FormField'
 import { ShieldIcon } from '@/components/ui/icons'
 
 /** Management sign-in: a real account, not a shared key. */
-export function AdminTokenGate() {
+export function AdminTokenGate({
+  onMember,
+}: {
+  /** When given, the card shows the shared tab bar so the page can switch back to the member side. */
+  onMember?: (tab: 'login' | 'register') => void
+} = {}) {
   const login = useCoachLogin()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -22,6 +28,9 @@ export function AdminTokenGate() {
   return (
     <div className="mx-auto w-full max-w-md">
       <div className="rounded-2xl border border-border bg-surface p-6 sm:p-8">
+        {onMember ? (
+          <AuthTabs active="admin" onChange={(tab) => (tab === 'admin' ? undefined : onMember(tab))} />
+        ) : null}
         <h1 className="font-display text-2xl font-extrabold uppercase tracking-tight text-text-primary">
           Yönetim Girişi
         </h1>

@@ -9,6 +9,7 @@ import {
   useResetMemberPassword,
   useVerifyMemberCode,
 } from '@/api/memberAuthApi'
+import { AuthTabs } from '@/components/auth/AuthTabs'
 import { Button } from '@/components/ui/Button'
 import { Field, inputClasses, textareaClasses } from '@/components/ui/FormField'
 import { CheckIcon, ShieldIcon } from '@/components/ui/icons'
@@ -42,22 +43,26 @@ type Step =
  * password — and the first sign-in of a member the coach created, who has none — goes through the
  * e-mailed code, which also confirms a new account's address.
  */
-export function MemberLogin() {
-  const [step, setStep] = useState<Step>({ name: 'login' })
+export function MemberLogin({
+  initialStep = 'login',
+  onAdmin,
+}: {
+  initialStep?: 'login' | 'register'
+  /** When given, the tab bar gains a "Yönetim" tab that calls this (the single sign-in page). */
+  onAdmin?: () => void
+}) {
+  const [step, setStep] = useState<Step>(initialStep === 'register' ? { name: 'register' } : { name: 'login' })
   const tab = step.name === 'register' || step.name === 'verify' ? 'register' : 'login'
 
   return (
     <div className="mx-auto w-full max-w-md">
       <div className="rounded-2xl border border-border bg-surface p-6 sm:p-8">
         {step.name === 'login' || step.name === 'register' ? (
-          <div className="mb-6 grid grid-cols-2 rounded-full border border-border bg-canvas p-1 text-xs font-semibold uppercase tracking-wide">
-            <TabButton active={tab === 'login'} onClick={() => setStep({ name: 'login' })}>
-              Giriş Yap
-            </TabButton>
-            <TabButton active={tab === 'register'} onClick={() => setStep({ name: 'register' })}>
-              Hesap Oluştur
-            </TabButton>
-          </div>
+          <AuthTabs
+            active={tab}
+            tabs={onAdmin ? ['login', 'register', 'admin'] : ['login', 'register']}
+            onChange={(next) => (next === 'admin' ? onAdmin?.() : setStep(next === 'register' ? { name: 'register' } : { name: 'login' }))}
+          />
         ) : null}
 
         {step.name === 'login' ? (
@@ -91,29 +96,6 @@ export function MemberLogin() {
         </div>
       </div>
     </div>
-  )
-}
-
-function TabButton({
-  active,
-  onClick,
-  children,
-}: {
-  active: boolean
-  onClick: () => void
-  children: React.ReactNode
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-pressed={active}
-      className={`rounded-full px-3 py-2.5 transition-colors ${
-        active ? 'bg-primary text-canvas' : 'text-text-secondary hover:text-text-primary'
-      }`}
-    >
-      {children}
-    </button>
   )
 }
 

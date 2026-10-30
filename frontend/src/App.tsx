@@ -39,12 +39,14 @@ import { MemberProfilePage } from '@/pages/member/MemberProfilePage'
 import { MemberTodayPage } from '@/pages/member/MemberTodayPage'
 import { MemberPrintPage as AdminMemberPrintPage } from '@/pages/admin/MemberPrintPage'
 import { MemberPrintPage } from '@/pages/member/MemberPrintPage'
+import { LoginPage } from '@/pages/LoginPage'
 import { NotFoundPage } from '@/pages/NotFoundPage'
 
 export default function App() {
   return (
     <Routes>
       <Route path="/" element={<LandingPage />} />
+      <Route path="/giris" element={<LoginPage />} />
 
       <Route path="/uye" element={<MemberAreaLayout />}>
         <Route index element={<MemberTodayPage />} />
