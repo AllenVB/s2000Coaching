@@ -117,4 +117,50 @@ class MemberAuthControllerTest {
 
 		assertThat(mvc.get().uri("/api/member/me")).hasStatus(HttpStatus.UNAUTHORIZED);
 	}
+
+	private String signUpJson(String password, boolean acceptedTerms) {
+		return jsonMapper.writeValueAsString(new com.s2000coaching.web.dto.RegisterMemberRequest("yeni@example.com",
+				password, "Ahmet", "Yılmaz", 27, com.s2000coaching.domain.MemberGender.MALE, 182,
+				new java.math.BigDecimal("84.50"), "5 yıl fitness", acceptedTerms));
+	}
+
+	@Test
+	void shouldOpenAnAccountFromTheSignUpForm() {
+		when(memberAuthService.register(org.mockito.ArgumentMatchers.any()))
+				.thenReturn(new com.s2000coaching.web.dto.RegistrationResponse(true, null));
+
+		assertThat(mvc.post().uri("/api/member/auth/register").contentType(MediaType.APPLICATION_JSON)
+				.content(signUpJson("gizli-parola", true)))
+				.hasStatus(HttpStatus.CREATED)
+				.bodyJson().extractingPath("$.verificationRequired").isEqualTo(true);
+	}
+
+	@Test
+	void shouldRefuseAShortPasswordAndMissingConsentBeforeAnythingIsCreated() {
+		assertThat(mvc.post().uri("/api/member/auth/register").contentType(MediaType.APPLICATION_JSON)
+				.content(signUpJson("kisa", true))).hasStatus(HttpStatus.BAD_REQUEST);
+		assertThat(mvc.post().uri("/api/member/auth/register").contentType(MediaType.APPLICATION_JSON)
+				.content(signUpJson("gizli-parola", false))).hasStatus(HttpStatus.BAD_REQUEST);
+		org.mockito.Mockito.verify(memberAuthService, org.mockito.Mockito.never()).register(org.mockito.ArgumentMatchers.any());
+	}
+
+	@Test
+	void shouldAnswer403WhenTheAddressIsNotConfirmedYetSoThePageCanAskForTheCode() {
+		when(memberAuthService.login("sporcu@example.com", "gizli-parola"))
+				.thenThrow(new com.s2000coaching.exception.EmailNotVerifiedException("Doğrulayın."));
+
+		assertThat(mvc.post().uri("/api/member/auth/login").contentType(MediaType.APPLICATION_JSON)
+				.content("{\"email\":\"sporcu@example.com\",\"password\":\"gizli-parola\"}"))
+				.hasStatus(HttpStatus.FORBIDDEN);
+	}
+
+	@Test
+	void shouldAnswer401ForWrongCredentials() {
+		when(memberAuthService.login("sporcu@example.com", "yanlis"))
+				.thenThrow(new UnauthorizedException("E-posta veya şifre hatalı."));
+
+		assertThat(mvc.post().uri("/api/member/auth/login").contentType(MediaType.APPLICATION_JSON)
+				.content("{\"email\":\"sporcu@example.com\",\"password\":\"yanlis\"}"))
+				.hasStatus(HttpStatus.UNAUTHORIZED);
+	}
 }

@@ -14,11 +14,12 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Creates the first coach account from {@code ADMIN_EMAIL} / {@code ADMIN_PASSWORD} so a
- * fresh deployment is reachable without a manual database insert.
+ * Makes sure the coach account named by {@code ADMIN_EMAIL} / {@code ADMIN_PASSWORD} exists, so a
+ * fresh deployment is reachable without a manual database insert and a coach can be added just by
+ * starting once with a new address.
  *
- * <p>Runs once: an existing account is never overwritten, so changing the variables later
- * does not reset a password someone has since changed.
+ * <p>Only ever creates: an account that already has that address is left exactly as it is, so
+ * changing the variables later does not reset a password someone has since changed.
  */
 @Component
 public class CoachAccountSeeder implements ApplicationRunner {
@@ -50,11 +51,10 @@ public class CoachAccountSeeder implements ApplicationRunner {
 	@Override
 	@Transactional
 	public void run(ApplicationArguments args) {
-		if (coachRepository.count() > 0) {
-			return;
-		}
-
 		if (seedEmail.isBlank() || seedPassword.isBlank()) {
+			if (coachRepository.count() > 0) {
+				return;
+			}
 			log.warn("Yönetim hesabı yok ve ADMIN_EMAIL/ADMIN_PASSWORD tanımlı değil — "
 					+ "yönetim paneline giriş yapılamaz. Bu iki değişkeni tanımlayıp yeniden başlatın.");
 			return;
@@ -71,8 +71,11 @@ public class CoachAccountSeeder implements ApplicationRunner {
 		}
 
 		String email = CoachAuthService.normalizeEmail(seedEmail);
+		if (coachRepository.findByEmail(email).isPresent()) {
+			return;
+		}
 		coachRepository.save(new CoachAccount(UUID.randomUUID(), email,
 				passwordEncoder.encode(seedPassword), name, Instant.now()));
-		log.info("İlk yönetim hesabı oluşturuldu: {}", email);
+		log.info("Yönetim hesabı oluşturuldu: {}", email);
 	}
 }

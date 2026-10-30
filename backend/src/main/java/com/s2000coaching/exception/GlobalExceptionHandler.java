@@ -49,6 +49,12 @@ public class GlobalExceptionHandler {
 				.body(new ApiError(Instant.now(), 401, "Unauthorized", List.of(ex.getMessage())));
 	}
 
+	@ExceptionHandler(EmailNotVerifiedException.class)
+	public ResponseEntity<ApiError> handleEmailNotVerified(EmailNotVerifiedException ex) {
+		return ResponseEntity.status(HttpStatus.FORBIDDEN)
+				.body(new ApiError(Instant.now(), 403, "Forbidden", List.of(ex.getMessage())));
+	}
+
 	@ExceptionHandler(MethodArgumentNotValidException.class)
 	public ResponseEntity<ApiError> handleValidation(MethodArgumentNotValidException ex) {
 		List<String> messages = ex.getBindingResult().getFieldErrors().stream()

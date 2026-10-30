@@ -9,6 +9,8 @@ import static org.mockito.Mockito.when;
 import com.s2000coaching.domain.CoachAccount;
 import com.s2000coaching.repository.CoachAccountRepository;
 import org.junit.jupiter.api.Test;
+import static org.mockito.Mockito.mock;
+import java.util.Optional;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
@@ -37,7 +39,7 @@ class CoachAccountSeederTest {
 
 	@Test
 	void shouldCreateTheFirstAccountWithANormalizedAddressAndHashedPassword() {
-		when(coachRepository.count()).thenReturn(0L);
+		when(coachRepository.findByEmail("koc@s2000.com")).thenReturn(Optional.empty());
 
 		CoachAccount saved = seedAndCapture(seeder("  Koc@S2000.COM ", "gizli-sifre", "Koç"));
 
@@ -50,11 +52,22 @@ class CoachAccountSeederTest {
 	@Test
 	void shouldLeaveAnExistingAccountAlone() {
 		// Re-seeding must never reset a password the coach has since changed.
-		when(coachRepository.count()).thenReturn(1L);
+		when(coachRepository.findByEmail("koc@s2000.com")).thenReturn(Optional.of(mock(CoachAccount.class)));
 
 		seeder("koc@s2000.com", "yeni-sifre", "Koç").run(null);
 
 		verify(coachRepository, never()).save(any());
+	}
+
+	/** A coach can be added by starting once with a new address; the first one is not special. */
+	@Test
+	void shouldAddAnotherCoachWhenTheAddressIsNew() {
+		when(coachRepository.findByEmail("ikinci@s2000.com")).thenReturn(Optional.empty());
+
+		CoachAccount saved = seedAndCapture(seeder("ikinci@s2000.com", "gizli-sifre-2", "İkinci Koç"));
+
+		assertThat(saved.getEmail()).isEqualTo("ikinci@s2000.com");
+		verify(coachRepository, never()).count();
 	}
 
 	@Test
@@ -73,7 +86,7 @@ class CoachAccountSeederTest {
 	 */
 	@Test
 	void shouldNotStoreANameTheJvmFailedToDecode() {
-		when(coachRepository.count()).thenReturn(0L);
+		when(coachRepository.findByEmail("koc@s2000.com")).thenReturn(Optional.empty());
 
 		CoachAccount saved = seedAndCapture(seeder("koc@s2000.com", "gizli-sifre", "S�leyman Ko�"));
 

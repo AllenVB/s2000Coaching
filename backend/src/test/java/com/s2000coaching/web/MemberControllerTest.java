@@ -59,7 +59,7 @@ class MemberControllerTest {
 	void shouldUpdateTheSignedInMemberRatherThanAnyIdTheBodyCarries() {
 		Member member = member();
 		when(memberAuthService.requireMember(BEARER)).thenReturn(member);
-		var request = new UpdateOwnProfileRequest("Ahmet Yılmaz", "+905559998877", 183, "7 yıl fitness");
+		var request = new UpdateOwnProfileRequest(30, "+905559998877", 183, new BigDecimal("85.00"), "7 yıl fitness");
 		when(memberService.updateOwnProfile(eq(member.getId()), any()))
 				.thenReturn(MemberResponse.from(member));
 
@@ -80,7 +80,7 @@ class MemberControllerTest {
 
 		assertThat(mvc.patch().uri("/api/member/me")
 				.contentType(MediaType.APPLICATION_JSON)
-				.content(json(new UpdateOwnProfileRequest("Ahmet", "+905551112233", 182, "fitness"))))
+				.content(json(new UpdateOwnProfileRequest(30, "+905551112233", 182, new BigDecimal("85.00"), "fitness"))))
 				.hasStatus(HttpStatus.UNAUTHORIZED);
 		verify(memberService, never()).updateOwnProfile(any(), any());
 	}
@@ -92,19 +92,19 @@ class MemberControllerTest {
 		assertThat(mvc.patch().uri("/api/member/me")
 				.header(HttpHeaders.AUTHORIZATION, BEARER)
 				.contentType(MediaType.APPLICATION_JSON)
-				.content(json(new UpdateOwnProfileRequest("Ahmet", "+905551112233", 20, "fitness"))))
+				.content(json(new UpdateOwnProfileRequest(30, "+905551112233", 20, new BigDecimal("85.00"), "fitness"))))
 				.hasStatus(HttpStatus.BAD_REQUEST);
 		verify(memberService, never()).updateOwnProfile(any(), any());
 	}
 
 	@Test
-	void shouldRejectABlankName() {
+	void shouldRejectAnImpossibleWeight() {
 		when(memberAuthService.requireMember(BEARER)).thenReturn(member());
 
 		assertThat(mvc.patch().uri("/api/member/me")
 				.header(HttpHeaders.AUTHORIZATION, BEARER)
 				.contentType(MediaType.APPLICATION_JSON)
-				.content(json(new UpdateOwnProfileRequest("   ", "+905551112233", 182, "fitness"))))
+				.content(json(new UpdateOwnProfileRequest(30, "+905551112233", 182, new BigDecimal("4.0"), "fitness"))))
 				.hasStatus(HttpStatus.BAD_REQUEST);
 		verify(memberService, never()).updateOwnProfile(any(), any());
 	}

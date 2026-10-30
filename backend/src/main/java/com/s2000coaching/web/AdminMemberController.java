@@ -1,11 +1,13 @@
 package com.s2000coaching.web;
 
+import com.s2000coaching.service.MemberAuthService;
 import com.s2000coaching.service.MemberService;
 import com.s2000coaching.web.dto.CreateMemberRequest;
 import com.s2000coaching.web.dto.MemberResponse;
 import com.s2000coaching.web.dto.UpdateMemberRequest;
 import com.s2000coaching.web.dto.CreateMemberResponse;
 import com.s2000coaching.web.dto.ResendCodeResponse;
+import com.s2000coaching.web.dto.SetMemberPasswordRequest;
 import com.s2000coaching.web.dto.VerificationCodeRequest;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -28,9 +30,11 @@ import org.springframework.web.bind.annotation.RestController;
 public class AdminMemberController {
 
 	private final MemberService memberService;
+	private final MemberAuthService memberAuthService;
 
-	public AdminMemberController(MemberService memberService) {
+	public AdminMemberController(MemberService memberService, MemberAuthService memberAuthService) {
 		this.memberService = memberService;
+		this.memberAuthService = memberAuthService;
 	}
 
 	@GetMapping("/api/admin/members")
@@ -70,6 +74,14 @@ public class AdminMemberController {
 			@PathVariable UUID memberId,
 			@Valid @RequestBody VerificationCodeRequest request) {
 		return memberService.completeRegistration(memberId, request.code());
+	}
+
+	/** The coach choosing a password for a member; the member's sessions end. */
+	@PutMapping("/api/admin/members/{memberId}/password")
+	public ResponseEntity<Void> setPassword(@PathVariable UUID memberId,
+			@Valid @RequestBody SetMemberPasswordRequest request) {
+		memberAuthService.setPasswordAsCoach(memberId, request.newPassword());
+		return ResponseEntity.noContent().build();
 	}
 
 	@DeleteMapping("/api/admin/members/{memberId}")

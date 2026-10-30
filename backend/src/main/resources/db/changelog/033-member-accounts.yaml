@@ -1,0 +1,22 @@
+databaseChangeLog:
+  - changeSet:
+      id: 049-add-member-account-columns
+      author: s2000
+      comment: >-
+        Self-service accounts: a password (bcrypt hash, null for members the coach created who have
+        not set one yet — they sign in with an e-mailed code and set it from their profile), gender,
+        age, and the same failed-attempt lockout the coach accounts have. Gender and age are null for
+        members created before these existed; the coach can fill them in.
+      changes:
+        - addColumn:
+            tableName: member
+            columns:
+              - column: { name: password_hash, type: varchar(100) }
+              - column: { name: gender, type: varchar(10) }
+              - column: { name: age, type: int }
+              - column:
+                  name: failed_login_attempts
+                  type: int
+                  defaultValueNumeric: 0
+                  constraints: { nullable: false }
+              - column: { name: login_locked_until, type: timestamp with time zone }

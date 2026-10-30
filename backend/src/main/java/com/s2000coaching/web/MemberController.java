@@ -2,10 +2,12 @@ package com.s2000coaching.web;
 
 import com.s2000coaching.service.MemberAuthService;
 import com.s2000coaching.service.MemberService;
+import com.s2000coaching.web.dto.ChangePasswordRequest;
 import com.s2000coaching.web.dto.MemberResponse;
 import com.s2000coaching.web.dto.UpdateOwnProfileRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -39,6 +41,16 @@ public class MemberController {
 			@Valid @RequestBody UpdateOwnProfileRequest request) {
 		return memberService.updateOwnProfile(
 				memberAuthService.requireMember(authorization).getId(), request);
+	}
+
+	/** Sets the member's password, or changes it (the current one is then required). */
+	@PutMapping("/api/member/password")
+	public ResponseEntity<Void> changePassword(
+			@RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization,
+			@Valid @RequestBody ChangePasswordRequest request) {
+		memberAuthService.changePassword(memberAuthService.requireMember(authorization).getId(), authorization,
+				request.currentPassword(), request.newPassword());
+		return ResponseEntity.noContent().build();
 	}
 
 	@PutMapping("/api/member/reminders")

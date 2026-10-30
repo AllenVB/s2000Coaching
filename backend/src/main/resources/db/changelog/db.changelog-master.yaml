@@ -70,3 +70,5 @@ databaseChangeLog:
       file: db/changelog/031-nutrition-supplements-and-water.yaml
   - include:
       file: db/changelog/032-training-set-reps.yaml
+  - include:
+      file: db/changelog/033-member-accounts.yaml

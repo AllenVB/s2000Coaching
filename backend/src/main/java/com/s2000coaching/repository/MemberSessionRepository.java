@@ -12,5 +12,8 @@ public interface MemberSessionRepository extends JpaRepository<MemberSession, UU
 
 	void deleteAllByMemberId(UUID memberId);
 
+	/** Ends every session of the member except the one the token belongs to. */
+	void deleteAllByMemberIdAndTokenHashNot(UUID memberId, String tokenHash);
+
 	int deleteByExpiresAtBefore(Instant cutoff);
 }
