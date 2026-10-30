@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/Button'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { Field, inputClasses, textareaClasses } from '@/components/ui/FormField'
 import { createMemberSchema, type CreateMemberFormValues } from '@/schemas/memberSchema'
-import type { MailDelivery, Member } from '@/types/member'
+import { GENDERS, genderLabel, type MailDelivery, type Member } from '@/types/member'
 
 /**
  * Member creation. Submitting only opens the confirmation prompt — nothing is sent until the
@@ -36,6 +36,8 @@ export function CreateMemberForm({
       email: prefill?.email ?? '',
       fullName: prefill?.fullName ?? '',
       phone: prefill?.phone ?? '',
+      gender: '',
+      age: '',
       sportsBackground: '',
     } as CreateMemberFormValues,
   })
@@ -49,7 +51,8 @@ export function CreateMemberForm({
     if (!confirming) {
       return
     }
-    createMember.mutate(confirming, {
+    const { gender, age, ...rest } = confirming
+    createMember.mutate({ ...rest, gender: gender === '' ? null : gender, age: age === '' ? null : Number(age) }, {
       onSuccess: ({ member, inviteDelivery }) => {
         setConfirming(null)
         reset()
@@ -91,7 +94,7 @@ export function CreateMemberForm({
         </div>
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <Field label="Telefon *" error={errors.phone?.message}>
+          <Field label="Telefon" error={errors.phone?.message}>
             <input
               {...register('phone')}
               type="tel"
@@ -121,6 +124,22 @@ export function CreateMemberForm({
               placeholder="82.5"
               className={inputClasses}
             />
+          </Field>
+        </div>
+
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <Field label="Cinsiyet" error={errors.gender?.message}>
+            <select {...register('gender')} className={inputClasses}>
+              <option value="">Belirtilmemiş</option>
+              {GENDERS.map((gender) => (
+                <option key={gender.value} value={gender.value}>
+                  {gender.label}
+                </option>
+              ))}
+            </select>
+          </Field>
+          <Field label="Yaş" error={errors.age?.message}>
+            <input {...register('age')} type="text" inputMode="numeric" placeholder="28" className={inputClasses} />
           </Field>
         </div>
 
@@ -156,7 +175,9 @@ export function CreateMemberForm({
               <dl className="space-y-1.5 rounded-xl border border-border bg-surface-elevated p-3.5 text-xs">
                 <SummaryRow label="E-Posta" value={confirming.email} />
                 <SummaryRow label="Ad Soyad" value={confirming.fullName} />
-                <SummaryRow label="Telefon" value={confirming.phone} />
+                <SummaryRow label="Telefon" value={confirming.phone || '—'} />
+                <SummaryRow label="Cinsiyet" value={genderLabel(confirming.gender === '' ? null : confirming.gender)} />
+                <SummaryRow label="Yaş" value={confirming.age || '—'} />
                 <SummaryRow label="Boy" value={`${confirming.heightCm} cm`} />
                 <SummaryRow label="Kilo" value={`${confirming.weightKg} kg`} />
               </dl>

@@ -39,6 +39,8 @@ import { MemberProfilePage } from '@/pages/member/MemberProfilePage'
 import { MemberTodayPage } from '@/pages/member/MemberTodayPage'
 import { MemberPrintPage as AdminMemberPrintPage } from '@/pages/admin/MemberPrintPage'
 import { MemberPrintPage } from '@/pages/member/MemberPrintPage'
+import { MemberMonthlyRecordsTab } from '@/pages/admin/tabs/MemberMonthlyRecordsTab'
+import { MemberRecordsPage } from '@/pages/member/MemberRecordsPage'
 import { LoginPage } from '@/pages/LoginPage'
 import { NotFoundPage } from '@/pages/NotFoundPage'
 
@@ -54,6 +56,7 @@ export default function App() {
         <Route path="antrenman/:dayId" element={<MemberWorkoutDayPage />} />
         <Route path="beslenme" element={<MemberNutritionPage />} />
         <Route path="olcumler" element={<MemberMeasurementsPage />} />
+        <Route path="verilerim" element={<MemberRecordsPage />} />
         <Route path="haftalik" element={<MemberCheckInPage />} />
         <Route path="anket" element={<MemberQuestionnairePage />} />
         <Route path="form-kontrol" element={<MemberFormCheckPage />} />
@@ -75,6 +78,7 @@ export default function App() {
           <Route path="antrenman" element={<MemberTrainingTab />} />
           <Route path="beslenme" element={<MemberNutritionTab />} />
           <Route path="olcumler" element={<MemberMeasurementsTab />} />
+          <Route path="aylik-veriler" element={<MemberMonthlyRecordsTab />} />
           <Route path="haftalik" element={<MemberCheckInsTab />} />
           <Route path="analiz" element={<MemberAnalysisTab />} />
           <Route path="form-kontrol" element={<MemberFormChecksTab />} />

@@ -21,6 +21,7 @@ const tabs = [
   { to: 'antrenman', label: 'Antrenman' },
   { to: 'beslenme', label: 'Beslenme' },
   { to: 'olcumler', label: 'Ölçümler' },
+  { to: 'aylik-veriler', label: 'Aylık Veriler' },
   { to: 'haftalik', label: 'Haftalık' },
   { to: 'analiz', label: 'Analiz' },
   { to: 'form-kontrol', label: 'Form' },

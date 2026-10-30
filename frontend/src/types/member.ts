@@ -62,6 +62,8 @@ export interface CreateMemberInput {
   email: string
   fullName: string
   phone: string
+  gender: MemberGender | null
+  age: number | null
   heightCm: number
   weightKg: number
   sportsBackground: string

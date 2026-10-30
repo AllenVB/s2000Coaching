@@ -20,7 +20,7 @@ klasörlerdeki `DESIGN.md`).
 | `/yonetim` | Yönetim paneli | E-posta + şifre ile giriş yapan koç hesapları |
 
 **Üye alanı** (masaüstünde sol menü, telefonda alt sekme çubuğu): `/uye` bugün · `/uye/antrenman` (ve
-`/uye/antrenman/:gunId` gün detayı) · `/uye/beslenme` · `/uye/olcumler` · `/uye/gecmis` ·
+`/uye/antrenman/:gunId` gün detayı) · `/uye/beslenme` · `/uye/verilerim` · `/uye/olcumler` · `/uye/gecmis` ·
 `/uye/fotograflar` · `/uye/mesajlar` · `/uye/profil`.
 
 `/uye/gecmis` ve `/uye/fotograflar` telefon sekme çubuğunda yoktur: çubuk genişliği sekmelere böler, altıdan sonrası
@@ -457,11 +457,29 @@ bağlandığında verilir; önce ödeyip sonra üye olan biri paraladığı sür
 gibi dükkân dışı ödemeler için üye detayında elle dönem ekleyebilir. Üye `/uye/profil`'de bitiş tarihini
 görür; son 14 günde "Bugün" ekranında yenileme uyarısı çıkar.
 
+## Verilerim (aylık tablolar)
+
+Üye `/uye/verilerim` sayfasında **her ay için bir tablo** doldurur (örn. 10/2026, 11/2026): boy, kilo,
+omuz, göğüs, kol, boyun, bel, kalça ve tek bacak çevresi. **Kaydet** ile ay kaydolur; kalem simgesi
+tabloyu düzenler (ay değiştirilemez), çöp kutusu siler. Kurallar:
+
+- Bir ay için **tek tablo** vardır; aynı ay tekrar eklenirse sunucu 409 döner ve kalemle düzenlemesi söylenir.
+- En az bir değer zorunludur, boş bırakılan satır "ölçülmedi" demektir (—). Ondalık virgül kabul edilir.
+- Gelecek bir ay girilemez.
+- Veriler sağlık verisidir: üye **KVKK sağlık verisi onayını** vermeden sayfa yalnızca onay kartını gösterir ve
+  sunucu satır yazmaz. Silme her zaman serbesttir; üye silinince tabloları da silinir.
+- Koç, üye detayındaki **Aylık Veriler** sekmesinden aynı tabloları ekleyip düzenleyebilir ve silebilir
+  (`/api/admin/members/{id}/monthly-records`). Bu, mevcut **Ölçümler** (haftalık check-in + grafik) ile
+  karışmaz; ikisi ayrı tablolarda tutulur.
+
+Koçun **Yeni Üye** formunda telefon artık isteğe bağlıdır; cinsiyet ve yaş girilebilir.
+
 ## Tecrübelerim
 
 Herkese açık, salt okunur bir bölüm: kategoriler ve altındaki tecrübe kartları veritabanından
 (`GET /api/experience-categories`) okunur. Düzenleme uçları yoktur; içerik Liquibase seed'leriyle gelir.
-Bölümün sonunda yayındaki **vaka çalışmaları** (koçun kendi verisi) görünür.
+Ana sayfada artık vaka çalışması bölümü yoktur; koçun kendi verisi yönetim alanında, diğer üyeler gibi
+bir üye hesabı olarak tutulur (vaka çalışması uçları ve yönetim sayfaları yerinde durur).
 
 ## Testler
 
