@@ -101,7 +101,8 @@ Siteyi gerçek üyeler için bir sunucuda çalıştırmak: **[docs/yayin-rehberi
 
 ## Üyelik akışı
 
-**Hesap ve giriş (güncel).** Üye `/uye` sayfasında **e-posta + şifre** ile girer ya da **Hesap Oluştur** sekmesinden
+**Hesap ve giriş (güncel).** Sitenin üst menüsünde tek bir **Giriş Yap** düğmesi vardır (`/giris`): sekmeler
+**Giriş Yap · Hesap Oluştur · Yönetim**. Giriş yapılmışsa düğme "Hesabım" / "Yönetim Paneli" olur. Üye `/uye` sayfasında **e-posta + şifre** ile girer ya da **Hesap Oluştur** sekmesinden
 kendi hesabını açar (ad, soyad, e-posta, yaş, cinsiyet, boy, kilo, spor geçmişi, şifre ve aydınlatma onayı).
 E-posta doğrulaması açıkken (varsayılan, canlıda böyledir) hesap, adrese gelen 6 haneli kod girilene kadar
 giremez; yerel `baslat.bat` bunu kapatır (`REGISTRATION_VERIFY_EMAIL=false`), çünkü yerelde e-posta sunucusu
