@@ -40,3 +40,6 @@ yedekler/
 
 # Production secrets (deploy/.env.example is the template)
 deploy/.env
+
+# Gelistirme ortaminin gunluk dosyalari (baslat.bat)
+loglar/
