@@ -9,7 +9,7 @@ spring:
       max-file-size: ${PHOTO_MAX_SIZE_BYTES:8388608}
       max-request-size: ${PHOTO_MAX_REQUEST_SIZE_BYTES:10485760}
   datasource:
-    url: ${DB_URL:jdbc:postgresql://localhost:10003/s2000coaching}
+    url: ${DB_URL:jdbc:postgresql://localhost:7002/s2000coaching}
     username: ${DB_USERNAME:s2000coaching}
     password: ${DB_PASSWORD:s2000coaching}
   liquibase:
@@ -40,7 +40,7 @@ spring:
           writetimeout: 10000
 
 server:
-  port: ${SERVER_PORT:10002}
+  port: ${SERVER_PORT:7001}
 
 app:
   # The zone every "today" is read in: which day a workout or measurement belongs to, when a
@@ -49,7 +49,7 @@ app:
   # previous day. The front end reads the same zone from VITE_APP_TIME_ZONE.
   time-zone: ${APP_TIME_ZONE:Europe/Istanbul}
   cors:
-    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:10001}
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:7000}
   admin:
     # The first coach account is created from these on an empty database; an existing
     # account is never overwritten. Leave them unset and the management area has no way in.
@@ -73,7 +73,7 @@ app:
     cron: ${CLEANUP_CRON:0 30 3 * * *}
     code-retention: ${CLEANUP_CODE_RETENTION:7d}
   # Used in the links inside e-mails to members.
-  public-url: ${PUBLIC_URL:http://localhost:10001}
+  public-url: ${PUBLIC_URL:http://localhost:7000}
   reminders:
     # Daily at 09:00 Istanbul time. Does nothing while spring.mail.host is not set.
     enabled: ${REMINDERS_ENABLED:true}

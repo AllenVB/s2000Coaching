@@ -75,54 +75,71 @@ if errorlevel 1 (
 echo       Java, Node ve Docker hazir.
 
 rem --- Portlar bos mu
-rem 10001 mesgulse Vite normalde sessizce bir sonraki bos porta kayar; backend'in CORS
-rem listesinde yalnizca 10001 oldugu icin sayfa acilir ama hicbir veri gelmez.
+rem 7000 mesgulse Vite normalde sessizce bir sonraki bos porta kayar; backend'in CORS
+rem listesinde yalnizca 7000 oldugu icin sayfa acilir ama hicbir veri gelmez.
 rem vite.config.ts artik strictPort ile buna izin vermiyor, burada da pesinen soyluyoruz.
-netstat -ano | findstr /r /c:":10001 .*LISTENING" >nul 2>&1
+netstat -ano | findstr /r /c:":7000 .*LISTENING" >nul 2>&1
 if not errorlevel 1 (
     echo.
-    echo   HATA: 10001 portu kullanimda. Frontend baska bir porta kayamaz,
-    echo         cunku backend yalnizca 10001'e izin veriyor.
+    echo   HATA: 7000 portu kullanimda. Frontend baska bir porta kayamaz,
+    echo         cunku backend yalnizca 7000'e izin veriyor.
     echo.
-    echo         Kullanani bulmak icin:   netstat -ano ^| findstr :10001
+    echo         Kullanani bulmak icin:   netstat -ano ^| findstr :7000
     echo         Sonra o PID'i kapatin:   taskkill /PID ^<numara^> /F
     echo         Genelde sebebi: onceden acik kalmis bir frontend penceresi.
     goto :hata
 )
-netstat -ano | findstr /r /c:":10002 .*LISTENING" >nul 2>&1
+netstat -ano | findstr /r /c:":7001 .*LISTENING" >nul 2>&1
 if not errorlevel 1 (
     echo.
-    echo   HATA: 10002 portu kullanimda; backend baslayamaz.
-    echo         Kullanani bulmak icin:   netstat -ano ^| findstr :10002
+    echo   HATA: 7001 portu kullanimda; backend baslayamaz.
+    echo         Kullanani bulmak icin:   netstat -ano ^| findstr :7001
     echo         Sonra o PID'i kapatin:   taskkill /PID ^<numara^> /F
     goto :hata
 )
-echo       10001 ve 10002 portlari bos.
+rem --- Windows'un kendi ayirdigi port araliklari
+rem Hyper-V/WSL/Docker bazi araliklari (ornegin 7000-7099) rezerve eder. Bu portlar netstat'ta
+rem "bos" gorunur ama hicbir program onlara baglanamaz; Docker "bind: access permissions" hatasiyla
+rem durur ve kurulum yarida kesilir. Rezerve araliklari burada okuyup once uyariyoruz.
+for /f "tokens=1,2" %%a in ('netsh interface ipv4 show excludedportrange protocol=tcp 2^>nul ^| findstr /r /c:"^ *[0-9][0-9]* *[0-9][0-9]*"') do (
+    for %%p in (7000 7001 7002) do (
+        if %%p geq %%a if %%p leq %%b (
+            echo.
+            echo   HATA: %%p portu Windows tarafindan rezerve edilmis ^(%%a-%%b araligi^).
+            echo         Hicbir program bu porta baglanamaz.
+            echo         Cozum: yonetici CMD'de  net stop winnat  calistirin, sonra  net start winnat
+            echo         ya da portlari baska bir araliga tasiyin ^(docker-compose.yml, vite.config.ts,
+            echo         application.yml, frontend\.env.example^).
+            goto :hata
+        )
+    )
+)
+echo       7000 ve 7001 portlari bos.
 
-rem --- 10003 (veritabani) portu
-rem Bu proje icin postgres zaten calisiyorsa (ikinci kez calistirma) 10003 portunun dolu
+rem --- 7002 (veritabani) portu
+rem Bu proje icin postgres zaten calisiyorsa (ikinci kez calistirma) 7002 portunun dolu
 rem olmasi normaldir; o durumda kontrol atlanir, eslemeyi asagida yine dogruluyoruz.
-rem Calismiyorsa 10003 portunu baska bir sey tutuyorsa konteyner ya hic baslamaz ya da
+rem Calismiyorsa 7002 portunu baska bir sey tutuyorsa konteyner ya hic baslamaz ya da
 rem "5432/tcp" gibi host eslemesi olmadan baslar: konteynerin ICINDE postgres calisir
 rem ama Windows'taki backend ona ulasamaz. Bunu burada, baslatmadan once yakaliyoruz.
 set "pgcalisiyor="
 for /f "delims=" %%i in ('docker compose ps --status running -q postgres 2^>nul') do set "pgcalisiyor=%%i"
 if not defined pgcalisiyor (
-    netstat -ano | findstr /r /c:":10003 .*LISTENING" >nul 2>&1
+    netstat -ano | findstr /r /c:":7002 .*LISTENING" >nul 2>&1
     if not errorlevel 1 (
         echo.
-        echo   HATA: 10003 portu baska bir sey tarafindan kullaniliyor; veritabani
+        echo   HATA: 7002 portu baska bir sey tarafindan kullaniliyor; veritabani
         echo         konteyneri bu porta baglanamaz.
         echo.
         echo         Muhtemel sebep: baska bir Docker projesinin postgres'i ya da
-        echo         bilgisayarda kurulu bir PostgreSQL 10003 portunu tutuyor.
-        echo         Kullanani bulmak icin:   netstat -ano ^| findstr :10003
+        echo         bilgisayarda kurulu bir PostgreSQL 7002 portunu tutuyor.
+        echo         Kullanani bulmak icin:   netstat -ano ^| findstr :7002
         echo         Docker konteyneri ise:   docker ps
         echo         Cozum: o projenin klasorunde  docker compose down  calistirin,
         echo         ya da Windows PostgreSQL servisini durdurun, sonra tekrar deneyin.
         goto :hata
     )
-    echo       10003 portu bos.
+    echo       7002 portu bos.
 ) else (
     echo       Bu projenin postgres konteyneri zaten calisiyor.
 )
@@ -142,11 +159,11 @@ if errorlevel 1 (
 
 rem Port eslemesi gercekten olustu mu? "docker compose port" eslenmemisse bos doner ya da
 rem hata verir. Eslenmediyse konteyner calisir ama Windows'tan ulasilamaz (docker ps'te
-rem PORTS sutununda "0.0.0.0:10003->5432/tcp" yerine yalnizca "5432/tcp" gorunur).
+rem PORTS sutununda "0.0.0.0:7002->5432/tcp" yerine yalnizca "5432/tcp" gorunur).
 set "pgesleme="
 for /f "delims=" %%p in ('docker compose port postgres 5432 2^>nul') do set "pgesleme=%%p"
 if not defined pgesleme goto :eslemehata
-echo !pgesleme! | findstr /c:":10003" >nul 2>&1
+echo !pgesleme! | findstr /c:":7002" >nul 2>&1
 if errorlevel 1 goto :eslemehata
 echo       Port eslemesi tamam: !pgesleme! -^> konteyner 5432
 
@@ -168,20 +185,20 @@ timeout /t 2 /nobreak >nul
 goto :bekle
 
 :icerihazir
-rem Sonra Windows'tan localhost:10003 adresine gercekten baglanilabiliyor mu: backend'in
+rem Sonra Windows'tan localhost:7002 adresine gercekten baglanilabiliyor mu: backend'in
 rem gorecegi yol bu. psql gerekmez; PowerShell ile TCP baglantisi denenir.
-echo       localhost:10003 Windows tarafindan kontrol ediliyor...
+echo       localhost:7002 Windows tarafindan kontrol ediliyor...
 set /a tdeneme=0
 :tbekle
 set /a tdeneme+=1
-powershell -NoProfile -Command "if ((Test-NetConnection -ComputerName localhost -Port 10003 -InformationLevel Quiet -WarningAction SilentlyContinue)) { exit 0 } else { exit 1 }" >nul 2>&1
+powershell -NoProfile -Command "if ((Test-NetConnection -ComputerName localhost -Port 7002 -InformationLevel Quiet -WarningAction SilentlyContinue)) { exit 0 } else { exit 1 }" >nul 2>&1
 if not errorlevel 1 goto :hazir
 if %tdeneme% geq 10 (
     echo.
-    echo   HATA: PostgreSQL konteynerde calisiyor ama localhost:10003 adresine Windows'tan
+    echo   HATA: PostgreSQL konteynerde calisiyor ama localhost:7002 adresine Windows'tan
     echo         baglanilamadi. Backend de baglanamaz.
-    echo         Kontrol edin:  docker ps   ^(PORTS sutununda 0.0.0.0:10003-^>5432/tcp olmali^)
-    echo         Baska bir proje 10003 portunu tutuyorsa onun klasorunde  docker compose down
+    echo         Kontrol edin:  docker ps   ^(PORTS sutununda 0.0.0.0:7002-^>5432/tcp olmali^)
+    echo         Baska bir proje 7002 portunu tutuyorsa onun klasorunde  docker compose down
     echo         calistirin, sonra bu projede  docker compose up -d  deneyin.
     goto :hata
 )
@@ -190,15 +207,15 @@ goto :tbekle
 
 :eslemehata
 echo.
-echo   HATA: PostgreSQL konteyneri calisiyor ama 10003 portu Windows'a acilmamis.
-echo         Muhtemel sebep: baska bir Docker projesi ^(ornegin routewise^) 10003 portunu
+echo   HATA: PostgreSQL konteyneri calisiyor ama 7002 portu Windows'a acilmamis.
+echo         Muhtemel sebep: baska bir Docker projesi ^(ornegin routewise^) 7002 portunu
 echo         tutuyor. docker ps'te PORTS sutunu yalnizca 5432/tcp gosterir.
 echo         Cozum: o projenin klasorunde  docker compose down  calistirin,
 echo         sonra bu projede  docker compose down  ve  docker compose up -d.
 goto :hata
 
 :hazir
-echo       PostgreSQL hazir ve localhost:10003 uzerinden ulasilabilir.
+echo       PostgreSQL hazir ve localhost:7002 uzerinden ulasilabilir.
 
 rem ---------------------------------------------------------------
 rem  3) Backend
@@ -235,9 +252,9 @@ echo.
 echo ====================================================
 echo   Hazir. Adresler:
 echo.
-echo     Tanitim sitesi  :  http://localhost:10001
-echo     Uye alani       :  http://localhost:10001/uye
-echo     Yonetim paneli  :  http://localhost:10001/yonetim
+echo     Tanitim sitesi  :  http://localhost:7000
+echo     Uye alani       :  http://localhost:7000/uye
+echo     Yonetim paneli  :  http://localhost:7000/yonetim
 echo.
 echo   Yonetim girisi:
 echo     E-posta : %ADMIN_EMAIL%
@@ -257,7 +274,7 @@ echo Frontend hazir olunca tarayici acilacak...
 set /a fdeneme=0
 :fbekle
 set /a fdeneme+=1
-curl -s -o nul http://localhost:10001 >nul 2>&1
+curl -s -o nul http://localhost:7000 >nul 2>&1
 if not errorlevel 1 goto :fhazir
 if %fdeneme% geq 150 (
     echo   Frontend 5 dakikada acilmadi. Frontend penceresindeki mesajlara bakin.
@@ -267,7 +284,7 @@ timeout /t 2 /nobreak >nul
 goto :fbekle
 
 :fhazir
-start "" http://localhost:10001
+start "" http://localhost:7000
 goto :son
 
 :hata
