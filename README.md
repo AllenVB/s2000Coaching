@@ -101,6 +101,23 @@ Siteyi gerçek üyeler için bir sunucuda çalıştırmak: **[docs/yayin-rehberi
 
 ## Üyelik akışı
 
+**Hesap ve giriş (güncel).** Üye `/uye` sayfasında **e-posta + şifre** ile girer ya da **Hesap Oluştur** sekmesinden
+kendi hesabını açar (ad, soyad, e-posta, yaş, cinsiyet, boy, kilo, spor geçmişi, şifre ve aydınlatma onayı).
+E-posta doğrulaması açıkken (varsayılan, canlıda böyledir) hesap, adrese gelen 6 haneli kod girilene kadar
+giremez; yerel `baslat.bat` bunu kapatır (`REGISTRATION_VERIFY_EMAIL=false`), çünkü yerelde e-posta sunucusu
+yoktur ve kayıt olan hemen girer. Beş yanlış şifre hesabı 15 dakika kilitler; yanlış adres ile yanlış şifre aynı
+mesajı verir. Şifre en az 8 karakter, en çok 64 (bcrypt 72 baytı okur); yalnızca özeti saklanır.
+**Şifremi unuttum** (ve koçun açtığı, henüz şifresi olmayan üyeler) e-posta koduyla yeni şifre seçer; şifre
+değişince o üyenin diğer oturumları kapanır. Üye yaş, telefon, boy, kilo ve spor geçmişini düzenler; **ad soyad,
+cinsiyet ve e-postayı yalnızca koç değiştirir**. Koç, üye sayfasında her bilgiyi düzenler ve üyeye şifre belirler
+(şifre geri okunamaz, yalnızca değiştirilir).
+
+**Koç hesabı.** `ADMIN_EMAIL` / `ADMIN_PASSWORD` ile tanımlanan hesap, veritabanında yoksa başlarken oluşturulur
+(başka bir koç hesabı olsa bile; böylece yeni bir koç eklemek için yeni adresle bir kez başlatmak yeter). Var olan
+hesaba dokunulmaz: şifreyi sonradan Ayarlar'dan değiştirdiysen buradaki değer etkisizdir. Yerelde bu bilgileri
+`yerel-ayarlar.bat` dosyasına yaz (örneği `yerel-ayarlar.ornek.bat`); dosya git'e girmez. Gerçek şifreyi depoya,
+README'ye ya da sohbete yazma.
+
 Üyeler kendileri kayıt olmaz; koç `/yonetim` sayfasından oluşturur.
 
 1. **Yönetim → Yeni Üye Ekle.** E-posta, ad soyad, telefon, boy, kilo ve spor geçmişi girilir. Form

@@ -1,5 +1,18 @@
 export type MemberStatus = 'PENDING_VERIFICATION' | 'ACTIVE'
 
+/** As the member stated it at sign-up; only the coach can change it afterwards. */
+export type MemberGender = 'MALE' | 'FEMALE' | 'OTHER'
+
+export const GENDERS: { value: MemberGender; label: string }[] = [
+  { value: 'FEMALE', label: 'Kadın' },
+  { value: 'MALE', label: 'Erkek' },
+  { value: 'OTHER', label: 'Diğer' },
+]
+
+export function genderLabel(gender: MemberGender | null): string {
+  return GENDERS.find((entry) => entry.value === gender)?.label ?? '—'
+}
+
 export interface Member {
   id: string
   email: string
@@ -15,6 +28,11 @@ export interface Member {
   healthDataConsentAt: string | null
   /** Whether reminder e-mails (renewal, weekly check-in, measurement) are wanted. */
   remindersEnabled: boolean
+  /** Null for members the coach created before gender and age were asked. */
+  gender: MemberGender | null
+  age: number | null
+  /** False means the member still signs in with an e-mailed code and can set a password. */
+  hasPassword: boolean
 }
 
 /**
@@ -55,10 +73,30 @@ export interface CreateMemberInput {
  * the progress charts are drawn against, so neither is editable here.
  */
 export interface UpdateMyProfileBody {
-  fullName: string
+  age: number
   phone: string
   heightCm: number
+  weightKg: number
   sportsBackground: string
+}
+
+export interface RegisterInput {
+  email: string
+  password: string
+  firstName: string
+  lastName: string
+  age: number
+  gender: MemberGender
+  heightCm: number
+  weightKg: number
+  sportsBackground: string
+  acceptedTerms: boolean
+}
+
+/** With e-mail confirmation on, `session` is null and the page asks for the mailed code. */
+export interface RegistrationResponse {
+  verificationRequired: boolean
+  session: MemberSession | null
 }
 
 export interface MemberSession {

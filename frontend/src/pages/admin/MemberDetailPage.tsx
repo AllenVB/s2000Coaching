@@ -69,7 +69,7 @@ export function MemberDetailPage() {
               </div>
               <p className="mt-2 break-all text-sm text-text-secondary">{member.email}</p>
               <p className="mt-0.5 text-xs text-text-muted">
-                {member.phone} · Kayıt: {formatDate(member.createdAt)}
+                {member.phone ? `${member.phone} · ` : ''}Kayıt: {formatDate(member.createdAt)}
                 {member.verifiedAt ? ` · Onay: ${formatDate(member.verifiedAt)}` : ''}
               </p>
             </div>
