@@ -1,20 +1,18 @@
-export type AuthTab = 'login' | 'register' | 'admin'
+export type AuthTab = 'login' | 'register'
 
 const LABELS: Record<AuthTab, string> = {
   login: 'Giriş Yap',
-  register: 'Hesap Oluştur',
-  admin: 'Yönetim',
+  register: 'Üye Ol',
 }
 
 /**
- * The switch at the top of the single sign-in page: members sign in or open an account, the
- * coach goes to the management sign-in. One page and one button on the site instead of two
- * separate entrances.
+ * The switch at the top of the sign-in page: "Giriş Yap" (members and the coach alike) or
+ * "Üye Ol". There is no separate management entrance; the server tells the two apart.
  */
 export function AuthTabs({
   active,
   onChange,
-  tabs = ['login', 'register', 'admin'],
+  tabs = ['login', 'register'],
 }: {
   active: AuthTab
   onChange: (tab: AuthTab) => void

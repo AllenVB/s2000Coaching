@@ -101,9 +101,12 @@ Siteyi gerçek üyeler için bir sunucuda çalıştırmak: **[docs/yayin-rehberi
 
 ## Üyelik akışı
 
-**Hesap ve giriş (güncel).** Sitenin üst menüsünde tek bir **Giriş Yap** düğmesi vardır (`/giris`): sekmeler
-**Giriş Yap · Hesap Oluştur · Yönetim**. Giriş yapılmışsa düğme "Hesabım" / "Yönetim Paneli" olur. Üye `/uye` sayfasında **e-posta + şifre** ile girer ya da **Hesap Oluştur** sekmesinden
-kendi hesabını açar (ad, soyad, e-posta, yaş, cinsiyet, boy, kilo, spor geçmişi, şifre ve aydınlatma onayı).
+**Hesap ve giriş (güncel).** Sitenin üst menüsünde tek bir **Giriş Yap** düğmesi vardır (`/giris`): iki sekme,
+**Giriş Yap · Üye Ol**. Yönetim için ayrı bir sekme ya da sayfa yoktur: üyeler de koç da **aynı formdan**
+e-posta + şifreyle girer; sunucu (`POST /api/auth/login`) adresin koça mı üyeye mi ait olduğuna bakar, koç
+`/yonetim`'e, üye `/uye`'ye yönlenir. Hatalı şifre ile bilinmeyen adres aynı mesajı verir. Oturum açmadan
+`/yonetim` ya da `/uye` açılırsa `/giris`'e yönlenir. Giriş yapılmışsa düğme "Hesabım" / "Yönetim Paneli" olur. Üye **Üye Ol** sekmesinden
+hesabını açar (ad, soyad, e-posta, yaş, cinsiyet, boy, kilo, spor geçmişi, şifre ve aydınlatma onayı).
 E-posta doğrulaması açıkken (varsayılan, canlıda böyledir) hesap, adrese gelen 6 haneli kod girilene kadar
 giremez; yerel `baslat.bat` bunu kapatır (`REGISTRATION_VERIFY_EMAIL=false`), çünkü yerelde e-posta sunucusu
 yoktur ve kayıt olan hemen girer. Beş yanlış şifre hesabı 15 dakika kilitler; yanlış adres ile yanlış şifre aynı

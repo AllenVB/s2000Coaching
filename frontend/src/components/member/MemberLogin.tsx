@@ -3,16 +3,17 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 
 import {
-  useMemberLogin,
   useRegisterMember,
   useRequestMemberCode,
   useResetMemberPassword,
   useVerifyMemberCode,
 } from '@/api/memberAuthApi'
+import { useAccountLogin } from '@/api/accountAuthApi'
 import { AuthTabs } from '@/components/auth/AuthTabs'
 import { Button } from '@/components/ui/Button'
 import { Field, inputClasses, textareaClasses } from '@/components/ui/FormField'
 import { CheckIcon, ShieldIcon } from '@/components/ui/icons'
+import { useAdminAuth } from '@/context/AdminAuthContext'
 import { useMemberAuth } from '@/context/MemberAuthContext'
 import { ApiError } from '@/lib/api'
 import {
@@ -39,18 +40,12 @@ type Step =
   | { name: 'reset'; email: string }
 
 /**
- * The member page's front door: sign in with e-mail and password, or open an account. A forgotten
+ * The site's front door: sign in with e-mail and password (members and the coach use the same
+ * form), or open a member account. A forgotten
  * password — and the first sign-in of a member the coach created, who has none — goes through the
  * e-mailed code, which also confirms a new account's address.
  */
-export function MemberLogin({
-  initialStep = 'login',
-  onAdmin,
-}: {
-  initialStep?: 'login' | 'register'
-  /** When given, the tab bar gains a "Yönetim" tab that calls this (the single sign-in page). */
-  onAdmin?: () => void
-}) {
+export function MemberLogin({ initialStep = 'login' }: { initialStep?: 'login' | 'register' }) {
   const [step, setStep] = useState<Step>(initialStep === 'register' ? { name: 'register' } : { name: 'login' })
   const tab = step.name === 'register' || step.name === 'verify' ? 'register' : 'login'
 
@@ -60,8 +55,7 @@ export function MemberLogin({
         {step.name === 'login' || step.name === 'register' ? (
           <AuthTabs
             active={tab}
-            tabs={onAdmin ? ['login', 'register', 'admin'] : ['login', 'register']}
-            onChange={(next) => (next === 'admin' ? onAdmin?.() : setStep(next === 'register' ? { name: 'register' } : { name: 'login' }))}
+            onChange={(next) => setStep(next === 'register' ? { name: 'register' } : { name: 'login' })}
           />
         ) : null}
 
@@ -130,8 +124,9 @@ function LoginForm({
   onForgot: () => void
   onNeedsVerification: (email: string) => void
 }) {
-  const { signIn } = useMemberAuth()
-  const login = useMemberLogin()
+  const { signIn: signInMember } = useMemberAuth()
+  const { signIn: signInCoach } = useAdminAuth()
+  const login = useAccountLogin()
   const requestCode = useRequestMemberCode()
   const {
     register,
@@ -141,7 +136,8 @@ function LoginForm({
 
   const onSubmit = (values: LoginFormValues) => {
     login.mutate(values, {
-      onSuccess: (session) => signIn(session),
+      // The server says whose sign-in this was; the page then sends each to their own area.
+      onSuccess: (account) => (account.role === 'COACH' ? signInCoach(account.coach) : signInMember(account.member)),
       onError: (error) => {
         // Right password, address never confirmed: send a fresh code and ask for it.
         if (error instanceof ApiError && error.status === 403) {
@@ -154,7 +150,7 @@ function LoginForm({
 
   return (
     <>
-      <Heading title="Üye Girişi" text="E-posta adresiniz ve şifrenizle giriş yapın." />
+      <Heading title="Giriş Yap" text="E-posta adresiniz ve şifrenizle giriş yapın." />
       <form className="mt-6 space-y-4" onSubmit={handleSubmit(onSubmit)}>
         <Field label="E-Posta Adresi" error={errors.email?.message}>
           <input {...register('email')} type="email" autoComplete="email" className={inputClasses} />
