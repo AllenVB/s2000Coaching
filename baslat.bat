@@ -28,6 +28,11 @@ rem yalnizca loglar\backend.log icinde gorunur. Bu yuzden burada dogrulama kapal
 rem acilmaz giris yapilir. Gercek sunucuda (deploy\) bu ayar ACIK kalir.
 set "REGISTRATION_VERIFY_EMAIL=false"
 
+rem Frontend'in backend adresi. Burada acikca verilir: kabuktaki ortam degiskeni frontend\.env
+rem dosyasindan once gelir; eski bir .env (ornegin 8080 yazan) bu yuzden artik giris ekraninda
+rem "Failed to fetch" hatasi veremez.
+set "VITE_API_BASE_URL=http://localhost:7001"
+
 if exist "%~dp0yerel-ayarlar.bat" (
     call "%~dp0yerel-ayarlar.bat"
     echo       Yerel ayarlar okundu: yerel-ayarlar.bat
