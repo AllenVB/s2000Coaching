@@ -1,6 +1,7 @@
 import { useMyNutritionPlan } from '@/api/nutritionApi'
+import { useMemberWeeklyNutrition } from '@/api/weeklyNutritionApi'
 import { HealthDataConsent } from '@/components/member/HealthDataConsent'
-import { IntakeLog } from '@/components/member/IntakeLog'
+import { WeeklyNutritionAlbum } from '@/components/nutrition/WeeklyNutritionAlbum'
 import { MacroSummary } from '@/components/nutrition/MacroSummary'
 import { NutritionTable } from '@/components/nutrition/NutritionTable'
 import { useMemberProfileSync } from '@/hooks/useMemberProfileSync'
@@ -10,8 +11,9 @@ import { ComingSoonCard, PageHeading } from '@/components/ui/PageHeading'
 export function MemberNutritionPage() {
   const { data: plan, isLoading, isError, error } = useMyNutritionPlan()
   const { member } = useMemberProfileSync()
-  // Food intake is health data like measurements: nothing is shown or written before consent.
-  const intakeLog = member?.healthDataConsentAt ? <IntakeLog plan={plan ?? null} /> : <HealthDataConsent />
+  const weeklySource = useMemberWeeklyNutrition()
+  // What is eaten is health data like measurements: nothing is shown or written before consent.
+  const weeklyAlbum = member?.healthDataConsentAt ? <WeeklyNutritionAlbum source={weeklySource} /> : <HealthDataConsent />
 
   if (isLoading) {
     return (
@@ -41,7 +43,7 @@ export function MemberNutritionPage() {
           title="Beslenme Planınız Hazırlanıyor"
           description="Koçunuz planınızı yüklediğinde makro hedefleriniz ve öğünleriniz burada görünecek."
         />
-        <div className="mt-6">{intakeLog}</div>
+        <div className="mt-6">{weeklyAlbum}</div>
       </>
     )
   }
@@ -55,7 +57,7 @@ export function MemberNutritionPage() {
       />
 
       <div className="space-y-6">
-        {intakeLog}
+        {weeklyAlbum}
 
         <section className="rounded-2xl border border-border bg-surface p-6">
           <h2 className="mb-4 text-sm font-bold uppercase tracking-wider text-text-primary">

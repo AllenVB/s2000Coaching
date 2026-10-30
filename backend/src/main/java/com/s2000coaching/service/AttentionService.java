@@ -7,6 +7,7 @@ import com.s2000coaching.repository.CheckInRepository;
 import com.s2000coaching.repository.FormCheckRepository;
 import com.s2000coaching.repository.MeasurementRepository;
 import com.s2000coaching.repository.MemberIntakeRepository;
+import com.s2000coaching.repository.WeeklyNutritionRepository;
 import com.s2000coaching.repository.MemberRepository;
 import com.s2000coaching.repository.MemberQuestionnaireRepository;
 import com.s2000coaching.repository.MembershipRepository;
@@ -43,6 +44,7 @@ public class AttentionService {
 	private final WorkoutLogRepository workoutLogRepository;
 	private final MeasurementRepository measurementRepository;
 	private final MemberIntakeRepository intakeRepository;
+	private final WeeklyNutritionRepository weeklyNutritionRepository;
 	private final TrainingPlanRepository trainingPlanRepository;
 	private final NutritionPlanRepository nutritionPlanRepository;
 	private final MembershipRepository membershipRepository;
@@ -55,6 +57,7 @@ public class AttentionService {
 
 	public AttentionService(MemberRepository memberRepository, WorkoutLogRepository workoutLogRepository,
 			MeasurementRepository measurementRepository, MemberIntakeRepository intakeRepository,
+			WeeklyNutritionRepository weeklyNutritionRepository,
 			TrainingPlanRepository trainingPlanRepository, NutritionPlanRepository nutritionPlanRepository,
 			MembershipRepository membershipRepository, OrderRepository orderRepository,
 			CheckInRepository checkInRepository, FormCheckRepository formCheckRepository, MemberQuestionnaireRepository questionnaireRepository,
@@ -66,6 +69,7 @@ public class AttentionService {
 		this.workoutLogRepository = workoutLogRepository;
 		this.measurementRepository = measurementRepository;
 		this.intakeRepository = intakeRepository;
+		this.weeklyNutritionRepository = weeklyNutritionRepository;
 		this.trainingPlanRepository = trainingPlanRepository;
 		this.nutritionPlanRepository = nutritionPlanRepository;
 		this.membershipRepository = membershipRepository;
@@ -81,7 +85,8 @@ public class AttentionService {
 
 		Map<UUID, LocalDate> lastWorkout = dates(workoutLogRepository.latestPerformedOnPerMember());
 		Map<UUID, LocalDate> lastMeasurement = dates(measurementRepository.latestMeasuredOnPerMember());
-		Map<UUID, LocalDate> lastIntake = dates(intakeRepository.latestConsumedOnPerMember());
+		Map<UUID, LocalDate> lastIntake = lastFoodDay(intakeRepository.latestConsumedOnPerMember(),
+				weeklyNutritionRepository.latestWeekStartPerMember());
 		Map<UUID, LocalDate> membershipEnd = dates(membershipRepository.latestEndPerMember());
 		Set<UUID> trainingPlans = new HashSet<>(trainingPlanRepository.findMemberIdsWithActivePlan());
 		Set<UUID> nutritionPlans = new HashSet<>(nutritionPlanRepository.findMemberIdsWithActivePlan());
@@ -117,6 +122,17 @@ public class AttentionService {
 				nutritionPlans.contains(id), lastWorkout.get(id), lastMeasurement.get(id), lastIntake.get(id),
 				unread.contains(id), membershipEnd.get(id), unansweredCheckIns.contains(id),
 				withQuestionnaire.contains(id), needClearance.contains(id), unansweredFormChecks.contains(id));
+	}
+
+	/**
+	 * The latest day any food was recorded for: the end of the newest weekly entry (the Sunday that
+	 * closes the week) or the newest day of the older daily log, whichever is later.
+	 */
+	private static Map<UUID, LocalDate> lastFoodDay(List<Object[]> dailyLog, List<Object[]> weeks) {
+		Map<UUID, LocalDate> latest = dates(dailyLog);
+		dates(weeks).forEach((memberId, weekStart) -> latest.merge(memberId, weekStart.plusDays(6),
+				(a, b) -> a.isAfter(b) ? a : b));
+		return latest;
 	}
 
 	/** Rows of (member id, date) from a grouped query. */

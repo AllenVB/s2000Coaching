@@ -76,3 +76,5 @@ databaseChangeLog:
       file: db/changelog/034-create-monthly-record-table.yaml
   - include:
       file: db/changelog/035-member-number.yaml
+  - include:
+      file: db/changelog/036-create-weekly-nutrition.yaml

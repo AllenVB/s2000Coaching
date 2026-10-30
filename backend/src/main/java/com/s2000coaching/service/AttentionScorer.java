@@ -24,8 +24,12 @@ public final class AttentionScorer {
 	static final int WORKOUT_VERY_QUIET_DAYS = 14;
 	static final int MEASUREMENT_QUIET_DAYS = 10;
 	static final int MEASUREMENT_VERY_QUIET_DAYS = 21;
-	static final int INTAKE_QUIET_DAYS = 3;
-	static final int INTAKE_VERY_QUIET_DAYS = 7;
+	/**
+	 * Food is entered once a week, after the week is over, so "quiet" is counted from the Sunday that
+	 * closed the last entered week: a week is late three days after the next Sunday has passed.
+	 */
+	static final int INTAKE_QUIET_DAYS = 10;
+	static final int INTAKE_VERY_QUIET_DAYS = 17;
 	static final int MEMBERSHIP_ENDING_DAYS = 14;
 	/** A new member is given a few days to fill in the starting questionnaire before being chased. */
 	static final int QUESTIONNAIRE_GRACE_DAYS = 3;
@@ -96,7 +100,7 @@ public final class AttentionScorer {
 		if (s.hasNutritionPlan()) {
 			long quiet = quietDays(s.lastIntake(), s.joinedOn(), today);
 			if (quiet >= INTAKE_QUIET_DAYS) {
-				reasons.add(new Reason("NO_INTAKE", "%d gündür yemek kaydı yok".formatted(quiet),
+				reasons.add(new Reason("NO_INTAKE", "%d gündür haftalık beslenme kaydı yok".formatted(quiet),
 						quiet >= INTAKE_VERY_QUIET_DAYS ? 3 : 2));
 			}
 		}

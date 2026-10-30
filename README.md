@@ -319,12 +319,20 @@ demektir, satırı olmayan baytlar ise görünmez ve geri kazanılabilir.
 Hepsi `/uye` (üye) ve `/yonetim/uyeler/:id` (koç) altında; sağlık verisi sayılanlar KVKK onayı ister.
 
 - **İlgi bekleyenler** (`/yonetim`): tüm aktif üyeleri tek geçişte (üye başına sorgu yok) şu nedenlerle
-  puanlar — bekleyen mesaj, biten/biten üyelik, antrenman/ölçüm/yemek kaydı yok, yanıt bekleyen
+  puanlar — bekleyen mesaj, biten/biten üyelik, antrenman/ölçüm/haftalık beslenme kaydı yok, yanıt bekleyen
   değerlendirme ve form videosu, sağlık anketinde dikkat gerektiren yanıt. En acilden sıralı, her
   neden yazılı. Sessizlik, üyenin katıldığı günden sayılır; plan verilmemiş konuda kimse "kayıt yok"
   diye işaretlenmez. Havale bekleyen siparişler en üstte.
-- **Yemek kaydı** (`/uye/beslenme`): günlük toplam (kalori zorunlu; makro ve sodyum isteğe bağlı). Aynı
-  güne tekrar girmek o günü günceller. Koç üye detayında okur.
+- **Haftalık beslenme albümü** (`/uye/beslenme`): üye bir **hafta** (pazartesi–pazar, örn. 26.10.2026 –
+  01.11.2026) seçer; o haftanın **toplam kalorisini** ve **karbonhidrat / yağ / protein yüzdelerini** girer
+  (toplam tam 100 olmalı, değilse kaydedilmez) ve haftaya **tek bir fotoğraf** ekleyebilir. Gramajlar
+  otomatik hesaplanır (karbonhidrat ve protein 4, yağ 9 kcal/g) ve **haftalık toplam ile günlük ortalama**
+  (hafta ÷ 7) kartta gösterilir; gram değerleri saklanmaz, kalori ve yüzdelerden her seferinde türetilir.
+  Aynı hafta tekrar kaydedilirse güncellenir (kalemle düzenle, çöp kutusuyla sil); gelecek haftalar ve üç
+  yıldan eski haftalar girilemez. Koç aynı albümü üye detayı → Beslenme sekmesinde okur (fotoğraflar dahil).
+  Sağlık verisidir: onay olmadan yazılmaz, üye silinince satırlar ve fotoğraf dosyaları da silinir. Eski
+  günlük yemek kaydı ekranı kaldırıldı; daha önce girilmiş günlük kayıtlar koçun sekmesinde durur.
+  "İlgi bekleyenler" artık haftalık kayda bakar: son girilen haftanın bittiği günden 10 gün geçtiyse işaretler.
 - **Antrenman gelişimi** (`/uye/gecmis`, üye detayı → Antrenman): set başına **RPE**, hareket başına
   tahmini 1TM (Epley, yalnızca ≤12 tekrarlık ağırlıklı setlerden), "yeni rekor" (öncesinde yenilecek bir
   seans gerekir), 12 haftalık hacim. Gün ekranında her harekete **sonraki seans önerisi**: tüm çalışma
