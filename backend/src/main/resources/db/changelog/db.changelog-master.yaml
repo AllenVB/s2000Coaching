@@ -84,3 +84,5 @@ databaseChangeLog:
       file: db/changelog/038-nutrition-day-types.yaml
   - include:
       file: db/changelog/039-create-site-setting.yaml
+  - include:
+      file: db/changelog/040-exercise-image.yaml

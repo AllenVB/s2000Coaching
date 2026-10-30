@@ -1,0 +1,16 @@
+databaseChangeLog:
+  - changeSet:
+      id: 056-exercise-image
+      author: s2000
+      comment: >-
+        One demonstration image per catalogue exercise (a screenshot the coach uploads), shown to the member at
+        the start of the exercise. Only the storage key and the file's facts are kept here, like progress photos;
+        image_updated_at is what a browser uses to notice that the picture was replaced.
+      changes:
+        - addColumn:
+            tableName: exercise
+            columns:
+              - column: { name: image_key, type: varchar(200) }
+              - column: { name: image_content_type, type: varchar(50) }
+              - column: { name: image_size_bytes, type: bigint }
+              - column: { name: image_updated_at, type: timestamp with time zone }

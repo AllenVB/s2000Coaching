@@ -1,8 +1,9 @@
 import { useMemo, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useParams, useSearchParams } from 'react-router-dom'
 
-import { useMyTrainingPlan, useMyTrainingStats, useSaveWorkoutLog } from '@/api/trainingApi'
+import { useMyTrainingPlan, useMyTrainingStats, useMyWorkoutLogs, useSaveWorkoutLog } from '@/api/trainingApi'
 import { RestTimer } from '@/components/training/RestTimer'
+import { MemberExerciseImage } from '@/components/training/ExerciseImage'
 import { ExerciseVideo } from '@/components/training/ExerciseVideo'
 import { WeightStrip } from '@/components/training/WeightStrip'
 import { Button } from '@/components/ui/Button'
@@ -31,15 +32,32 @@ export function MemberWorkoutDayPage() {
   const { data: stats } = useMyTrainingStats()
 
   const day = plan?.days.find((candidate) => candidate.id === dayId)
+  const { data: logs } = useMyWorkoutLogs()
+
+  // "?tarih=2026-10-12&kayit=1" opens the day already recording that date — how the history page
+  // sends the member to add or correct a session they did earlier.
+  const [searchParams] = useSearchParams()
+  const requestedDate = searchParams.get('tarih')
 
   const [entries, setEntries] = useState<Record<string, SetEntry[]> | null>(null)
-  const [note, setNote] = useState('')
-  const [performedOn, setPerformedOn] = useState(today)
+  const [performedOn, setPerformedOn] = useState(() =>
+    requestedDate && /^\d{4}-\d{2}-\d{2}$/.test(requestedDate) && requestedDate <= today() ? requestedDate : today(),
+  )
   // The plan is for reading: the sets below are the coach's. The boxes to write what was actually
-  // lifted only open when the member chooses to record the session.
-  const [logging, setLogging] = useState(false)
+  // lifted only open when the member chooses to record a session.
+  const [logging, setLogging] = useState(() => searchParams.get('kayit') === '1')
 
-  // Seeded once from the plan: prescribed set count, pre-filled with what was lifted last time.
+  // A session already recorded for this day and date: opening that date edits it rather than starting over.
+  const existingLog = useMemo(
+    () => (day ? logs?.find((log) => log.dayId === day.id && log.performedOn === performedOn) : undefined),
+    [logs, day, performedOn],
+  )
+  // What the member typed; until they type, the note of the session already recorded for that date.
+  const [typedNote, setTypedNote] = useState<string | null>(null)
+  const note = typedNote ?? existingLog?.note ?? ''
+
+  // Seeded from the plan: the prescribed set count, filled with the session already recorded for that
+  // date, else with what was lifted last time, else with the target.
   const initialEntries = useMemo(() => {
     if (!day) {
       return null
@@ -47,6 +65,16 @@ export function MemberWorkoutDayPage() {
     const seeded: Record<string, SetEntry[]> = {}
     day.exercises.forEach((planExercise) => {
       seeded[planExercise.id] = Array.from({ length: planExercise.setCount }, (_unused, index) => {
+        const recorded = existingLog?.sets.find(
+          (set) => set.planExerciseId === planExercise.id && set.setNumber === index + 1,
+        )
+        if (existingLog) {
+          return {
+            reps: recorded ? String(recorded.reps) : '',
+            weightKg: recorded?.weightKg != null ? String(recorded.weightKg) : '',
+            rpe: recorded?.rpe != null ? String(recorded.rpe) : '',
+          }
+        }
         const previous = planExercise.lastPerformed.find((set) => set.setNumber === index + 1)
         return {
           reps: previous ? String(previous.reps) : '',
@@ -58,7 +86,14 @@ export function MemberWorkoutDayPage() {
       })
     })
     return seeded
-  }, [day])
+  }, [day, existingLog])
+
+  const chooseDate = (next: string) => {
+    setPerformedOn(next)
+    // Another date is another session: start from what that date holds, not from what was typed for this one.
+    setEntries(null)
+    setTypedNote(null)
+  }
 
   if (isLoading) {
     return <div className="h-64 animate-pulse rounded-2xl border border-border bg-surface" />
@@ -117,7 +152,9 @@ export function MemberWorkoutDayPage() {
           {day.lastPerformedOn
             ? `Son yapılış: ${formatDate(day.lastPerformedOn)}.`
             : 'Henüz yapılmadı.'}
-          {logging ? ' Alanlar son seansın değerleriyle ya da hedefle dolu.' : ' Programı koçunuz hazırladı; burada yalnızca görüntülenir.'}
+          {logging
+            ? ' Alanlar o tarihte kayıtlı seansla, yoksa son seansla ya da hedefle dolu.'
+            : ' Programı koçunuz hazırladı; burada yalnızca görüntülenir.'}
         </p>
       </div>
 
@@ -131,6 +168,8 @@ export function MemberWorkoutDayPage() {
                 {planExercise.targetWeightKg !== null ? ` @ ${planExercise.targetWeightKg} kg` : ''}
               </span>
             </div>
+
+            <MemberExerciseImage exercise={planExercise.exercise} />
 
             {planExercise.note ? (
               <p className="mb-3 text-xs leading-relaxed text-text-secondary">{planExercise.note}</p>
@@ -220,26 +259,49 @@ export function MemberWorkoutDayPage() {
 
         {!logging ? (
           <Button type="button" variant="secondary" className="w-full" onClick={() => setLogging(true)}>
-            Bugünkü Antrenmanımı Kaydet
+            Antrenmanı Kaydet
           </Button>
         ) : null}
 
         <section className={`rounded-2xl border border-border bg-surface p-5 ${logging ? '' : 'hidden'}`}>
           <label className="block">
-            <span className="mb-1.5 block text-xs font-medium text-text-secondary">Tarih</span>
+            <span className="mb-1.5 block text-xs font-medium text-text-secondary">
+              Bu antrenmanı hangi gün yaptınız?
+            </span>
             <input
               value={performedOn}
-              onChange={(event) => setPerformedOn(event.target.value)}
+              onChange={(event) => event.target.value && chooseDate(event.target.value)}
               type="date"
               max={today()}
+              aria-label="Antrenman tarihi"
               className={`${inputClasses} max-w-[200px]`}
             />
           </label>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {[
+              { label: 'Bugün', date: today() },
+              { label: 'Dün', date: shiftDay(today(), -1) },
+            ].map((option) => (
+              <button
+                key={option.label}
+                type="button"
+                onClick={() => chooseDate(option.date)}
+                className="rounded-full border border-border-strong px-3 py-1 text-[11px] font-semibold uppercase tracking-wide text-text-secondary transition-colors hover:border-primary/60 hover:text-text-primary"
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+          {existingLog ? (
+            <p className="mt-3 text-xs text-warning">
+              {formatDate(performedOn)} tarihinde bu gün için kayıtlı bir antrenmanınız var; kaydederseniz güncellenir.
+            </p>
+          ) : null}
           <label className="mt-4 block">
             <span className="mb-1.5 block text-xs font-medium text-text-secondary">Not</span>
             <textarea
               value={note}
-              onChange={(event) => setNote(event.target.value)}
+              onChange={(event) => setTypedNote(event.target.value)}
               rows={2}
               placeholder="Nasıl geçti, ağrı, enerji…"
               className={textareaClasses}
@@ -293,6 +355,12 @@ function SuggestionLine({
 /** "12" and "8-10" are repetitions; "60 sn" or "AMRAP" already say what they are. */
 function repsText(value: string): string {
   return /^[\d\s\-–]+$/.test(value) ? `${value} tekrar` : value
+}
+
+/** The date `days` away from an ISO date, in the same form. Worked in UTC so a clock change cannot move it. */
+function shiftDay(iso: string, days: number): string {
+  const [year, month, day] = iso.split('-').map(Number)
+  return new Date(Date.UTC(year, month - 1, day + days)).toISOString().slice(0, 10)
 }
 
 function BackLink() {

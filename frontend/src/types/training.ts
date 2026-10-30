@@ -25,6 +25,10 @@ export interface Exercise {
   /** What the player is built from; null when there is no YouTube video. */
   video: ExerciseVideo | null
   note: string | null
+  /** A demonstration image the coach uploaded; shown to the member at the start of the exercise. */
+  hasImage: boolean
+  /** When the image was last replaced; part of its address so a browser never shows an old one. */
+  imageUpdatedAt: string | null
 }
 
 export interface ExerciseVideo {

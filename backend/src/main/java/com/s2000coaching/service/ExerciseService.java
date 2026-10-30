@@ -6,11 +6,16 @@ import com.s2000coaching.exception.ConflictException;
 import com.s2000coaching.exception.NotFoundException;
 import com.s2000coaching.repository.ExerciseRepository;
 import com.s2000coaching.repository.TrainingPlanExerciseRepository;
+import com.s2000coaching.storage.PhotoStorage;
 import com.s2000coaching.web.dto.ExerciseResponse;
 import com.s2000coaching.web.dto.UpsertExerciseRequest;
+import java.io.InputStream;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,13 +23,81 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class ExerciseService {
 
+	private static final Logger log = LoggerFactory.getLogger(ExerciseService.class);
+
 	private final ExerciseRepository exerciseRepository;
 	private final TrainingPlanExerciseRepository planExerciseRepository;
+	private final PhotoStorage photoStorage;
+	private final long maxImageBytes;
 
 	public ExerciseService(ExerciseRepository exerciseRepository,
-			TrainingPlanExerciseRepository planExerciseRepository) {
+			TrainingPlanExerciseRepository planExerciseRepository,
+			PhotoStorage photoStorage,
+			@Value("${app.photos.max-size-bytes}") long maxImageBytes) {
 		this.exerciseRepository = exerciseRepository;
 		this.planExerciseRepository = planExerciseRepository;
+		this.photoStorage = photoStorage;
+		this.maxImageBytes = maxImageBytes;
+	}
+
+	/** The bytes plus what the browser needs to render them. */
+	public record StoredImage(InputStream content, String contentType, long sizeBytes) {
+	}
+
+	/**
+	 * Replaces the exercise's demonstration image. The upload is decoded and written back out as a bare
+	 * image ({@link PhotoSanitizer}), which drops any metadata and proves the bytes really are a picture;
+	 * members are shown it, so it must not carry what a phone screenshot or camera adds.
+	 */
+	@Transactional
+	public ExerciseResponse setImage(UUID exerciseId, byte[] upload) {
+		Exercise exercise = getOrThrow(exerciseId);
+		if (upload == null || upload.length == 0) {
+			throw new BadRequestException("Görsel dosyası boş.");
+		}
+		if (upload.length > maxImageBytes) {
+			throw new BadRequestException("Görsel en fazla %d MB olabilir.".formatted(maxImageBytes / (1024 * 1024)));
+		}
+		PhotoSanitizer.Sanitized clean = PhotoSanitizer.sanitize(upload);
+		String oldKey = exercise.getImageKey();
+		// Bytes first, then the row: a row pointing at nothing is a broken picture, bytes with no row are invisible.
+		String key = photoStorage.store(clean.content(), clean.contentType());
+		exercise.attachImage(key, clean.contentType(), clean.content().length, Instant.now());
+		if (oldKey != null) {
+			deleteFileAfterCommit(oldKey);
+		}
+		return ExerciseResponse.from(exercise);
+	}
+
+	@Transactional
+	public ExerciseResponse removeImage(UUID exerciseId) {
+		Exercise exercise = getOrThrow(exerciseId);
+		String oldKey = exercise.getImageKey();
+		exercise.clearImage();
+		if (oldKey != null) {
+			deleteFileAfterCommit(oldKey);
+		}
+		return ExerciseResponse.from(exercise);
+	}
+
+	@Transactional(readOnly = true)
+	public StoredImage readImage(UUID exerciseId) {
+		Exercise exercise = getOrThrow(exerciseId);
+		if (!exercise.hasImage()) {
+			throw new NotFoundException("Bu hareketin görseli yok.");
+		}
+		return new StoredImage(photoStorage.read(exercise.getImageKey()), exercise.getImageContentType(),
+				exercise.getImageSizeBytes());
+	}
+
+	private void deleteFileAfterCommit(String key) {
+		AfterCommit.run(() -> {
+			try {
+				photoStorage.delete(key);
+			} catch (RuntimeException e) {
+				log.warn("Hareket görseli silinemedi: {}", key, e);
+			}
+		});
 	}
 
 	@Transactional(readOnly = true)
@@ -68,7 +141,11 @@ public class ExerciseService {
 			throw new ConflictException(
 					"Bu hareket en az bir planda kullanılıyor; önce planlardan çıkarın: " + exercise.getName());
 		}
+		String imageKey = exercise.getImageKey();
 		exerciseRepository.delete(exercise);
+		if (imageKey != null) {
+			deleteFileAfterCommit(imageKey);
+		}
 	}
 
 	Exercise requireExercise(UUID exerciseId) {

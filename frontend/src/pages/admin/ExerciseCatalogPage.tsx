@@ -1,6 +1,7 @@
 import { useState } from 'react'
 
 import { useCreateExercise, useDeleteExercise, useExercises } from '@/api/trainingApi'
+import { ExerciseImageEditor } from '@/components/training/ExerciseImage'
 import { ExerciseVideoEditor } from '@/components/training/ExerciseVideoEditor'
 import { Button } from '@/components/ui/Button'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
@@ -122,6 +123,7 @@ export function ExerciseCatalogPage() {
                       {exercise.videoUrl ? ' · video var' : ''}
                     </span>
                     <ExerciseVideoEditor exercise={exercise} />
+                    <ExerciseImageEditor exercise={exercise} />
                   </span>
                   <button
                     type="button"

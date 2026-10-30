@@ -23,8 +23,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.support.TransactionSynchronization;
-import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 /**
  * The weekly food album. Each week (Monday to Sunday) holds the week's total calories, how they
@@ -227,16 +225,7 @@ public class WeeklyNutritionService implements MemberDataEraser {
 
 	/** The old file goes only once the change is committed; a rollback must not leave a row without its picture. */
 	private void deleteFileAfterCommit(String key) {
-		if (TransactionSynchronizationManager.isSynchronizationActive()) {
-			TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-				@Override
-				public void afterCommit() {
-					deleteFile(key);
-				}
-			});
-		} else {
-			deleteFile(key);
-		}
+		AfterCommit.run(() -> deleteFile(key));
 	}
 
 	/** A file that will not delete is only wasted bytes; it must not stop the row from going. */

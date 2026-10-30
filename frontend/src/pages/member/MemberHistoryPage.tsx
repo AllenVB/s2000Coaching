@@ -1,15 +1,23 @@
+import { useState } from 'react'
+import { Link } from 'react-router-dom'
+
 import type { WorkoutLog } from '@/types/training'
 
-import { useMyTrainingStats, useMyWorkoutLogs } from '@/api/trainingApi'
+import { useMyTrainingPlan, useMyTrainingStats, useMyWorkoutLogs } from '@/api/trainingApi'
 import { TrainingStatsView } from '@/components/training/TrainingStatsView'
+import { Button } from '@/components/ui/Button'
+import { Field, inputClasses } from '@/components/ui/FormField'
 import { ComingSoonCard, PageHeading } from '@/components/ui/PageHeading'
-import { currentMonthIso, formatDate } from '@/lib/date'
+import { currentMonthIso, formatDate, todayIso } from '@/lib/date'
 import { formatMonth, groupByMonth, totalReps, totalVolumeKg } from '@/lib/workoutStats'
 
 /** Every session the member has recorded, newest first, grouped by month. */
 export function MemberHistoryPage() {
   const { data: logs, isPending, error } = useMyWorkoutLogs()
   const { data: stats } = useMyTrainingStats()
+  const { data: plan } = useMyTrainingPlan()
+  // Only days of the plan the member is on can be opened again; an older plan's days are not shown.
+  const activeDayIds = new Set(plan?.days.map((day) => day.id) ?? [])
 
   if (isPending) {
     return (
@@ -39,6 +47,9 @@ export function MemberHistoryPage() {
           title="Henüz Kayıtlı Antrenman Yok"
           description="Bir antrenmanı tamamlayıp kaydettiğinizde burada listelenecek."
         />
+        <div className="mt-6">
+          <PastWorkoutForm days={plan?.days ?? []} />
+        </div>
       </>
     )
   }
@@ -54,6 +65,10 @@ export function MemberHistoryPage() {
 
       <SummaryRow logs={logs} />
 
+      <div className="mt-6">
+        <PastWorkoutForm days={plan?.days ?? []} />
+      </div>
+
       {stats ? (
         <div className="mt-6">
           <TrainingStatsView stats={stats} />
@@ -68,7 +83,7 @@ export function MemberHistoryPage() {
             </h2>
             <ul className="space-y-2.5">
               {monthLogs.map((log) => (
-                <LogRow key={log.id} log={log} />
+                <LogRow key={log.id} log={log} editable={activeDayIds.has(log.dayId)} />
               ))}
             </ul>
           </section>
@@ -105,14 +120,79 @@ function SummaryCard({ label, value }: { label: string; value: string }) {
   )
 }
 
-function LogRow({ log }: { log: WorkoutLog }) {
+/**
+ * Adding a session from a day that has gone by: pick which day of the programme and which date, and
+ * land on that day's page already recording it. A date that already has a session opens it to correct.
+ */
+function PastWorkoutForm({ days }: { days: { id: string; name: string }[] }) {
+  const today = todayIso()
+  const [dayId, setDayId] = useState('')
+  const [date, setDate] = useState(today)
+
+  if (days.length === 0) {
+    return null
+  }
+
+  const chosenDay = dayId || days[0].id
+  const valid = /^\d{4}-\d{2}-\d{2}$/.test(date) && date <= today
+
+  return (
+    <section className="rounded-2xl border border-border bg-surface p-6">
+      <h2 className="text-sm font-bold uppercase tracking-wider text-text-primary">Geçmiş Antrenman Ekle</h2>
+      <p className="mt-1.5 text-xs leading-relaxed text-text-secondary">
+        Kaydetmeyi unuttuğunuz bir antrenmanı, yaptığınız günü seçerek girin. Aynı güne daha önce kayıt
+        girdiyseniz o açılır ve kaydedince güncellenir.
+      </p>
+      <div className="mt-4 flex flex-wrap items-end gap-3">
+        <div className="min-w-[160px] flex-1">
+          <Field label="Antrenman günü">
+            <select value={chosenDay} onChange={(event) => setDayId(event.target.value)} className={inputClasses}>
+              {days.map((day) => (
+                <option key={day.id} value={day.id}>
+                  {day.name}
+                </option>
+              ))}
+            </select>
+          </Field>
+        </div>
+        <div className="min-w-[160px] flex-1">
+          <Field label="Hangi tarihte yaptınız?">
+            <input value={date} onChange={(event) => setDate(event.target.value)} type="date" max={today} className={inputClasses} />
+          </Field>
+        </div>
+        {valid ? (
+          <Link to={`/uye/antrenman/${chosenDay}?tarih=${date}&kayit=1`}>
+            <Button type="button">Devam</Button>
+          </Link>
+        ) : (
+          <Button type="button" disabled>
+            Devam
+          </Button>
+        )}
+      </div>
+    </section>
+  )
+}
+
+function LogRow({ log, editable }: { log: WorkoutLog; editable: boolean }) {
   const volume = totalVolumeKg(log)
 
   return (
     <li className="rounded-xl border border-border bg-surface p-4">
       <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
         <span className="font-semibold text-text-primary">{log.dayName}</span>
-        <span className="text-xs text-text-muted">{formatDate(log.performedOn)}</span>
+        <span className="flex items-center gap-3 text-xs text-text-muted">
+          {formatDate(log.performedOn)}
+          {editable ? (
+            <Link
+              to={`/uye/antrenman/${log.dayId}?tarih=${log.performedOn}&kayit=1`}
+              className="font-semibold uppercase tracking-wide text-primary hover:underline"
+              aria-label={`${formatDate(log.performedOn)} antrenmanını düzenle`}
+            >
+              Düzenle
+            </Link>
+          ) : null}
+        </span>
       </div>
       <p className="mt-1.5 text-xs text-text-secondary">
         {log.sets.length} set · {totalReps(log)} tekrar

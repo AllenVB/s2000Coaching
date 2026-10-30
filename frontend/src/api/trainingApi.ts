@@ -4,7 +4,7 @@ import { useEffect } from 'react'
 import { useAdminAuth } from '@/context/AdminAuthContext'
 import { useMemberAuth } from '@/context/MemberAuthContext'
 import { adminHeaders } from '@/lib/adminSession'
-import { apiFetch } from '@/lib/api'
+import { apiFetch, apiUpload } from '@/lib/api'
 import { cachePlan, enqueueWorkoutLog, flushPendingLogs, isNetworkError, readCachedPlan } from '@/lib/offline'
 import { memberHeaders } from '@/lib/memberSession'
 import type {
@@ -32,6 +32,43 @@ export function useExercises() {
     queryFn: () => apiFetch<Exercise[]>('/api/admin/exercises', { headers: adminHeaders(token!) }),
     enabled: Boolean(token),
   })
+}
+
+/** Replaces the exercise's demonstration image (JPEG or PNG; the server re-encodes it). */
+export function useSetExerciseImage() {
+  const { token } = useAdminAuth()
+  const refresh = useRefreshExercises()
+
+  return useMutation({
+    mutationFn: ({ exerciseId, file }: { exerciseId: string; file: File }) => {
+      const body = new FormData()
+      body.append('file', file)
+      return apiUpload<Exercise>(`/api/admin/exercises/${exerciseId}/image`, body, adminHeaders(token!), 'PUT')
+    },
+    onSuccess: refresh,
+  })
+}
+
+export function useRemoveExerciseImage() {
+  const { token } = useAdminAuth()
+  const refresh = useRefreshExercises()
+
+  return useMutation({
+    mutationFn: ({ exerciseId }: { exerciseId: string }) =>
+      apiFetch<Exercise>(`/api/admin/exercises/${exerciseId}/image`, { method: 'DELETE', headers: adminHeaders(token!) }),
+    onSuccess: refresh,
+  })
+}
+
+/** Plans embed the exercise, so a changed image has to reach the lists they appear in too. */
+function useRefreshExercises() {
+  const queryClient = useQueryClient()
+  return () => {
+    queryClient.invalidateQueries({ queryKey: EXERCISES_KEY })
+    queryClient.invalidateQueries({ queryKey: TEMPLATES_KEY })
+    queryClient.invalidateQueries({ queryKey: ['admin-member-plans'] })
+    queryClient.invalidateQueries({ queryKey: ['member-training-plan'] })
+  }
 }
 
 export function useCreateExercise() {

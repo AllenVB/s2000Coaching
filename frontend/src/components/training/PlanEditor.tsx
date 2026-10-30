@@ -7,6 +7,7 @@ import {
   useDeletePlanExercise,
   useUpdatePlanExercise,
 } from '@/api/trainingApi'
+import { ExerciseImageEditor } from '@/components/training/ExerciseImage'
 import { ExerciseVideoEditor } from '@/components/training/ExerciseVideoEditor'
 import { Button } from '@/components/ui/Button'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
@@ -389,7 +390,12 @@ function ExerciseForm({ dayId, planExercise }: { dayId?: string; planExercise?: 
         </>
       )}
 
-      {planExercise ? <ExerciseVideoEditor exercise={planExercise.exercise} /> : null}
+      {planExercise ? (
+        <>
+          <ExerciseVideoEditor exercise={planExercise.exercise} />
+          <ExerciseImageEditor exercise={planExercise.exercise} />
+        </>
+      ) : null}
 
       {isConfirmingRemove && planExercise ? (
         <ConfirmDialog
