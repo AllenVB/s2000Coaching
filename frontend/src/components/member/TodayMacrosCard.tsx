@@ -1,23 +1,25 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 
-import type { NutritionPlan } from '@/types/nutrition'
+import { DayTypeTabs } from '@/components/nutrition/DayTypeTabs'
+import { hasTargets, targetsOf, type NutritionDayType, type NutritionPlan } from '@/types/nutrition'
 
 import { hasAnyMacro, plannedTotals } from '@/lib/nutritionStats'
 
 /**
- * The day's macro targets at a glance. A plan can carry targets, meal macros, or both:
+ * The day's macro targets at a glance, for a training day or a rest day (the member picks; the
+ * plan does not know which one today is). A plan can carry targets, meal macros, or both:
  * when both exist the bar shows how far the planned meals go towards the target, which is
  * what tells the member whether the plan as written actually adds up.
  */
 export function TodayMacrosCard({ plan }: { plan: NutritionPlan }) {
-  const planned = plannedTotals(plan)
-  const hasTargets =
-    plan.targetCalories !== null ||
-    plan.targetProteinG !== null ||
-    plan.targetCarbsG !== null ||
-    plan.targetFatG !== null
+  const [dayType, setDayType] = useState<NutritionDayType>('TRAINING')
+  const planned = plannedTotals(plan, dayType)
+  const targets = targetsOf(plan, dayType)
+  const anyTargets = hasTargets(targetsOf(plan, 'TRAINING')) || hasTargets(targetsOf(plan, 'REST'))
+  const anyPlanned = hasAnyMacro(plannedTotals(plan, 'TRAINING')) || hasAnyMacro(plannedTotals(plan, 'REST'))
 
-  if (!hasTargets && !hasAnyMacro(planned)) {
+  if (!anyTargets && !anyPlanned) {
     return null
   }
 
@@ -25,7 +27,7 @@ export function TodayMacrosCard({ plan }: { plan: NutritionPlan }) {
     <section className="rounded-2xl border border-border bg-surface p-6">
       <div className="mb-4 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 border-b border-border pb-3">
         <h2 className="text-sm font-bold uppercase tracking-wider text-text-primary">
-          Bugünün Makroları
+          Günün Makroları
         </h2>
         <Link
           to="/uye/beslenme"
@@ -35,11 +37,15 @@ export function TodayMacrosCard({ plan }: { plan: NutritionPlan }) {
         </Link>
       </div>
 
+      <div className="mb-4">
+        <DayTypeTabs value={dayType} onChange={setDayType} labels="short" />
+      </div>
+
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <MacroStat label="Kalori" unit="kcal" target={plan.targetCalories} planned={planned.calories} />
-        <MacroStat label="Protein" unit="g" target={plan.targetProteinG} planned={planned.proteinG} />
-        <MacroStat label="Karbonhidrat" unit="g" target={plan.targetCarbsG} planned={planned.carbsG} />
-        <MacroStat label="Yağ" unit="g" target={plan.targetFatG} planned={planned.fatG} />
+        <MacroStat label="Kalori" unit="kcal" target={targets.calories} planned={planned.calories} />
+        <MacroStat label="Protein" unit="g" target={targets.proteinG} planned={planned.proteinG} />
+        <MacroStat label="Karbonhidrat" unit="g" target={targets.carbsG} planned={planned.carbsG} />
+        <MacroStat label="Yağ" unit="g" target={targets.fatG} planned={planned.fatG} />
       </div>
     </section>
   )

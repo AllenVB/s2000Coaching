@@ -132,9 +132,9 @@ class AttentionScorerTest {
 	}
 
 	@Test
-	void shouldFlagAFoodLogGapFromThreeDays() {
-		assertThat(AttentionScorer.score(with(b -> b.intake(TODAY.minusDays(2))), TODAY)).isNull();
-		assertThat(codes(AttentionScorer.score(with(b -> b.intake(TODAY.minusDays(3))), TODAY)))
+	void shouldFlagAWeeklyFoodGapFromTenDaysAfterTheLastEnteredWeekEnded() {
+		assertThat(AttentionScorer.score(with(b -> b.intake(TODAY.minusDays(9))), TODAY)).isNull();
+		assertThat(codes(AttentionScorer.score(with(b -> b.intake(TODAY.minusDays(10))), TODAY)))
 				.containsExactly("NO_INTAKE");
 	}
 

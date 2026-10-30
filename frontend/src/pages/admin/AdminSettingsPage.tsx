@@ -1,3 +1,6 @@
+import { PasswordChecklist } from '@/components/ui/PasswordChecklist'
+import { PasswordInput } from '@/components/ui/PasswordInput'
+import { isStrongPassword } from '@/lib/password'
 import { useState, type FormEvent } from 'react'
 
 import { useChangeCoachPassword, useSendTestMail } from '@/api/coachAuthApi'
@@ -111,8 +114,8 @@ function PasswordSection() {
     event.preventDefault()
     setError(null)
 
-    if (newPassword.length < MIN_PASSWORD_LENGTH) {
-      setError(`Yeni şifre en az ${MIN_PASSWORD_LENGTH} karakter olmalı.`)
+    if (!isStrongPassword(newPassword, MIN_PASSWORD_LENGTH)) {
+      setError(`Yeni şifre en az ${MIN_PASSWORD_LENGTH} karakter olmalı; büyük harf, küçük harf, rakam ve özel karakter içermeli.`)
       return
     }
     if (newPassword !== repeatPassword) {
@@ -165,8 +168,7 @@ function PasswordSection() {
 
       <form className="mt-4 max-w-sm space-y-4" onSubmit={submit}>
         <Field label="Mevcut şifre">
-          <input
-            type="password"
+          <PasswordInput
             autoComplete="current-password"
             className={inputClasses}
             value={currentPassword}
@@ -174,9 +176,8 @@ function PasswordSection() {
             required
           />
         </Field>
-        <Field label="Yeni şifre" hint={`En az ${MIN_PASSWORD_LENGTH} karakter.`}>
-          <input
-            type="password"
+        <Field label="Yeni şifre">
+          <PasswordInput
             autoComplete="new-password"
             className={inputClasses}
             value={newPassword}
@@ -184,9 +185,9 @@ function PasswordSection() {
             required
           />
         </Field>
+        <PasswordChecklist value={newPassword} minLength={MIN_PASSWORD_LENGTH} />
         <Field label="Yeni şifre (tekrar)" error={error ?? undefined}>
-          <input
-            type="password"
+          <PasswordInput
             autoComplete="new-password"
             className={inputClasses}
             value={repeatPassword}

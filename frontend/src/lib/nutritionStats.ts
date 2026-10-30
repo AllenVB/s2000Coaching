@@ -1,4 +1,4 @@
-import type { NutritionPlan } from '@/types/nutrition'
+import { mealsOfDay, type NutritionDayType, type NutritionPlan } from '@/types/nutrition'
 
 export interface MacroTotals {
   calories: number
@@ -12,10 +12,10 @@ export interface MacroTotals {
  * coach may only fill in calories — so a missing value counts as zero rather than voiding
  * the whole total.
  */
-export function plannedTotals(plan: NutritionPlan): MacroTotals {
+export function plannedTotals(plan: NutritionPlan, dayType: NutritionDayType): MacroTotals {
   const totals: MacroTotals = { calories: 0, proteinG: 0, carbsG: 0, fatG: 0 }
 
-  for (const meal of plan.meals) {
+  for (const meal of mealsOfDay(plan, dayType)) {
     for (const item of meal.items) {
       totals.calories += item.calories ?? 0
       totals.proteinG += item.proteinG ?? 0

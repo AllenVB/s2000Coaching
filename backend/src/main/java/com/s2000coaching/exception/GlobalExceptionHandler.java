@@ -7,6 +7,7 @@ import java.time.Instant;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -53,6 +54,18 @@ public class GlobalExceptionHandler {
 	public ResponseEntity<ApiError> handleEmailNotVerified(EmailNotVerifiedException ex) {
 		return ResponseEntity.status(HttpStatus.FORBIDDEN)
 				.body(new ApiError(Instant.now(), 403, "Forbidden", List.of(ex.getMessage())));
+	}
+
+	/**
+	 * Two requests raced past the "is it taken?" check and the database's unique constraint
+	 * stopped the second. Without this it would be a bare 500 for what is simply a conflict.
+	 */
+	@ExceptionHandler(DataIntegrityViolationException.class)
+	public ResponseEntity<ApiError> handleIntegrityViolation(DataIntegrityViolationException ex) {
+		log.warn("Veritabanı bütünlük ihlali", ex);
+		return ResponseEntity.status(HttpStatus.CONFLICT)
+				.body(new ApiError(Instant.now(), 409, "Conflict",
+						List.of("Bu kayıt zaten var ya da başka bir kayıtla çakışıyor. Sayfayı yenileyip tekrar deneyin.")));
 	}
 
 	@ExceptionHandler(MethodArgumentNotValidException.class)

@@ -1,9 +1,8 @@
 import { formatDate } from '@/lib/date'
-import { MAX_SET_CELLS, muscleGroupLabel, type PlanExercise, type TrainingPlan } from '@/types/training'
+import { MAX_SETS, muscleGroupLabel, type PlanExercise, type TrainingPlan } from '@/types/training'
 import type { Measurement } from '@/types/measurement'
-import { splitBlocks, type Meal, type NutritionPlan } from '@/types/nutrition'
+import { dayTypeLabel, hasTargets, mealsOfDay, splitBlocks, targetsOf, type Meal, type NutritionDayType, type NutritionPlan } from '@/types/nutrition'
 
-const SET_NUMBERS = Array.from({ length: MAX_SET_CELLS }, (_unused, index) => index + 1)
 /** The weight-tracking grid is ten sessions wide, like the strip in the member's workout page. */
 const GRID_SESSIONS = Array.from({ length: 10 }, (_unused, index) => index + 1)
 
@@ -48,7 +47,13 @@ export function PlanDocument({
       </header>
 
       {nutrition ? (
-        <NutritionSection member={member} measurements={measurements} plan={nutrition} />
+        <NutritionSection member={member} measurements={measurements} plan={nutrition} dayType="TRAINING" />
+      ) : null}
+      {/* The rest-day half goes on its own page, and only when the coach has written something for it. */}
+      {nutrition && (mealsOfDay(nutrition, 'REST').length > 0 || hasTargets(targetsOf(nutrition, 'REST'))) ? (
+        <div className="break-before-page print:break-before-page">
+          <NutritionSection member={member} measurements={measurements} plan={nutrition} dayType="REST" />
+        </div>
       ) : null}
 
       {training ? (
@@ -131,22 +136,27 @@ function NutritionSection({
   member,
   measurements,
   plan,
+  dayType,
 }: {
   member: PlanDocumentMember
   measurements: Measurement[]
   plan: NutritionPlan
+  dayType: NutritionDayType
 }) {
-  const { meals, supplements } = splitBlocks(plan)
+  const { meals, supplements } = splitBlocks(plan, dayType)
+  const dayTargets = targetsOf(plan, dayType)
   const targets = [
-    plan.targetCalories !== null ? { label: 'Kalori', value: `${plan.targetCalories} kcal` } : null,
-    plan.targetProteinG !== null ? { label: 'Protein', value: `${plan.targetProteinG} g` } : null,
-    plan.targetCarbsG !== null ? { label: 'Karbonhidrat', value: `${plan.targetCarbsG} g` } : null,
-    plan.targetFatG !== null ? { label: 'Yağ', value: `${plan.targetFatG} g` } : null,
+    dayTargets.calories !== null ? { label: 'Kalori', value: `${dayTargets.calories} kcal` } : null,
+    dayTargets.proteinG !== null ? { label: 'Protein', value: `${dayTargets.proteinG} g` } : null,
+    dayTargets.carbsG !== null ? { label: 'Karbonhidrat', value: `${dayTargets.carbsG} g` } : null,
+    dayTargets.fatG !== null ? { label: 'Yağ', value: `${dayTargets.fatG} g` } : null,
   ].filter((target): target is { label: string; value: string } => target !== null)
 
   return (
     <section>
-      <SectionTitle>Beslenme programı · {plan.name}</SectionTitle>
+      <SectionTitle>
+        Beslenme programı · {plan.name} · {dayTypeLabel(dayType)}
+      </SectionTitle>
       <div className="grid grid-cols-[180px_1fr_1fr_1fr] items-start gap-3">
         <div className="space-y-3">
           <MemberCard member={member} measurements={measurements} />
@@ -290,13 +300,20 @@ function setCells(planExercise: PlanExercise): { cells: string[]; overflow: stri
   if (perSet.length > 0) {
     return { cells: perSet, overflow: null }
   }
-  if (planExercise.setCount > MAX_SET_CELLS) {
+  if (planExercise.setCount > MAX_SETS) {
     return { cells: [], overflow: `${planExercise.setCount} set × ${planExercise.reps}` }
   }
   return { cells: Array.from({ length: planExercise.setCount }, () => planExercise.reps), overflow: null }
 }
 
+/** Set columns on the sheet: at least four, so there is room to write, and as many as the longest exercise has. */
+function setColumnsOf(exercises: PlanExercise[]): number[] {
+  const longest = Math.max(0, ...exercises.map((planExercise) => setCells(planExercise).cells.length))
+  return Array.from({ length: Math.min(MAX_SETS, Math.max(4, longest)) }, (_unused, index) => index + 1)
+}
+
 function DayBlock({ name, note, exercises }: { name: string; note: string | null; exercises: PlanExercise[] }) {
+  const SET_NUMBERS = setColumnsOf(exercises)
   return (
     <div className="break-inside-avoid">
       <table className="w-full border-collapse border border-neutral-400 text-left">
@@ -327,7 +344,7 @@ function DayBlock({ name, note, exercises }: { name: string; note: string | null
                   {planExercise.note ? <span className="block text-[10px] font-normal text-neutral-600">{planExercise.note}</span> : null}
                 </td>
                 {overflow ? (
-                  <td colSpan={MAX_SET_CELLS} className="border-l border-neutral-200 px-1 py-1 text-center">
+                  <td colSpan={SET_NUMBERS.length} className="border-l border-neutral-200 px-1 py-1 text-center">
                     {overflow}
                   </td>
                 ) : (

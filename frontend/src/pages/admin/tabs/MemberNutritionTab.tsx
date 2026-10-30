@@ -7,6 +7,8 @@ import {
   useMemberNutritionPlans,
   useNutritionTemplates,
 } from '@/api/nutritionApi'
+import { useCoachWeeklyNutrition } from '@/api/weeklyNutritionApi'
+import { WeeklyNutritionAlbum } from '@/components/nutrition/WeeklyNutritionAlbum'
 import { MemberIntakeHistory } from '@/components/nutrition/MemberIntakeHistory'
 import { NutritionPlanEditor } from '@/components/nutrition/NutritionPlanEditor'
 import { Button } from '@/components/ui/Button'
@@ -24,6 +26,7 @@ export function MemberNutritionTab() {
   const { data: plans, isLoading, isError, error } = useMemberNutritionPlans(member.id)
   const { data: templates } = useNutritionTemplates()
 
+  const weeklySource = useCoachWeeklyNutrition(member.id)
   const createPlan = useCreateMemberNutritionPlan(member.id)
   const activatePlan = useActivateNutritionPlan()
   const deletePlan = useDeleteNutritionPlan()
@@ -176,6 +179,13 @@ export function MemberNutritionTab() {
           Bu üyeye henüz beslenme planı atanmadı.
         </p>
       )}
+
+      <section>
+        <h2 className="mb-3 text-sm font-bold uppercase tracking-wider text-text-primary">
+          Haftalık Beslenme Albümü
+        </h2>
+        <WeeklyNutritionAlbum source={weeklySource} />
+      </section>
 
       <MemberIntakeHistory
         memberId={member.id}

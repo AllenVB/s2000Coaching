@@ -15,6 +15,8 @@ public interface MemberRepository extends JpaRepository<Member, UUID> {
 
 	boolean existsByEmail(String email);
 
+	boolean existsByMemberNumber(int memberNumber);
+
 	List<Member> findAllByStatusOrderByCreatedAtDesc(MemberStatus status);
 
 	long countByStatus(MemberStatus status);

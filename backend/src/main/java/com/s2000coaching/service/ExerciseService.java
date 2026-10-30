@@ -75,6 +75,24 @@ public class ExerciseService {
 		return getOrThrow(exerciseId);
 	}
 
+	/**
+	 * The exercise a plan line points at: the one with that id, or — when the coach typed a name —
+	 * the catalogue entry of that name (any case), made on the spot when there is none. Typing the
+	 * same name again therefore reuses the entry, and with it its video and its history.
+	 */
+	Exercise resolve(UUID exerciseId, String exerciseName) {
+		if (exerciseId != null) {
+			return getOrThrow(exerciseId);
+		}
+		String name = exerciseName == null ? "" : exerciseName.trim().replaceAll("\\s+", " ");
+		if (name.isEmpty()) {
+			throw new BadRequestException("Egzersiz adını yazın.");
+		}
+		return exerciseRepository.findFirstByNameIgnoreCase(name)
+				.orElseGet(() -> exerciseRepository.save(new Exercise(UUID.randomUUID(), name, null, null, null,
+						Instant.now())));
+	}
+
 	private Exercise getOrThrow(UUID exerciseId) {
 		return exerciseRepository.findById(exerciseId)
 				.orElseThrow(() -> new NotFoundException("Hareket bulunamadı: " + exerciseId));

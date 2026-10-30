@@ -49,8 +49,9 @@ export async function apiUpload<T>(
   path: string,
   body: FormData,
   headers: Record<string, string>,
+  method: 'POST' | 'PUT' = 'POST',
 ): Promise<T> {
-  const response = await fetch(`${API_BASE_URL}${path}`, { method: 'POST', headers, body })
+  const response = await fetch(`${API_BASE_URL}${path}`, { method, headers, body })
   if (!response.ok) {
     throw await failureOf(response)
   }

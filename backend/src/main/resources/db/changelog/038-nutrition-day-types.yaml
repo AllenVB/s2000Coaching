@@ -1,0 +1,25 @@
+databaseChangeLog:
+  - changeSet:
+      id: 054-nutrition-day-types
+      author: s2000
+      comment: >-
+        A nutrition plan now covers two kinds of day, training days and rest days, each with its own
+        calorie and macro targets and its own meals. The targets already on the plan become the
+        training-day targets, and every existing meal is a training-day meal; the rest-day side starts
+        empty for the coach to fill in. Water stays one number for the whole plan.
+      changes:
+        - addColumn:
+            tableName: meal
+            columns:
+              - column:
+                  name: day_type
+                  type: varchar(10)
+                  defaultValue: TRAINING
+                  constraints: { nullable: false }
+        - addColumn:
+            tableName: nutrition_plan
+            columns:
+              - column: { name: rest_target_calories, type: int }
+              - column: { name: rest_target_protein_g, type: int }
+              - column: { name: rest_target_carbs_g, type: int }
+              - column: { name: rest_target_fat_g, type: int }

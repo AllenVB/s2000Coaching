@@ -1,122 +1,134 @@
-import { useRef, useState } from 'react'
+import { useState } from 'react'
 
 import {
   useAddPlanDay,
   useAddPlanExercise,
   useDeletePlanDay,
   useDeletePlanExercise,
-  useExercises,
   useUpdatePlanExercise,
 } from '@/api/trainingApi'
 import { ExerciseVideoEditor } from '@/components/training/ExerciseVideoEditor'
+import { Button } from '@/components/ui/Button'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
+import { inputClasses } from '@/components/ui/FormField'
 import { PlusIcon, TrashIcon } from '@/components/ui/icons'
-import { MAX_SET_CELLS, muscleGroupLabel, type PlanDay, type PlanExercise, type TrainingPlan } from '@/types/training'
-
-const SET_NUMBERS = Array.from({ length: MAX_SET_CELLS }, (_unused, index) => index + 1)
-
-// Cells look like plain text until pointed at, so a filled plan reads like the printed one.
-const cellClasses =
-  'h-9 w-full rounded-md border border-transparent bg-transparent px-2 text-center text-sm text-text-primary transition-colors hover:border-border focus:border-primary focus:bg-surface focus:outline-none'
-const smallFieldClasses =
-  'h-8 w-full rounded-md border border-border bg-surface px-2 text-xs text-text-primary focus:border-primary focus:outline-none'
+import { MAX_DAYS, MAX_SETS, type PlanDay, type PlanExercise, type TrainingPlan } from '@/types/training'
 
 /**
- * Day-and-exercise editor, shared by the template page and a member's training tab. A day is
- * a table: the exercise, then the rep target of set 1 to 4 (none beyond the first is
- * required), saved when a cell loses focus. The "+" row at the foot adds an exercise.
+ * The programme as the coach builds it: "Gün 1" is there from the start and selected, the other
+ * days come one at a time with the "+" (up to seven), and the selected day shows its exercises and
+ * a form for the next one. An exercise is a name the coach types and its sets: "1.set" is there
+ * already, a second "+" adds more (up to ten), and it can be saved with just the first.
  */
 export function PlanEditor({ plan }: { plan: TrainingPlan }) {
   const addDay = useAddPlanDay()
-  const [dayName, setDayName] = useState('')
+  const [selectedId, setSelectedId] = useState<string | null>(null)
+
+  // Whatever was selected may be gone (deleted) or not there yet; fall back to the first day.
+  const selected = plan.days.find((day) => day.id === selectedId) ?? plan.days[0]
+  const canAddDay = plan.days.length < MAX_DAYS
 
   const add = () => {
-    const name = dayName.trim()
-    if (name.length > 0 && !addDay.isPending) {
-      addDay.mutate({ planId: plan.id, name }, { onSuccess: () => setDayName('') })
+    if (!canAddDay || addDay.isPending) {
+      return
     }
+    addDay.mutate(
+      { planId: plan.id, name: nextDayName(plan.days) },
+      {
+        onSuccess: (updated) => {
+          // The new day is the last one; open it so its first exercise can be typed straight away.
+          const newest = [...updated.days].sort((a, b) => b.dayOrder - a.dayOrder)[0]
+          if (newest) {
+            setSelectedId(newest.id)
+          }
+        },
+      },
+    )
   }
 
   return (
     <div className="space-y-4" data-training-editor>
-      {plan.days.map((day) => (
-        <DayCard key={day.id} day={day} />
-      ))}
-
-      <div className="flex flex-wrap items-center gap-2">
-        <input
-          value={dayName}
-          onChange={(event) => setDayName(event.target.value)}
-          onKeyDown={(event) => {
-            if (event.key === 'Enter') {
-              event.preventDefault()
-              add()
-            }
-          }}
-          type="text"
-          placeholder={`Örn: Gün ${plan.days.length + 1}`}
-          aria-label="Yeni gün adı"
-          className="h-9 w-full max-w-xs rounded-lg border border-border bg-surface px-3 text-sm text-text-primary focus:border-primary focus:outline-none"
-        />
-        <button
-          type="button"
-          onClick={add}
-          disabled={addDay.isPending || dayName.trim().length === 0}
-          aria-label="Gün ekle"
-          className="inline-flex h-9 items-center gap-1.5 rounded-full border border-border-strong bg-surface-elevated px-3.5 text-xs font-semibold uppercase tracking-wide text-text-primary transition-colors hover:border-primary/60 disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          <PlusIcon className="h-3.5 w-3.5" />
-          Gün Ekle
-        </button>
+      <div role="tablist" aria-label="Antrenman günleri" className="flex flex-wrap items-center gap-2">
+        {plan.days.map((day) => (
+          <button
+            key={day.id}
+            type="button"
+            role="tab"
+            aria-selected={selected?.id === day.id}
+            onClick={() => setSelectedId(day.id)}
+            className={`h-9 rounded-full border px-4 text-xs font-semibold uppercase tracking-wide transition-colors ${
+              selected?.id === day.id
+                ? 'border-primary bg-primary text-canvas'
+                : 'border-border-strong bg-surface-elevated text-text-secondary hover:border-primary/60 hover:text-text-primary'
+            }`}
+          >
+            {day.name}
+          </button>
+        ))}
+        {canAddDay ? (
+          <button
+            type="button"
+            onClick={add}
+            disabled={addDay.isPending}
+            aria-label={`${nextDayName(plan.days)} ekle`}
+            title={`${nextDayName(plan.days)} ekle`}
+            className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-dashed border-border-strong text-text-primary transition-colors hover:border-primary hover:text-primary disabled:opacity-50"
+          >
+            <PlusIcon className="h-4 w-4" />
+          </button>
+        ) : (
+          <span className="text-[11px] text-text-muted">En fazla {MAX_DAYS} gün</span>
+        )}
       </div>
-
       {addDay.isError ? <p className="text-xs text-error">{addDay.error.message}</p> : null}
+
+      {selected ? <DayPanel key={selected.id} day={selected} isOnlyDay={plan.days.length <= 1} /> : null}
     </div>
   )
 }
 
-function DayCard({ day }: { day: PlanDay }) {
+/** The first "Gün N" (N from 1 to 7) that no day of the plan carries yet. */
+function nextDayName(days: PlanDay[]): string {
+  const taken = new Set(days.map((day) => day.name))
+  for (let number = 1; number <= MAX_DAYS; number += 1) {
+    if (!taken.has(`Gün ${number}`)) {
+      return `Gün ${number}`
+    }
+  }
+  return `Gün ${days.length + 1}`
+}
+
+function DayPanel({ day, isOnlyDay }: { day: PlanDay; isOnlyDay: boolean }) {
   const deleteDay = useDeletePlanDay()
   const [isConfirmingDelete, setConfirmingDelete] = useState(false)
 
   return (
-    <section className="overflow-hidden rounded-2xl border border-border bg-surface">
+    <section className="rounded-2xl border border-border bg-surface">
       <div className="flex items-center justify-between gap-3 border-b border-border bg-surface-elevated px-5 py-3">
         <h3 className="text-sm font-bold uppercase tracking-wider text-primary">{day.name}</h3>
-        <button
-          type="button"
-          onClick={() => setConfirmingDelete(true)}
-          aria-label={`${day.name} gününü sil`}
-          className="text-text-muted transition-colors hover:text-error"
-        >
-          <TrashIcon className="h-4 w-4" />
-        </button>
+        {isOnlyDay ? (
+          <span className="text-[11px] text-text-muted">Son gün silinemez</span>
+        ) : (
+          <button
+            type="button"
+            onClick={() => setConfirmingDelete(true)}
+            aria-label={`${day.name} gününü sil`}
+            className="text-text-muted transition-colors hover:text-error"
+          >
+            <TrashIcon className="h-4 w-4" />
+          </button>
+        )}
       </div>
 
-      <div className="overflow-x-auto">
-        <table className="w-full min-w-[540px] border-collapse">
-          <thead>
-            <tr className="text-[11px] font-semibold uppercase tracking-wider text-text-muted">
-              <th scope="col" className="px-4 py-2 text-left">
-                Hareket
-              </th>
-              {SET_NUMBERS.map((number) => (
-                <th key={number} scope="col" className="w-16 px-1 py-2 text-center">
-                  Set {number}
-                </th>
-              ))}
-              <th scope="col" className="w-10">
-                <span className="sr-only">İşlem</span>
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {day.exercises.map((planExercise) => (
-              <ExerciseRows key={planExercise.id} planExercise={planExercise} />
-            ))}
-            <AddExerciseRow dayId={day.id} />
-          </tbody>
-        </table>
+      <div className="space-y-4 p-5">
+        {day.exercises.length === 0 ? (
+          <p className="text-sm italic text-text-muted">Bu güne henüz egzersiz eklenmedi. Aşağıdan ekleyin.</p>
+        ) : null}
+        {day.exercises.map((planExercise) => (
+          <ExerciseForm key={`${planExercise.id}-${exerciseVersion(planExercise)}`} planExercise={planExercise} />
+        ))}
+
+        <ExerciseForm dayId={day.id} />
       </div>
 
       {isConfirmingDelete ? (
@@ -126,7 +138,7 @@ function DayCard({ day }: { day: PlanDay }) {
           tone="danger"
           isPending={deleteDay.isPending}
           error={deleteDay.isError ? deleteDay.error.message : null}
-          description={`"${day.name}" gününü ve içindeki hareketleri silmek istediğinize emin misiniz?`}
+          description={`"${day.name}" gününü ve içindeki egzersizleri silmek istediğinize emin misiniz? Bu güne girilmiş antrenman kayıtları da silinir.`}
           onCancel={() => setConfirmingDelete(false)}
           onConfirm={() => deleteDay.mutate({ dayId: day.id }, { onSuccess: () => setConfirmingDelete(false) })}
         />
@@ -135,243 +147,264 @@ function DayCard({ day }: { day: PlanDay }) {
   )
 }
 
+/** Changes whenever the saved prescription does, so a saved form restarts from what the server now holds. */
+function exerciseVersion(planExercise: PlanExercise): string {
+  return [
+    planExercise.exercise.name,
+    (planExercise.setReps ?? []).join('|'),
+    planExercise.reps,
+    planExercise.setCount,
+    planExercise.targetWeightKg,
+    planExercise.restSeconds,
+    planExercise.note,
+  ].join('~')
+}
+
 /**
- * What the set cells show for an exercise. One written per set shows as it was; one written the
- * older way (a count and a single free-text reps) shows that text in each of its sets, which is
- * what "3 × 8-10" means.
+ * What the set boxes start with. One written per set shows as it was; one written the older way
+ * (a count and a single free-text reps) shows that text in each of its sets, which is what
+ * "3 × 8-10" means. A brand new exercise starts with one empty set: "1.set".
  */
-function setCellValues(planExercise: PlanExercise): string[] {
+function initialSets(planExercise: PlanExercise | undefined): string[] {
+  if (!planExercise) {
+    return ['']
+  }
   const perSet = planExercise.setReps ?? []
   if (perSet.length > 0) {
     return perSet
   }
-  return Array.from({ length: Math.min(planExercise.setCount, MAX_SET_CELLS) }, () => planExercise.reps)
+  return Array.from({ length: Math.max(1, planExercise.setCount) }, () => planExercise.reps)
 }
 
-function ExerciseRows({ planExercise }: { planExercise: PlanExercise }) {
-  const update = useUpdatePlanExercise()
-  const remove = useDeletePlanExercise()
-  const setRefs = useRef<(HTMLInputElement | null)[]>([])
-  const weightRef = useRef<HTMLInputElement>(null)
-  const restRef = useRef<HTMLInputElement>(null)
-  const noteRef = useRef<HTMLInputElement>(null)
+/** Saved by the exercise form: either a new exercise for `dayId` or a change to `planExercise`. */
+function ExerciseForm({ dayId, planExercise }: { dayId?: string; planExercise?: PlanExercise }) {
+  const addExercise = useAddPlanExercise()
+  const updateExercise = useUpdatePlanExercise()
+  const removeExercise = useDeletePlanExercise()
 
-  const values = setCellValues(planExercise)
-  // More sets than there are cells can only come from the older format; editing it here would
-  // silently drop the extra sets, so it stays read-only until it is rewritten.
-  const isTooLongForCells = planExercise.setCount > MAX_SET_CELLS && (planExercise.setReps ?? []).length === 0
+  const [name, setName] = useState(planExercise?.exercise.name ?? '')
+  const [sets, setSets] = useState<string[]>(() => initialSets(planExercise))
+  const [weight, setWeight] = useState(planExercise?.targetWeightKg != null ? String(planExercise.targetWeightKg) : '')
+  const [rest, setRest] = useState(planExercise?.restSeconds != null ? String(planExercise.restSeconds) : '')
+  const [note, setNote] = useState(planExercise?.note ?? '')
+  const [error, setError] = useState<string | null>(null)
+  const [isConfirmingRemove, setConfirmingRemove] = useState(false)
 
-  // Every field is read from the page each time, never from `planExercise`: the server replaces
-  // the whole prescription, so a save carrying a stale sibling would quietly undo another edit.
-  const save = () => {
-    const setReps = SET_NUMBERS.map((number) => setRefs.current[number - 1]?.value.trim() ?? '')
-    const weight = weightRef.current?.value.trim() ?? ''
-    const rest = restRef.current?.value.trim() ?? ''
-    const note = noteRef.current?.value.trim() ?? ''
+  // An exercise written in the older style with more sets than there are boxes for cannot be
+  // edited here without losing sets, so it can only be removed.
+  const tooLong = planExercise !== undefined && sets.length > MAX_SETS
+  const isPending = addExercise.isPending || updateExercise.isPending
 
-    const unchanged =
-      SET_NUMBERS.every((number) => setReps[number - 1] === (values[number - 1] ?? '')) &&
-      weight === (planExercise.targetWeightKg === null ? '' : String(planExercise.targetWeightKg)) &&
-      rest === (planExercise.restSeconds === null ? '' : String(planExercise.restSeconds)) &&
-      note === (planExercise.note ?? '')
-    if (unchanged) {
+  const setRep = (index: number, value: string) => setSets((current) => current.map((rep, at) => (at === index ? value : rep)))
+  const addSet = () => setSets((current) => (current.length < MAX_SETS ? [...current, ''] : current))
+  const removeSet = (index: number) => setSets((current) => current.filter((_rep, at) => at !== index))
+
+  const save = (event: React.FormEvent) => {
+    event.preventDefault()
+    setError(null)
+
+    const typedName = name.trim()
+    if (typedName === '') {
+      setError('Egzersiz adını yazın.')
+      return
+    }
+    // Empty sets at the end are the ones the coach decided not to add; a gap before a filled one is a mistake.
+    const trimmed = sets.map((rep) => rep.trim())
+    const last = trimmed.reduce((found, rep, index) => (rep !== '' ? index : found), -1)
+    if (last < 0) {
+      setError('En az 1.set için tekrar yazın.')
+      return
+    }
+    const gap = trimmed.slice(0, last).findIndex((rep) => rep === '')
+    if (gap >= 0) {
+      setError(`${gap + 1}.set boş ama sonraki setler dolu; boş seti silin ya da doldurun.`)
+      return
+    }
+    const weightValue = weight.trim() === '' ? null : Number(weight.replace(',', '.'))
+    const restValue = rest.trim() === '' ? null : Number(rest)
+    if ((weightValue !== null && !(weightValue >= 0)) || (restValue !== null && !(restValue >= 0))) {
+      setError('Hedef kg ve dinlenme saniyesi 0 ya da daha büyük bir sayı olmalı.')
       return
     }
 
-    update.mutate({
-      planExerciseId: planExercise.id,
-      input: {
-        exerciseId: planExercise.exercise.id,
-        setReps,
-        targetWeightKg: weight === '' ? null : Number(weight),
-        restSeconds: rest === '' ? null : Number(rest),
-        note: note || null,
-      },
-    })
+    const input = {
+      // The same name keeps the catalogue entry (and its video) by id; a new name finds or makes one.
+      ...(planExercise && typedName === planExercise.exercise.name
+        ? { exerciseId: planExercise.exercise.id }
+        : { exerciseName: typedName }),
+      setReps: trimmed.slice(0, last + 1),
+      targetWeightKg: weightValue,
+      restSeconds: restValue,
+      note: note.trim() || null,
+    }
+
+    if (planExercise) {
+      updateExercise.mutate({ planExerciseId: planExercise.id, input }, { onError: (failure) => setError(failure.message) })
+    } else if (dayId) {
+      addExercise.mutate(
+        { dayId, input },
+        {
+          onSuccess: () => {
+            setName('')
+            setSets([''])
+            setWeight('')
+            setRest('')
+            setNote('')
+          },
+          onError: (failure) => setError(failure.message),
+        },
+      )
+    }
   }
 
+  const isNew = planExercise === undefined
+
   return (
-    <>
-      <tr className="border-t border-border/60">
-        <td className="px-4 py-1.5">
-          <span className="block text-sm font-semibold text-text-primary">{planExercise.exercise.name}</span>
-          <span className="block text-[11px] text-text-muted">
-            {muscleGroupLabel(planExercise.exercise.muscleGroup)}
+    <form
+      onSubmit={save}
+      noValidate
+      className={`rounded-xl border p-4 ${isNew ? 'border-dashed border-primary/50 bg-primary/5' : 'border-border bg-surface-elevated/50'}`}
+    >
+      <div className="flex items-start gap-2">
+        <label className="min-w-0 flex-1">
+          <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-text-muted">
+            {isNew ? 'Yeni egzersiz' : 'Egzersiz'}
           </span>
-        </td>
-        {isTooLongForCells ? (
-          <td colSpan={MAX_SET_CELLS} className="px-1 py-1.5 text-center text-xs text-text-secondary">
-            {planExercise.setCount} set × {planExercise.reps} (eski biçim)
-          </td>
-        ) : (
-          SET_NUMBERS.map((number) => (
-            <td key={number} className="px-1 py-1.5">
-              <input
-                ref={(element) => {
-                  setRefs.current[number - 1] = element
-                }}
-                defaultValue={values[number - 1] ?? ''}
-                onBlur={save}
-                onKeyDown={blurOnEnter}
-                maxLength={16}
-                placeholder="—"
-                aria-label={`${planExercise.exercise.name} set ${number} tekrar`}
-                className={cellClasses}
-              />
-            </td>
-          ))
-        )}
-        <td className="px-2 py-1.5 text-right">
+          <input
+            value={name}
+            onChange={(event) => setName(event.target.value)}
+            type="text"
+            maxLength={120}
+            placeholder="Egzersiz adı (örn. Incline Dumbbell Press)"
+            aria-label={isNew ? 'Yeni egzersiz adı' : 'Egzersiz adı'}
+            className={inputClasses}
+            disabled={tooLong}
+          />
+        </label>
+        {planExercise ? (
           <button
             type="button"
-            onClick={() => remove.mutate({ planExerciseId: planExercise.id })}
-            disabled={remove.isPending}
-            aria-label={`${planExercise.exercise.name} hareketini çıkar`}
-            className="text-text-muted transition-colors hover:text-error disabled:opacity-50"
+            onClick={() => setConfirmingRemove(true)}
+            aria-label={`${planExercise.exercise.name} egzersizini sil`}
+            className="mt-6 text-text-muted transition-colors hover:text-error"
           >
             <TrashIcon className="h-4 w-4" />
           </button>
-        </td>
-      </tr>
-      <tr>
-        <td colSpan={MAX_SET_CELLS + 2} className="px-4 pb-3">
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-[100px_100px_1fr]">
+        ) : null}
+      </div>
+
+      {tooLong && planExercise ? (
+        <p className="mt-3 text-xs text-text-secondary">
+          {planExercise.setCount} set × {planExercise.reps} (eski biçim) — düzenlemek için egzersizi silip yeniden
+          ekleyin.
+        </p>
+      ) : (
+        <>
+          <ul className="mt-3 space-y-2">
+            {sets.map((rep, index) => (
+              <li key={index} className="flex items-center gap-2">
+                <span className="w-14 shrink-0 text-xs font-semibold text-text-secondary">{index + 1}.set</span>
+                <input
+                  value={rep}
+                  onChange={(event) => setRep(index, event.target.value)}
+                  type="text"
+                  maxLength={16}
+                  placeholder="Tekrar (örn. 8-10)"
+                  aria-label={`${name.trim() || 'Egzersiz'} ${index + 1}.set tekrar`}
+                  className={`${inputClasses} min-w-0 flex-1`}
+                />
+                {index > 0 ? (
+                  <button
+                    type="button"
+                    onClick={() => removeSet(index)}
+                    aria-label={`${index + 1}.seti sil`}
+                    className="text-text-muted transition-colors hover:text-error"
+                  >
+                    <TrashIcon className="h-4 w-4" />
+                  </button>
+                ) : (
+                  <span className="w-4" />
+                )}
+              </li>
+            ))}
+          </ul>
+
+          <div className="mt-2">
+            {sets.length < MAX_SETS ? (
+              <button
+                type="button"
+                onClick={addSet}
+                aria-label="Set ekle"
+                className="inline-flex items-center gap-1.5 rounded-full border border-dashed border-border-strong px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-text-secondary transition-colors hover:border-primary hover:text-primary"
+              >
+                <PlusIcon className="h-3.5 w-3.5" />
+                Set ekle ({sets.length + 1}.set)
+              </button>
+            ) : (
+              <span className="text-[11px] text-text-muted">En fazla {MAX_SETS} set</span>
+            )}
+          </div>
+
+          <div className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-[110px_130px_1fr]">
             <input
-              ref={weightRef}
-              defaultValue={planExercise.targetWeightKg ?? ''}
-              onBlur={save}
-              onKeyDown={blurOnEnter}
-              type="number"
-              step="0.5"
-              min={0}
+              value={weight}
+              onChange={(event) => setWeight(event.target.value)}
+              type="text"
+              inputMode="decimal"
               placeholder="Hedef kg"
-              aria-label={`${planExercise.exercise.name} hedef kilo`}
-              className={smallFieldClasses}
+              aria-label="Hedef kilo"
+              className={inputClasses}
             />
             <input
-              ref={restRef}
-              defaultValue={planExercise.restSeconds ?? ''}
-              onBlur={save}
-              onKeyDown={blurOnEnter}
-              type="number"
-              step="15"
-              min={0}
+              value={rest}
+              onChange={(event) => setRest(event.target.value)}
+              type="text"
+              inputMode="numeric"
               placeholder="Dinlenme sn"
-              aria-label={`${planExercise.exercise.name} dinlenme saniyesi`}
-              className={smallFieldClasses}
+              aria-label="Dinlenme saniyesi"
+              className={inputClasses}
             />
             <input
-              ref={noteRef}
-              defaultValue={planExercise.note ?? ''}
-              onBlur={save}
-              onKeyDown={blurOnEnter}
+              value={note}
+              onChange={(event) => setNote(event.target.value)}
+              type="text"
               maxLength={2000}
               placeholder="Not (üye görür)"
-              aria-label={`${planExercise.exercise.name} notu`}
-              className={`${smallFieldClasses} col-span-2 sm:col-span-1`}
+              aria-label="Egzersiz notu"
+              className={`${inputClasses} col-span-2 sm:col-span-1`}
             />
           </div>
-          <ExerciseVideoEditor exercise={planExercise.exercise} />
-          {update.isError || remove.isError ? (
-            <p className="mt-1 text-xs text-error">{(update.error ?? remove.error)?.message}</p>
+
+          {error ? (
+            <p role="alert" className="mt-3 text-xs text-error">
+              {error}
+            </p>
           ) : null}
-        </td>
-      </tr>
-    </>
-  )
-}
 
-/** The "+" row at the foot of a day: pick an exercise, type the set targets, "+" or Enter. */
-function AddExerciseRow({ dayId }: { dayId: string }) {
-  const { data: exercises } = useExercises()
-  const addExercise = useAddPlanExercise()
-  const selectRef = useRef<HTMLSelectElement>(null)
-  const setRefs = useRef<(HTMLInputElement | null)[]>([])
+          <div className="mt-4">
+            <Button type="submit" size="sm" disabled={isPending}>
+              {isPending ? 'Kaydediliyor…' : isNew ? 'Egzersizi Kaydet' : 'Güncelle'}
+            </Button>
+          </div>
+        </>
+      )}
 
-  const add = () => {
-    const exerciseId = selectRef.current?.value ?? ''
-    if (!exerciseId || addExercise.isPending) {
-      selectRef.current?.focus()
-      return
-    }
-    const setReps = SET_NUMBERS.map((number) => setRefs.current[number - 1]?.value.trim() ?? '')
-    addExercise.mutate(
-      { dayId, input: { exerciseId, setReps } },
-      {
-        onSuccess: () => {
-          setRefs.current.forEach((input) => {
-            if (input) input.value = ''
-          })
-          if (selectRef.current) selectRef.current.value = ''
-          selectRef.current?.focus()
-        },
-      },
-    )
-  }
+      {planExercise ? <ExerciseVideoEditor exercise={planExercise.exercise} /> : null}
 
-  return (
-    <>
-      <tr className="border-t border-dashed border-border bg-surface-elevated/40">
-        <td className="px-3 py-1.5">
-          <select
-            ref={selectRef}
-            defaultValue=""
-            aria-label="Eklenecek hareket"
-            className="h-9 w-full rounded-md border border-border bg-surface px-2 text-sm text-text-primary focus:border-primary focus:outline-none"
-          >
-            <option value="">Hareket seçin…</option>
-            {exercises?.map((exercise) => (
-              <option key={exercise.id} value={exercise.id}>
-                {exercise.name} ({muscleGroupLabel(exercise.muscleGroup)})
-              </option>
-            ))}
-          </select>
-        </td>
-        {SET_NUMBERS.map((number) => (
-          <td key={number} className="px-1 py-1.5">
-            <input
-              ref={(element) => {
-                setRefs.current[number - 1] = element
-              }}
-              onKeyDown={(event) => {
-                if (event.key === 'Enter') {
-                  event.preventDefault()
-                  add()
-                }
-              }}
-              maxLength={16}
-              placeholder={number === 1 ? 'tekrar' : '—'}
-              aria-label={`Yeni hareket set ${number} tekrar`}
-              className={cellClasses}
-            />
-          </td>
-        ))}
-        <td className="px-2 py-1.5 text-right">
-          <button
-            type="button"
-            onClick={add}
-            disabled={addExercise.isPending}
-            aria-label="Hareket ekle"
-            className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-primary text-canvas transition-colors hover:bg-primary-hover disabled:opacity-50"
-          >
-            <PlusIcon className="h-4 w-4" />
-          </button>
-        </td>
-      </tr>
-      {addExercise.isError ? (
-        <tr>
-          <td colSpan={MAX_SET_CELLS + 2} className="px-4 pb-2 text-xs text-error">
-            {addExercise.error.message}
-          </td>
-        </tr>
+      {isConfirmingRemove && planExercise ? (
+        <ConfirmDialog
+          title="Egzersizi Sil"
+          confirmLabel="Evet, Sil"
+          tone="danger"
+          isPending={removeExercise.isPending}
+          error={removeExercise.isError ? removeExercise.error.message : null}
+          description={`"${planExercise.exercise.name}" egzersizini silmek istediğinize emin misiniz? Bu egzersize girilmiş set kayıtları da silinir.`}
+          onCancel={() => setConfirmingRemove(false)}
+          onConfirm={() =>
+            removeExercise.mutate({ planExerciseId: planExercise.id }, { onSuccess: () => setConfirmingRemove(false) })
+          }
+        />
       ) : null}
-    </>
+    </form>
   )
-}
-
-function blurOnEnter(event: React.KeyboardEvent<HTMLInputElement>) {
-  if (event.key === 'Enter') {
-    event.preventDefault()
-    event.currentTarget.blur()
-  }
 }

@@ -35,6 +35,9 @@ export function MemberWorkoutDayPage() {
   const [entries, setEntries] = useState<Record<string, SetEntry[]> | null>(null)
   const [note, setNote] = useState('')
   const [performedOn, setPerformedOn] = useState(today)
+  // The plan is for reading: the sets below are the coach's. The boxes to write what was actually
+  // lifted only open when the member chooses to record the session.
+  const [logging, setLogging] = useState(false)
 
   // Seeded once from the plan: prescribed set count, pre-filled with what was lifted last time.
   const initialEntries = useMemo(() => {
@@ -112,8 +115,9 @@ export function MemberWorkoutDayPage() {
         </h1>
         <p className="mt-2 text-sm text-text-secondary">
           {day.lastPerformedOn
-            ? `Son yapılış: ${formatDate(day.lastPerformedOn)} — alanlar o seansın değerleriyle dolu.`
-            : 'İlk kez yapıyorsunuz; alanlar hedef değerlerle dolu.'}
+            ? `Son yapılış: ${formatDate(day.lastPerformedOn)}.`
+            : 'Henüz yapılmadı.'}
+          {logging ? ' Alanlar son seansın değerleriyle ya da hedefle dolu.' : ' Programı koçunuz hazırladı; burada yalnızca görüntülenir.'}
         </p>
       </div>
 
@@ -150,7 +154,20 @@ export function MemberWorkoutDayPage() {
               <ExerciseVideo exercise={planExercise.exercise} />
             </div>
 
-            <ul className="space-y-2">
+            {!logging ? (
+              <ul className="space-y-1.5">
+                {Array.from({ length: planExercise.setCount }, (_unused, index) => (
+                  <li key={index} className="flex items-center gap-3 text-sm">
+                    <span className="w-12 shrink-0 text-xs font-semibold uppercase tracking-wider text-text-muted">
+                      {index + 1}. set
+                    </span>
+                    <span className="text-text-primary">{repsText(planExercise.setReps?.[index] || planExercise.reps)}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
+
+            <ul className={`space-y-2 ${logging ? '' : 'hidden'}`} aria-hidden={!logging}>
               {(values[planExercise.id] ?? []).map((entry, index) => (
                 <li key={index} className="flex items-center gap-2">
                   <span className="w-12 shrink-0 text-xs font-semibold uppercase tracking-wider text-text-muted">
@@ -201,7 +218,13 @@ export function MemberWorkoutDayPage() {
           </section>
         ))}
 
-        <section className="rounded-2xl border border-border bg-surface p-5">
+        {!logging ? (
+          <Button type="button" variant="secondary" className="w-full" onClick={() => setLogging(true)}>
+            Bugünkü Antrenmanımı Kaydet
+          </Button>
+        ) : null}
+
+        <section className={`rounded-2xl border border-border bg-surface p-5 ${logging ? '' : 'hidden'}`}>
           <label className="block">
             <span className="mb-1.5 block text-xs font-medium text-text-secondary">Tarih</span>
             <input
@@ -237,9 +260,11 @@ export function MemberWorkoutDayPage() {
           </p>
         ) : null}
 
-        <Button type="submit" className="w-full" disabled={saveLog.isPending || day.exercises.length === 0}>
-          {saveLog.isPending ? 'Kaydediliyor…' : 'Antrenmanı Kaydet'}
-        </Button>
+        {logging ? (
+          <Button type="submit" className="w-full" disabled={saveLog.isPending || day.exercises.length === 0}>
+            {saveLog.isPending ? 'Kaydediliyor…' : 'Antrenmanı Kaydet'}
+          </Button>
+        ) : null}
       </form>
     </>
   )
@@ -263,6 +288,11 @@ function SuggestionLine({
       {suggestion.text}
     </p>
   )
+}
+
+/** "12" and "8-10" are repetitions; "60 sn" or "AMRAP" already say what they are. */
+function repsText(value: string): string {
+  return /^[\d\s\-–]+$/.test(value) ? `${value} tekrar` : value
 }
 
 function BackLink() {

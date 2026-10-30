@@ -21,7 +21,8 @@ public class Exercise {
 	private String name;
 
 	@Enumerated(EnumType.STRING)
-	@Column(name = "muscle_group", nullable = false, length = 20)
+	/** Null for an exercise the coach simply typed into a plan; the catalogue page can fill it in later. */
+	@Column(name = "muscle_group", length = 20)
 	private MuscleGroup muscleGroup;
 
 	@Column(name = "video_url")

@@ -54,6 +54,19 @@ public class NutritionPlan {
 	@Column(name = "target_fat_g")
 	private Integer targetFatG;
 
+	/** The same four targets for a rest day; the ones above are the training-day targets. */
+	@Column(name = "rest_target_calories")
+	private Integer restTargetCalories;
+
+	@Column(name = "rest_target_protein_g")
+	private Integer restTargetProteinG;
+
+	@Column(name = "rest_target_carbs_g")
+	private Integer restTargetCarbsG;
+
+	@Column(name = "rest_target_fat_g")
+	private Integer restTargetFatG;
+
 	/** Daily water target in litres; null when the coach has not set one. */
 	@Column(name = "water_liters", precision = 3, scale = 1)
 	private BigDecimal waterLiters;
@@ -80,6 +93,38 @@ public class NutritionPlan {
 		this.active = active;
 		this.createdAt = createdAt;
 		this.updatedAt = createdAt;
+	}
+
+	public Integer getRestTargetCalories() {
+		return restTargetCalories;
+	}
+
+	public void setRestTargetCalories(Integer restTargetCalories) {
+		this.restTargetCalories = restTargetCalories;
+	}
+
+	public Integer getRestTargetProteinG() {
+		return restTargetProteinG;
+	}
+
+	public void setRestTargetProteinG(Integer restTargetProteinG) {
+		this.restTargetProteinG = restTargetProteinG;
+	}
+
+	public Integer getRestTargetCarbsG() {
+		return restTargetCarbsG;
+	}
+
+	public void setRestTargetCarbsG(Integer restTargetCarbsG) {
+		this.restTargetCarbsG = restTargetCarbsG;
+	}
+
+	public Integer getRestTargetFatG() {
+		return restTargetFatG;
+	}
+
+	public void setRestTargetFatG(Integer restTargetFatG) {
+		this.restTargetFatG = restTargetFatG;
 	}
 
 	public BigDecimal getWaterLiters() {

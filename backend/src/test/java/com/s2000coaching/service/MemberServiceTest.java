@@ -83,11 +83,14 @@ class MemberServiceTest {
 	@Mock
 	private MemberDataEraser eraser;
 
+	@Mock
+	private com.s2000coaching.repository.CoachAccountRepository coachRepository;
+
 	private MemberService memberService;
 
 	@BeforeEach
 	void setUp() {
-		memberService = new MemberService(memberRepository, codeRepository, sessionRepository,
+		memberService = new MemberService(memberRepository, new MemberIdentity(memberRepository, coachRepository), codeRepository, sessionRepository,
 				coachNoteRepository, measurementRepository, workoutLogRepository, trainingPlanRepository,
 				nutritionPlanRepository, messageRepository, adminOrderService, verificationCodeService,
 				progressPhotoService, java.util.List.of(eraser));
@@ -135,7 +138,7 @@ class MemberServiceTest {
 
 			assertThatThrownBy(() -> memberService.createMember(request("Sporcu@Example.com")))
 					.isInstanceOf(ConflictException.class)
-					.hasMessageContaining("sporcu@example.com");
+					.hasMessageContaining("zaten bir hesap var");
 
 			verify(memberRepository, never()).save(any());
 			verify(verificationCodeService, never()).issueAndSend(any(), any());

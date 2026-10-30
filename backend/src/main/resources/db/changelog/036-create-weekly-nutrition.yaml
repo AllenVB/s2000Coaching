@@ -1,0 +1,44 @@
+databaseChangeLog:
+  - changeSet:
+      id: 052-create-weekly-nutrition
+      author: s2000
+      comment: >-
+        The member's weekly food album: one entry per Monday-to-Sunday week with the week's total
+        calories, how they split between carbohydrate, fat and protein (whole percentages that add up
+        to 100), and at most one photo. Grams are not stored: they follow from the calories and the
+        percentages (4 kcal/g carbohydrate and protein, 9 kcal/g fat), so they can never disagree with
+        them. Only the photo's storage key is kept here, like progress photos.
+      changes:
+        - createTable:
+            tableName: weekly_nutrition
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints: { primaryKey: true, nullable: false }
+              - column:
+                  name: member_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_weekly_nutrition_member
+                    references: member(id)
+              - column: { name: week_start, type: date, constraints: { nullable: false } }
+              - column: { name: calories, type: int, constraints: { nullable: false } }
+              - column: { name: carbs_percent, type: int, constraints: { nullable: false } }
+              - column: { name: fat_percent, type: int, constraints: { nullable: false } }
+              - column: { name: protein_percent, type: int, constraints: { nullable: false } }
+              - column: { name: photo_key, type: varchar(200) }
+              - column: { name: photo_content_type, type: varchar(50) }
+              - column: { name: photo_size_bytes, type: bigint }
+              - column: { name: created_at, type: timestamp with time zone, constraints: { nullable: false } }
+              - column: { name: updated_at, type: timestamp with time zone, constraints: { nullable: false } }
+        - addUniqueConstraint:
+            tableName: weekly_nutrition
+            columnNames: member_id, week_start
+            constraintName: uk_weekly_nutrition_member_week
+        - sql:
+            sql: >-
+              ALTER TABLE weekly_nutrition ADD CONSTRAINT ck_weekly_nutrition_percent_total
+              CHECK (carbs_percent + fat_percent + protein_percent = 100
+                     AND carbs_percent >= 0 AND fat_percent >= 0 AND protein_percent >= 0)

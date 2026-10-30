@@ -130,9 +130,17 @@ class MemberAuthControllerTest {
 				.thenReturn(new com.s2000coaching.web.dto.RegistrationResponse(true, null));
 
 		assertThat(mvc.post().uri("/api/member/auth/register").contentType(MediaType.APPLICATION_JSON)
-				.content(signUpJson("gizli-parola", true)))
+				.content(signUpJson("Gizli-parola1", true)))
 				.hasStatus(HttpStatus.CREATED)
 				.bodyJson().extractingPath("$.verificationRequired").isEqualTo(true);
+	}
+
+	@org.junit.jupiter.params.ParameterizedTest
+	@org.junit.jupiter.params.provider.ValueSource(strings = { "nouppercase1!", "NOLOWERCASE1!", "NoDigitHere!", "NoSpecial1234" })
+	void shouldRefuseAPasswordMissingAnUpperLowerDigitOrSpecialCharacter(String password) {
+		assertThat(mvc.post().uri("/api/member/auth/register").contentType(MediaType.APPLICATION_JSON)
+				.content(signUpJson(password, true))).hasStatus(HttpStatus.BAD_REQUEST);
+		org.mockito.Mockito.verify(memberAuthService, org.mockito.Mockito.never()).register(org.mockito.ArgumentMatchers.any());
 	}
 
 	@Test
@@ -140,7 +148,7 @@ class MemberAuthControllerTest {
 		assertThat(mvc.post().uri("/api/member/auth/register").contentType(MediaType.APPLICATION_JSON)
 				.content(signUpJson("kisa", true))).hasStatus(HttpStatus.BAD_REQUEST);
 		assertThat(mvc.post().uri("/api/member/auth/register").contentType(MediaType.APPLICATION_JSON)
-				.content(signUpJson("gizli-parola", false))).hasStatus(HttpStatus.BAD_REQUEST);
+				.content(signUpJson("Test-parola1", false))).hasStatus(HttpStatus.BAD_REQUEST);
 		org.mockito.Mockito.verify(memberAuthService, org.mockito.Mockito.never()).register(org.mockito.ArgumentMatchers.any());
 	}
 

@@ -45,12 +45,14 @@ class MemberPasswordAuthTest {
 	@Mock
 	private MemberSessionRepository sessionRepository;
 	@Mock
+	private com.s2000coaching.repository.CoachAccountRepository coachRepository;
+	@Mock
 	private VerificationCodeService verificationCodeService;
 
 	private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(4);
 
 	private MemberAuthService service(boolean verifyEmail) {
-		return new MemberAuthService(memberRepository, sessionRepository, verificationCodeService,
+		return new MemberAuthService(memberRepository, new MemberIdentity(memberRepository, coachRepository), sessionRepository, verificationCodeService,
 				passwordEncoder, Duration.ofDays(14), Duration.ofMinutes(15), verifyEmail);
 	}
 

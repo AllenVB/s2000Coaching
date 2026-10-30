@@ -10,13 +10,3 @@ export interface Intake {
   note: string | null
   updatedAt: string
 }
-
-export interface UpsertIntakeInput {
-  consumedOn: string
-  calories: number
-  proteinG?: number | null
-  carbsG?: number | null
-  fatG?: number | null
-  sodiumMg?: number | null
-  note?: string | null
-}

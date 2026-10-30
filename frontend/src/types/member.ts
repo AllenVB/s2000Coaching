@@ -33,6 +33,8 @@ export interface Member {
   age: number | null
   /** False means the member still signs in with an e-mailed code and can set a password. */
   hasPassword: boolean
+  /** Five digits, given once and never changed; people see it as "#12345". */
+  memberNumber: number
 }
 
 /**
@@ -124,4 +126,9 @@ export interface ProgressPhoto {
   sizeBytes: number
   note: string | null
   createdAt: string
+}
+
+/** "#12345": the number that tells apart two members with the same name. */
+export function formatMemberNumber(memberNumber: number): string {
+  return `#${memberNumber}`
 }

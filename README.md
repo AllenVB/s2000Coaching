@@ -110,7 +110,20 @@ hesabını açar (ad, soyad, e-posta, yaş, cinsiyet, boy, kilo, spor geçmişi,
 E-posta doğrulaması açıkken (varsayılan, canlıda böyledir) hesap, adrese gelen 6 haneli kod girilene kadar
 giremez; yerel `baslat.bat` bunu kapatır (`REGISTRATION_VERIFY_EMAIL=false`), çünkü yerelde e-posta sunucusu
 yoktur ve kayıt olan hemen girer. Beş yanlış şifre hesabı 15 dakika kilitler; yanlış adres ile yanlış şifre aynı
-mesajı verir. Şifre en az 8 karakter, en çok 64 (bcrypt 72 baytı okur); yalnızca özeti saklanır.
+mesajı verir. Seçilen her şifre (kayıt, sıfırlama, değiştirme, koçun belirlediği) **en az 8 karakter** (koç hesabı için 10),
+en çok 64 (bcrypt 72 baytı okur) olmalı ve **bir büyük harf, bir küçük harf, bir rakam ve bir özel karakter**
+içermelidir; kurallar yazarken tek tek işaretlenir, sunucu aynı kuralı `@StrongPassword` ile zorlar. Giriş
+isteği bu kurala bağlı değildir (eski şifreli hesaplar girebilsin diye). Şifre alanlarında göz simgesi şifreyi
+gösterir/gizler. Yalnızca bcrypt özeti saklanır.
+
+**Hesap çakışması ve üye numarası.** Bir e-posta adresi tek hesaba aittir: üyeler arasında olduğu gibi **üye ile
+koç hesabı arasında da** (ikisi aynı formdan girdiği için); kayıt, koçun üye açması, üyenin e-postasını
+değiştirmesi ve `ADMIN_EMAIL` tohumlaması bunu denetler, adres büyük/küçük harf ve baştaki/sondaki boşluktan
+bağımsız karşılaştırılır ve iki isteğin yarışması veritabanındaki tekillik kısıtıyla 409'a çevrilir. Her üyeye
+kayıt anında **rastgele, benzersiz 5 haneli bir üye numarası** verilir (`#12345`; sıralı değildir, kimin önce
+katıldığını göstermez), sonradan değiştirilemez (sütun güncellenemez, hiçbir güncelleme isteği taşımaz). Üye
+yalnızca **Profil** sayfasındaki Üyelik kartında, koç üyenin Profil sekmesinde görür; aynı adı taşıyan üyeleri
+ayırt etmek içindir. Var olan üyelere geçişte rastgele numara atanır.
 **Şifremi unuttum** (ve koçun açtığı, henüz şifresi olmayan üyeler) e-posta koduyla yeni şifre seçer; şifre
 değişince o üyenin diğer oturumları kapanır. Üye yaş, telefon, boy, kilo ve spor geçmişini düzenler; **ad soyad,
 cinsiyet ve e-postayı yalnızca koç değiştirir**. Koç, üye sayfasında her bilgiyi düzenler ve üyeye şifre belirler
@@ -153,12 +166,22 @@ planı olabilir ama yalnızca biri **aktiftir**; üye alanında görünen odur.
 kez yapılıyorsa hedef kilo yazar. Aynı gün ve tarihe tekrar kaydetmek o seansı düzeltir, ikinci kayıt
 açmaz. Üyenin "Bugün" sayfası en uzun süredir yapılmamış günü **Sıradaki Antrenman** olarak önerir.
 
-**Standart şema.** Şablon seçmeden plan oluşturduğunuzda plan boş **Gün 1 – Gün 5** ile açılır
-(`günsüz boş plan` seçeneği bunu atlar). Her gün bir tablodur: hareket ve **Set 1 – Set 4** tekrar hedefi
-(`30-25-20` gibi; yalnızca ilki zorunlu, boşluk bırakıp sonrasını doldurmak reddedilir çünkü setleri
-sessizce yeniden numaralamak olurdu). Hücreler odak kaybedince kaydolur, tablonun altındaki **+** yeni
-hareket ekler. Set sayısı ve tekrar metni bu hücrelerden türetilir; eski biçimde (set sayısı + serbest
-metin) yazılmış hareketler olduğu gibi çalışmaya devam eder.
+**Dinamik plan düzenleyici.** Plan **Gün 1** ile açılır ve seçilidir; diğer günler günlerin yanındaki **+**
+ile tek tek eklenir (**en az 1, en fazla 7 gün**; son gün silinemez). Seçili günde egzersizlerin listesi ve
+altında yeni egzersiz formu durur. **Egzersiz adını koç yazar** (kataloğa bağlı bir seçim kutusu yoktur):
+aynı ad (büyük/küçük harf fark etmez) kataloğdaki kaydı yeniden kullanır, yoksa o anda kataloğa eklenir —
+video bağlantısı ve geçmiş de böylece adla birlikte kalır; kas grubu bu yoldan eklenenlerde boştur
+(Hareketler sayfasından doldurulabilir). Yeni egzersizde **1.set** hazır gelir (tekrar kutusu boş);
+**Set ekle** (+) ile **en fazla 10 ssete** kadar yenisi eklenir, istenmezse yalnızca 1.set ile
+**Egzersizi Kaydet**'e basılır. Sondaki boş setler yok sayılır; ortada boş bırakılıp sonrası doldurulan set
+reddedilir (setleri sessizce yeniden numaralamak olurdu). Kaydedilmiş egzersizler aynı biçimde **Güncelle** ile
+değişir; hedef kg, dinlenme saniyesi ve üyenin göreceği not isteğe bağlıdır. Eski biçimde (set sayısı +
+serbest metin) yazılmış egzersizler olduğu gibi çalışır.
+
+**Üye yalnızca görüntüler.** Üye `/uye/antrenman` gün sayfasında koçun yazdığı setleri (1.set, 2.set …),
+notu ve videoyu salt okunur görür; plan üzerinde hiçbir düzenleme ucu üyeye açık değildir. Gerçekte
+kaldırdığını kaydetmek isterse **Bugünkü Antrenmanımı Kaydet** ile kayıt kutuları açılır (ağırlık takibi,
+RPE ve öneriler bu kayıttan beslenir).
 
 **Antrenman 1 – 10.** Üyenin gün sayfasında her hareketin altında on kutu vardır; kutular üyenin zaten
 kaydettiği seanslardan dolar (o seansın en ağır seti), yani ağırlık tek yerden girilir. Onuncudan sonra
@@ -174,8 +197,17 @@ Antrenmanla aynı kalıp: `/yonetim/sablonlar` sayfasının **Beslenme** sekmesi
 her öğünde besin + miktar + kalori/makro), üye detayındaki **Beslenme** sekmesinden üyeye kopyalanır. Kopya
 yine bağımsızdır ve üyenin yalnızca bir planı aktiftir.
 
+**Antrenman günleri ve dinlenme günleri.** Plan iki yarıdan oluşur: **Antrenman Günleri** ve **Dinlenme
+Günleri**. Her yarının kendi kalori/protein/karbonhidrat/yağ hedefi ve kendi öğünleri/supplement blokları
+vardır (su ve plan notu tüm plan için ortaktır); düzenleyicide ve üyenin sayfasında iki sekmeyle
+değiştirilir, "Bugün" sayfasındaki makro kartı da aynı seçimi sunar (plan bugünün hangi tür olduğunu
+bilmez, üye seçer). Bir öğün hangi yarıya eklendiyse orada kalır. Önceden yazılmış planlarda mevcut her
+öğün ve hedef **antrenman günü** sayılır; dinlenme günü tarafı boş başlar, koç doldurur. Yazdırılan çıktıda
+dinlenme günü yarısı, doluysa, ayrı sayfada çıkar.
+
 **Standart şema.** Şablon seçmeden plan oluşturduğunuzda (Planı Oluştur) plan koçun kendi planlarındaki
-şemayla açılır: Sabah, Öğlen, Antrenman öncesi/sonrası, Akşam, Uyumadan önce öğünleri ve üç supplement
+şemayla açılır (antrenman günü yarısı tam, dinlenme günü yarısı antrenman öncesi/sonrası öğünleri ve
+antrenman sonrası supplementi olmadan): Sabah, Öğlen, Antrenman öncesi/sonrası, Akşam, Uyumadan önce öğünleri ve üç supplement
 bloğu, besinler yazılı, **miktarlar boş**. Miktar, kalori ve su hedefi üyeye özeldir, bu yüzden şemada
 hiç yoktur; boş bir kutu "reçete edilmedi" demektir, "sıfır" değil. Plan her öğün/supplement için bir
 tablodur: besin solda, miktar sağda; miktar kutusuna yazıp Enter'a basınca bir alttakine geçer, tablonun
@@ -187,7 +219,7 @@ Plan düzeyinde **makro hedefi** (kalori/protein/karbonhidrat/yağ) tutulur; ara
 fiili toplamını da gösterir — aradaki fark planın henüz tamamlanmadığını söyleyen şeydir. Makro girmek
 zorunlu değil: besinleri makro yazmadan da reçete edebilirsiniz.
 
-Üye `/uye/beslenme` sayfasında günlük hedeflerini ve öğünlerini görür.
+Üye `/uye/beslenme` sayfasında seçtiği gün türünün hedeflerini ve öğünlerini salt okunur görür.
 
 ## Plan çıktısı (yazdır / PDF)
 
@@ -306,12 +338,20 @@ demektir, satırı olmayan baytlar ise görünmez ve geri kazanılabilir.
 Hepsi `/uye` (üye) ve `/yonetim/uyeler/:id` (koç) altında; sağlık verisi sayılanlar KVKK onayı ister.
 
 - **İlgi bekleyenler** (`/yonetim`): tüm aktif üyeleri tek geçişte (üye başına sorgu yok) şu nedenlerle
-  puanlar — bekleyen mesaj, biten/biten üyelik, antrenman/ölçüm/yemek kaydı yok, yanıt bekleyen
+  puanlar — bekleyen mesaj, biten/biten üyelik, antrenman/ölçüm/haftalık beslenme kaydı yok, yanıt bekleyen
   değerlendirme ve form videosu, sağlık anketinde dikkat gerektiren yanıt. En acilden sıralı, her
   neden yazılı. Sessizlik, üyenin katıldığı günden sayılır; plan verilmemiş konuda kimse "kayıt yok"
   diye işaretlenmez. Havale bekleyen siparişler en üstte.
-- **Yemek kaydı** (`/uye/beslenme`): günlük toplam (kalori zorunlu; makro ve sodyum isteğe bağlı). Aynı
-  güne tekrar girmek o günü günceller. Koç üye detayında okur.
+- **Haftalık beslenme albümü** (`/uye/beslenme`): üye bir **hafta** (pazartesi–pazar, örn. 26.10.2026 –
+  01.11.2026) seçer; o haftanın **toplam kalorisini** ve **karbonhidrat / yağ / protein yüzdelerini** girer
+  (toplam tam 100 olmalı, değilse kaydedilmez) ve haftaya **tek bir fotoğraf** ekleyebilir. Gramajlar
+  otomatik hesaplanır (karbonhidrat ve protein 4, yağ 9 kcal/g) ve **haftalık toplam ile günlük ortalama**
+  (hafta ÷ 7) kartta gösterilir; gram değerleri saklanmaz, kalori ve yüzdelerden her seferinde türetilir.
+  Aynı hafta tekrar kaydedilirse güncellenir (kalemle düzenle, çöp kutusuyla sil); gelecek haftalar ve üç
+  yıldan eski haftalar girilemez. Koç aynı albümü üye detayı → Beslenme sekmesinde okur (fotoğraflar dahil).
+  Sağlık verisidir: onay olmadan yazılmaz, üye silinince satırlar ve fotoğraf dosyaları da silinir. Eski
+  günlük yemek kaydı ekranı kaldırıldı; daha önce girilmiş günlük kayıtlar koçun sekmesinde durur.
+  "İlgi bekleyenler" artık haftalık kayda bakar: son girilen haftanın bittiği günden 10 gün geçtiyse işaretler.
 - **Antrenman gelişimi** (`/uye/gecmis`, üye detayı → Antrenman): set başına **RPE**, hareket başına
   tahmini 1TM (Epley, yalnızca ≤12 tekrarlık ağırlıklı setlerden), "yeni rekor" (öncesinde yenilecek bir
   seans gerekir), 12 haftalık hacim. Gün ekranında her harekete **sonraki seans önerisi**: tüm çalışma

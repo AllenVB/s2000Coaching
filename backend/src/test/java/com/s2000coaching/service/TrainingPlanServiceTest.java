@@ -141,18 +141,18 @@ class TrainingPlanServiceTest {
 		}
 
 		@Test
-		void shouldStartWithFiveEmptyDaysInOrder() {
+		void shouldStartWithOneEmptyDay() {
 			TrainingPlan plan = create(false);
 
-			assertThat(plan.getDays()).extracting(TrainingPlanDay::getName)
-					.containsExactly("Gün 1", "Gün 2", "Gün 3", "Gün 4", "Gün 5");
-			assertThat(plan.getDays()).extracting(TrainingPlanDay::getDayOrder).containsExactly(1, 2, 3, 4, 5);
+			assertThat(plan.getDays()).extracting(TrainingPlanDay::getName).containsExactly("Gün 1");
+			assertThat(plan.getDays()).extracting(TrainingPlanDay::getDayOrder).containsExactly(1);
 			assertThat(plan.getDays()).allSatisfy(day -> assertThat(day.getExercises()).isEmpty());
 		}
 
+		/** A programme always has a first day, so "blank" no longer means no days at all. */
 		@Test
-		void shouldStartEmptyWhenBlankIsAsked() {
-			assertThat(create(true).getDays()).isEmpty();
+		void shouldStillHaveTheFirstDayWhenBlankIsAsked() {
+			assertThat(create(true).getDays()).extracting(TrainingPlanDay::getName).containsExactly("Gün 1");
 		}
 
 		@Test
@@ -161,8 +161,7 @@ class TrainingPlanServiceTest {
 
 			var response = trainingPlanService.createTemplate(new UpsertTrainingPlanRequest("PPL", null), false);
 
-			assertThat(response.days()).extracting(day -> day.name())
-					.containsExactly("Gün 1", "Gün 2", "Gün 3", "Gün 4", "Gün 5");
+			assertThat(response.days()).extracting(day -> day.name()).containsExactly("Gün 1");
 		}
 
 		@Test
@@ -206,12 +205,12 @@ class TrainingPlanServiceTest {
 			day = new TrainingPlanDay(UUID.randomUUID(), plan, 1, "Gün 1", null);
 			plan.getDays().add(day);
 			when(dayRepository.findById(day.getId())).thenReturn(Optional.of(day));
-			when(exerciseService.requireExercise(squat.getId())).thenReturn(squat);
+			org.mockito.Mockito.lenient().when(exerciseService.resolve(squat.getId(), null)).thenReturn(squat);
 		}
 
 		private void add(String... setReps) {
 			trainingPlanService.addExercise(day.getId(),
-					new UpsertPlanExerciseRequest(squat.getId(), null, null, List.of(setReps), null, null, null));
+					new UpsertPlanExerciseRequest(squat.getId(), null, null, null, List.of(setReps), null, null, null));
 		}
 
 		@Test
@@ -222,6 +221,27 @@ class TrainingPlanServiceTest {
 			assertThat(saved.getSetCount()).isEqualTo(3);
 			assertThat(saved.getReps()).isEqualTo("30-25-20");
 			assertThat(saved.getSetReps()).isEqualTo("30|25|20");
+		}
+
+		@Test
+		void shouldAcceptTenSets() {
+			add("12", "12", "10", "10", "8", "8", "6", "6", "4", "4");
+
+			TrainingPlanExercise saved = day.getExercises().get(0);
+			assertThat(saved.getSetCount()).isEqualTo(10);
+			assertThat(saved.getSetReps()).isEqualTo("12|12|10|10|8|8|6|6|4|4");
+		}
+
+		@Test
+		void shouldAcceptAnExerciseTypedByName() {
+			Exercise typed = new Exercise(UUID.randomUUID(), "Incline Dumbbell Press", null, null, null, Instant.now());
+			when(exerciseService.resolve(null, "incline dumbbell press")).thenReturn(typed);
+
+			trainingPlanService.addExercise(day.getId(), new UpsertPlanExerciseRequest(null, "incline dumbbell press",
+					null, null, List.of("10"), null, null, null));
+
+			assertThat(day.getExercises()).singleElement()
+					.satisfies(saved -> assertThat(saved.getExercise()).isSameAs(typed));
 		}
 
 		@Test
@@ -265,10 +285,63 @@ class TrainingPlanServiceTest {
 			when(planExerciseRepository.findById(saved.getId())).thenReturn(Optional.of(saved));
 
 			trainingPlanService.updateExercise(saved.getId(),
-					new UpsertPlanExerciseRequest(squat.getId(), null, null, List.of("12", "10"), null, null, null));
+					new UpsertPlanExerciseRequest(squat.getId(), null, null, null, List.of("12", "10"), null, null, null));
 
 			assertThat(saved.getSetCount()).isEqualTo(2);
 			assertThat(saved.getSetReps()).isEqualTo("12|10");
+		}
+	}
+
+	@Nested
+	class DayLimits {
+
+		private TrainingPlan planWithDays(int count) {
+			TrainingPlan plan = new TrainingPlan(UUID.randomUUID(), member, "Plan", null, true, Instant.now());
+			for (int number = 1; number <= count; number++) {
+				plan.getDays().add(new TrainingPlanDay(UUID.randomUUID(), plan, number, "Gün " + number, null));
+			}
+			org.mockito.Mockito.lenient().when(planRepository.findById(plan.getId())).thenReturn(Optional.of(plan));
+			return plan;
+		}
+
+		@Test
+		void shouldAllowUpToSevenDays() {
+			TrainingPlan plan = planWithDays(6);
+
+			trainingPlanService.addDay(plan.getId(), new UpsertPlanDayRequest("Gün 7", null));
+
+			assertThat(plan.getDays()).hasSize(7);
+		}
+
+		@Test
+		void shouldRefuseAnEighthDay() {
+			TrainingPlan plan = planWithDays(7);
+
+			assertThatThrownBy(() -> trainingPlanService.addDay(plan.getId(), new UpsertPlanDayRequest("Gün 8", null)))
+					.isInstanceOf(BadRequestException.class).hasMessageContaining("en fazla 7");
+			assertThat(plan.getDays()).hasSize(7);
+		}
+
+		@Test
+		void shouldRefuseToDeleteTheLastDay() {
+			TrainingPlan plan = planWithDays(1);
+			TrainingPlanDay only = plan.getDays().get(0);
+			when(dayRepository.findById(only.getId())).thenReturn(Optional.of(only));
+
+			assertThatThrownBy(() -> trainingPlanService.deleteDay(only.getId()))
+					.isInstanceOf(BadRequestException.class).hasMessageContaining("en az 1");
+			assertThat(plan.getDays()).hasSize(1);
+		}
+
+		@Test
+		void shouldDeleteADayWhenOthersRemain() {
+			TrainingPlan plan = planWithDays(2);
+			TrainingPlanDay second = plan.getDays().get(1);
+			when(dayRepository.findById(second.getId())).thenReturn(Optional.of(second));
+
+			trainingPlanService.deleteDay(second.getId());
+
+			assertThat(plan.getDays()).hasSize(1);
 		}
 	}
 
@@ -315,7 +388,7 @@ class TrainingPlanServiceTest {
 
 			TrainingPlanDay first = plan.getDays().get(0);
 			when(dayRepository.findById(first.getId())).thenReturn(Optional.of(first));
-			when(exerciseService.requireExercise(squat.getId())).thenReturn(squat);
+			when(exerciseService.resolve(squat.getId(), null)).thenReturn(squat);
 
 			trainingPlanService.addExercise(first.getId(),
 					new UpsertPlanExerciseRequest(squat.getId(), 3, " 8-10 ", null, null, null));

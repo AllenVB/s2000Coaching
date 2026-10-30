@@ -29,7 +29,9 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class TrainingPlanService {
 
-	private static final int STANDARD_DAYS = 5;
+	/** A programme has at least one and at most seven training days. */
+	static final int MIN_DAYS = 1;
+	static final int MAX_DAYS = 7;
 
 	private final TrainingPlanRepository planRepository;
 	private final TrainingPlanDayRepository dayRepository;
@@ -65,16 +67,15 @@ public class TrainingPlanService {
 	}
 
 	/**
-	 * A new template starts with the standard days ("Gün 1" to "Gün 5", empty) unless
-	 * {@code blank} is set, so the coach adds exercises instead of building the week first.
+	 * A new template starts with its first day ("Gün 1", empty); the coach adds the other days one
+	 * at a time, up to seven. {@code blank} is kept for older callers and changes nothing: a plan
+	 * always has at least one day.
 	 */
 	@Transactional
 	public TrainingPlanResponse createTemplate(UpsertTrainingPlanRequest request, boolean blank) {
 		TrainingPlan plan = planRepository.save(new TrainingPlan(UUID.randomUUID(), null,
 				request.name().trim(), blankToNull(request.note()), false, Instant.now()));
-		if (!blank) {
-			seedStandardDays(plan);
-		}
+		seedFirstDay(plan);
 		return TrainingPlanMapper.toResponse(plan);
 	}
 
@@ -91,7 +92,7 @@ public class TrainingPlanService {
 	/**
 	 * Creates a plan for the member and makes it the active one — assigning a plan the member
 	 * cannot see would be a surprising default. It is a copy of the template when one is given,
-	 * otherwise the standard days "Gün 1" to "Gün 5", otherwise empty when {@code blank} is set.
+	 * otherwise it has its first day, "Gün 1", ready for exercises; {@code blank} changes nothing.
 	 */
 	@Transactional
 	public TrainingPlanResponse createForMember(UUID memberId, UpsertTrainingPlanRequest request,
@@ -111,8 +112,8 @@ public class TrainingPlanService {
 				throw new BadRequestException("Yalnızca şablonlar kopyalanabilir.");
 			}
 			copyInto(plan, template);
-		} else if (!blank) {
-			seedStandardDays(plan);
+		} else {
+			seedFirstDay(plan);
 		}
 
 		deactivateOtherPlans(memberId, plan.getId());
@@ -153,6 +154,9 @@ public class TrainingPlanService {
 	@Transactional
 	public TrainingPlanResponse addDay(UUID planId, UpsertPlanDayRequest request) {
 		TrainingPlan plan = getPlanOrThrow(planId);
+		if (plan.getDays().size() >= MAX_DAYS) {
+			throw new BadRequestException("Bir programda en fazla %d antrenman günü olabilir.".formatted(MAX_DAYS));
+		}
 		int nextOrder = plan.getDays().stream().mapToInt(TrainingPlanDay::getDayOrder).max().orElse(0) + 1;
 		TrainingPlanDay day = new TrainingPlanDay(UUID.randomUUID(), plan, nextOrder, request.name().trim(),
 				blankToNull(request.note()));
@@ -176,6 +180,10 @@ public class TrainingPlanService {
 	public TrainingPlanResponse deleteDay(UUID dayId) {
 		TrainingPlanDay day = getDayOrThrow(dayId);
 		TrainingPlan plan = day.getPlan();
+		if (plan.getDays().size() <= MIN_DAYS) {
+			throw new BadRequestException("Bir programda en az %d antrenman günü olmalı; son gün silinemez."
+					.formatted(MIN_DAYS));
+		}
 		deleteLogsForDays(List.of(day.getId()));
 		plan.getDays().remove(day);
 		plan.setUpdatedAt(Instant.now());
@@ -187,7 +195,7 @@ public class TrainingPlanService {
 	@Transactional
 	public TrainingPlanResponse addExercise(UUID dayId, UpsertPlanExerciseRequest request) {
 		TrainingPlanDay day = getDayOrThrow(dayId);
-		Exercise exercise = exerciseService.requireExercise(request.exerciseId());
+		Exercise exercise = exerciseService.resolve(request.exerciseId(), request.exerciseName());
 		int nextOrder = day.getExercises().stream()
 				.mapToInt(TrainingPlanExercise::getDisplayOrder).max().orElse(0) + 1;
 
@@ -204,7 +212,7 @@ public class TrainingPlanService {
 	@Transactional
 	public TrainingPlanResponse updateExercise(UUID planExerciseId, UpsertPlanExerciseRequest request) {
 		TrainingPlanExercise planExercise = getPlanExerciseOrThrow(planExerciseId);
-		planExercise.setExercise(exerciseService.requireExercise(request.exerciseId()));
+		planExercise.setExercise(exerciseService.resolve(request.exerciseId(), request.exerciseName()));
 		Prescription prescription = prescriptionOf(request);
 		planExercise.setSetCount(prescription.setCount());
 		planExercise.setReps(prescription.reps());
@@ -249,11 +257,9 @@ public class TrainingPlanService {
 		}
 	}
 
-	/** What a new plan starts from: five empty days, ready for exercises. */
-	private void seedStandardDays(TrainingPlan plan) {
-		for (int number = 1; number <= STANDARD_DAYS; number++) {
-			plan.getDays().add(new TrainingPlanDay(UUID.randomUUID(), plan, number, "Gün " + number, null));
-		}
+	/** What a new plan starts from: its first day, empty and ready for exercises. */
+	private void seedFirstDay(TrainingPlan plan) {
+		plan.getDays().add(new TrainingPlanDay(UUID.randomUUID(), plan, 1, "Gün 1", null));
 	}
 
 	/** The sets and reps as stored: how many sets, the text shown for them, and the per-set list. */

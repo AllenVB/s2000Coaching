@@ -1,3 +1,4 @@
+import { isStrongPassword, MAX_PASSWORD_LENGTH, PASSWORD_RULES_MESSAGE } from '@/lib/password'
 import { z } from 'zod'
 
 export const createMemberSchema = z.object({
@@ -59,8 +60,8 @@ const ageField = z
 
 const passwordField = z
   .string()
-  .min(8, 'Şifre en az 8 karakter olmalı')
-  .max(64, 'Şifre en fazla 64 karakter olabilir')
+  .max(MAX_PASSWORD_LENGTH, 'Şifre en fazla 64 karakter olabilir')
+  .refine((value) => isStrongPassword(value), PASSWORD_RULES_MESSAGE)
 
 export const loginSchema = z.object({
   email: z.string().trim().email('Geçerli bir e-posta adresi girin').max(255),

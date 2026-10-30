@@ -117,4 +117,36 @@ class ExerciseServiceTest {
 				.isInstanceOf(com.s2000coaching.exception.BadRequestException.class)
 				.hasMessageContaining("YouTube");
 	}
+
+	@Test
+	void shouldReuseTheCatalogueEntryOfATypedNameInAnyCase() {
+		var existing = new com.s2000coaching.domain.Exercise(java.util.UUID.randomUUID(), "Bench Press",
+				MuscleGroup.GOGUS, null, null, java.time.Instant.now());
+		when(exerciseRepository.findFirstByNameIgnoreCase("bench press")).thenReturn(java.util.Optional.of(existing));
+
+		var resolved = exerciseService.resolve(null, "  bench   press ");
+
+		assertThat(resolved).isSameAs(existing);
+		verify(exerciseRepository, never()).save(any());
+	}
+
+	@Test
+	void shouldCreateAnEntryWithoutAMuscleGroupForANewTypedName() {
+		when(exerciseRepository.findFirstByNameIgnoreCase("Cable Fly")).thenReturn(java.util.Optional.empty());
+		when(exerciseRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+		var created = exerciseService.resolve(null, " Cable Fly ");
+
+		assertThat(created.getName()).isEqualTo("Cable Fly");
+		assertThat(created.getMuscleGroup()).isNull();
+		verify(exerciseRepository).save(created);
+	}
+
+	@Test
+	void shouldRefuseAnEmptyTypedName() {
+		assertThatThrownBy(() -> exerciseService.resolve(null, "   "))
+				.isInstanceOf(com.s2000coaching.exception.BadRequestException.class);
+		assertThatThrownBy(() -> exerciseService.resolve(null, null))
+				.isInstanceOf(com.s2000coaching.exception.BadRequestException.class);
+	}
 }

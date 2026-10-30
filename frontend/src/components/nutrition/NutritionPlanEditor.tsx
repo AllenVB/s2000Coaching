@@ -8,6 +8,7 @@ import {
   useUpdateMeal,
   useUpdateMealItem,
 } from '@/api/nutritionApi'
+import { DayTypeTabs } from '@/components/nutrition/DayTypeTabs'
 import { PlanTargetsForm } from '@/components/nutrition/PlanTargetsForm'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { PlusIcon, TrashIcon } from '@/components/ui/icons'
@@ -17,6 +18,7 @@ import {
   type Meal,
   type MealItem,
   type MealKind,
+  type NutritionDayType,
   type NutritionPlan,
 } from '@/types/nutrition'
 
@@ -33,12 +35,16 @@ const emptyAmountClasses = 'border-dashed !border-primary/50 bg-primary/5 placeh
  * empty-or-not amount below, so the grams can be filled in straight down the page.
  */
 export function NutritionPlanEditor({ plan }: { plan: NutritionPlan }) {
-  const { meals, supplements } = splitBlocks(plan)
+  // The plan has two halves, one for training days and one for rest days; one is edited at a time.
+  const [dayType, setDayType] = useState<NutritionDayType>('TRAINING')
+  const { meals, supplements } = splitBlocks(plan, dayType)
   const missing = missingAmounts(plan)
 
   return (
     <div className="space-y-6" data-nutrition-editor>
-      <PlanTargetsForm key={plan.id} plan={plan} />
+      <DayTypeTabs value={dayType} onChange={setDayType} />
+
+      <PlanTargetsForm key={`${plan.id}-${dayType}`} plan={plan} dayType={dayType} />
 
       <p className={`text-xs ${missing > 0 ? 'text-primary' : 'text-success'}`}>
         {missing > 0
@@ -46,8 +52,8 @@ export function NutritionPlanEditor({ plan }: { plan: NutritionPlan }) {
           : 'Tüm miktarlar dolu.'}
       </p>
 
-      <BlockSection title="Beslenme Programı" kind="MEAL" blocks={meals} planId={plan.id} />
-      <BlockSection title="Supplement Planı" kind="SUPPLEMENT" blocks={supplements} planId={plan.id} />
+      <BlockSection title="Beslenme Programı" kind="MEAL" blocks={meals} planId={plan.id} dayType={dayType} />
+      <BlockSection title="Supplement Planı" kind="SUPPLEMENT" blocks={supplements} planId={plan.id} dayType={dayType} />
     </div>
   )
 }
@@ -57,11 +63,13 @@ function BlockSection({
   kind,
   blocks,
   planId,
+  dayType,
 }: {
   title: string
   kind: MealKind
   blocks: Meal[]
   planId: string
+  dayType: NutritionDayType
 }) {
   const addMeal = useAddMeal()
   const [name, setName] = useState('')
@@ -70,7 +78,7 @@ function BlockSection({
   const add = () => {
     const trimmed = name.trim()
     if (trimmed.length > 0 && !addMeal.isPending) {
-      addMeal.mutate({ planId, input: { name: trimmed, kind } }, { onSuccess: () => setName('') })
+      addMeal.mutate({ planId, input: { name: trimmed, kind, dayType } }, { onSuccess: () => setName('') })
     }
   }
 

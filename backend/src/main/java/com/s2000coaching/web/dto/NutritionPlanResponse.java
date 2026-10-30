@@ -18,7 +18,20 @@ public record NutritionPlanResponse(
 		Integer targetFatG,
 		BigDecimal waterLiters,
 		Instant updatedAt,
-		List<MealResponse> meals) {
+		List<MealResponse> meals,
+		/** The same four targets for rest days; the ones above are for training days. */
+		Integer restTargetCalories,
+		Integer restTargetProteinG,
+		Integer restTargetCarbsG,
+		Integer restTargetFatG) {
+
+	/** The shape from before rest days existed: no rest-day targets. */
+	public NutritionPlanResponse(UUID id, String name, String note, boolean template, boolean active,
+			Integer targetCalories, Integer targetProteinG, Integer targetCarbsG, Integer targetFatG,
+			BigDecimal waterLiters, Instant updatedAt, List<MealResponse> meals) {
+		this(id, name, note, template, active, targetCalories, targetProteinG, targetCarbsG, targetFatG, waterLiters,
+				updatedAt, meals, null, null, null, null);
+	}
 
 	public static NutritionPlanResponse from(NutritionPlan plan) {
 		return new NutritionPlanResponse(
@@ -33,6 +46,10 @@ public record NutritionPlanResponse(
 				plan.getTargetFatG(),
 				plan.getWaterLiters(),
 				plan.getUpdatedAt(),
-				plan.getMeals().stream().map(MealResponse::from).toList());
+				plan.getMeals().stream().map(MealResponse::from).toList(),
+				plan.getRestTargetCalories(),
+				plan.getRestTargetProteinG(),
+				plan.getRestTargetCarbsG(),
+				plan.getRestTargetFatG());
 	}
 }

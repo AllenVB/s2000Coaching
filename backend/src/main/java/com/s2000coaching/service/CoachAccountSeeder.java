@@ -2,6 +2,7 @@ package com.s2000coaching.service;
 
 import com.s2000coaching.domain.CoachAccount;
 import com.s2000coaching.repository.CoachAccountRepository;
+import com.s2000coaching.repository.MemberRepository;
 import java.time.Instant;
 import java.util.UUID;
 import org.slf4j.Logger;
@@ -31,17 +32,20 @@ public class CoachAccountSeeder implements ApplicationRunner {
 	private static final String FALLBACK_NAME = "Koc";
 
 	private final CoachAccountRepository coachRepository;
+	private final MemberRepository memberRepository;
 	private final PasswordEncoder passwordEncoder;
 	private final String seedEmail;
 	private final String seedPassword;
 	private final String seedName;
 
 	public CoachAccountSeeder(CoachAccountRepository coachRepository,
+			MemberRepository memberRepository,
 			PasswordEncoder passwordEncoder,
 			@Value("${app.admin.seed-email:}") String seedEmail,
 			@Value("${app.admin.seed-password:}") String seedPassword,
 			@Value("${app.admin.seed-name:Koç}") String seedName) {
 		this.coachRepository = coachRepository;
+		this.memberRepository = memberRepository;
 		this.passwordEncoder = passwordEncoder;
 		this.seedEmail = seedEmail;
 		this.seedPassword = seedPassword;
@@ -72,6 +76,13 @@ public class CoachAccountSeeder implements ApplicationRunner {
 
 		String email = CoachAuthService.normalizeEmail(seedEmail);
 		if (coachRepository.findByEmail(email).isPresent()) {
+			return;
+		}
+		if (memberRepository.existsByEmail(email)) {
+			// One address, one account: both sign in through the same form, so a coach and a member
+			// could not be told apart by it.
+			log.error("ADMIN_EMAIL ({}) bir üye hesabına ait; yönetim hesabı oluşturulmadı. Başka bir "
+					+ "e-posta adresi kullanın.", email);
 			return;
 		}
 		coachRepository.save(new CoachAccount(UUID.randomUUID(), email,

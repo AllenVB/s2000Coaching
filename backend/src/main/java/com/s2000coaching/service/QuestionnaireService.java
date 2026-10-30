@@ -9,6 +9,7 @@ import com.s2000coaching.web.dto.UpsertQuestionnaireRequest;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -67,10 +68,16 @@ public class QuestionnaireService implements MemberDataEraser {
 		request.parq().forEach(answer -> answers.append(Boolean.TRUE.equals(answer) ? 'Y' : 'N'));
 
 		Instant now = Instant.now(clock);
-		MemberQuestionnaire questionnaire = questionnaireRepository.findByMemberId(member.getId())
-				.orElseGet(() -> questionnaireRepository.save(new MemberQuestionnaire(UUID.randomUUID(), member, now)));
+		Optional<MemberQuestionnaire> earlier = questionnaireRepository.findByMemberId(member.getId());
+		MemberQuestionnaire questionnaire = earlier
+				.orElseGet(() -> new MemberQuestionnaire(UUID.randomUUID(), member, now));
 		questionnaire.fill(answers.toString(), request.goal(), request.trainingDaysPerWeek(), request.equipment(),
 				request.injuries() == null || request.injuries().isBlank() ? null : request.injuries().trim(), now);
+		if (earlier.isEmpty()) {
+			// Saved only once it is complete: the row's answer columns are NOT NULL, and an insert is
+			// built from the entity as it is when it is first persisted, not as it ends up.
+			questionnaire = questionnaireRepository.save(questionnaire);
+		}
 		return QuestionnaireResponse.of(QUESTIONS, questionnaire);
 	}
 

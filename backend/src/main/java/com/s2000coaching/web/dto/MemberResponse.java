@@ -23,7 +23,9 @@ public record MemberResponse(
 		MemberGender gender,
 		Integer age,
 		/** Whether a password is set; false means the member still signs in with an e-mailed code. */
-		boolean hasPassword) {
+		boolean hasPassword,
+		/** Five digits, assigned once; shown to people as "#12345". */
+		int memberNumber) {
 
 	public static MemberResponse from(Member member) {
 		return new MemberResponse(
@@ -41,6 +43,7 @@ public record MemberResponse(
 				member.isRemindersEnabled(),
 				member.getGender(),
 				member.getAge(),
-				member.hasPassword());
+				member.hasPassword(),
+				member.getMemberNumber());
 	}
 }

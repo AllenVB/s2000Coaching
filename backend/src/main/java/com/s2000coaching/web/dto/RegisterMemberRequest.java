@@ -1,6 +1,7 @@
 package com.s2000coaching.web.dto;
 
 import com.s2000coaching.domain.MemberGender;
+import com.s2000coaching.validation.StrongPassword;
 import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
@@ -18,7 +19,7 @@ import java.math.BigDecimal;
  */
 public record RegisterMemberRequest(
 		@NotBlank @Email @Size(max = 255) String email,
-		@NotBlank @Size(min = 8, max = 64) String password,
+		@NotBlank @StrongPassword String password,
 		@NotBlank @Size(max = 80) String firstName,
 		@NotBlank @Size(max = 80) String lastName,
 		@NotNull @Min(14) @Max(100) Integer age,
