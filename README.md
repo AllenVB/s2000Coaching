@@ -9,7 +9,7 @@ klasörlerdeki `DESIGN.md`).
 - `backend/` — Spring Boot 4 (Java 21, Gradle, PostgreSQL, Liquibase). Paket, sipariş ve üyelik REST API'si.
 - `frontend/` — React 19 + Vite + TypeScript + Tailwind v4 + React Router. Landing sitesi, üye alanı ve
   yönetim paneli.
-- `docker-compose.yml` — yerel geliştirme için yalnızca PostgreSQL (host portu **10003**; frontend 10001, backend 10002 — yaygın 3000/8080/5432 ile çakışmasın diye).
+- `docker-compose.yml` — yerel geliştirme için yalnızca PostgreSQL (host portu **7002**; frontend 7000, backend 7001 — yaygın 3000/8080/5432 ile çakışmasın diye).
 
 ### Sayfalar
 
@@ -63,7 +63,7 @@ Elle çalıştırmak isterseniz (ya da Linux/macOS'taysanız):
 # 1) Veritabanı
 docker compose up -d postgres
 
-# 2) Backend (varsayılan port 10002; meşgulse SERVER_PORT ile değiştirin)
+# 2) Backend (varsayılan port 7001; meşgulse SERVER_PORT ile değiştirin)
 #    ADMIN_EMAIL ve ADMIN_PASSWORD tanımlı değilse koç hesabı oluşmaz ve
 #    yönetim paneline giriş yapılamaz.
 cd backend
@@ -79,7 +79,7 @@ npm run dev
 Windows CMD'de `./` öneki yoktur (`gradlew bootRun`), ortam değişkenleri de ayrı satırda
 `set ADMIN_EMAIL=...` ile tanımlanır.
 
-Frontend `http://localhost:10001`, backend varsayılan olarak `http://localhost:10002` üzerinde
+Frontend `http://localhost:7000`, backend varsayılan olarak `http://localhost:7001` üzerinde
 çalışır. Yönetim paneline `ADMIN_EMAIL` / `ADMIN_PASSWORD` ile girilir.
 
 **Gerekenler:** Java 21, Node 22, Docker (yalnızca PostgreSQL için).
@@ -346,7 +346,7 @@ geri yüklenerek denendi; `yedekle.bat`'ın Windows'a özgü kısımları (Power
 | `VERIFICATION_CODE_TTL` | `15m` | Onay/giriş kodunun geçerlilik süresi. |
 | `MEMBER_SESSION_TTL` | `14d` | Üye oturumunun geçerlilik süresi. |
 | `MAIL_FROM` | `no-reply@s2000coaching.com` | Gönderen adresi. |
-| `PUBLIC_URL` | `http://localhost:10001` | E-postalardaki bağlantılar ve ödeme dönüşü için sitenin herkese açık adresi. |
+| `PUBLIC_URL` | `http://localhost:7000` | E-postalardaki bağlantılar ve ödeme dönüşü için sitenin herkese açık adresi. |
 | `REMINDERS_ENABLED` / `REMINDERS_CRON` | `true` / `0 0 9 * * *` | Günlük hatırlatma işi. SMTP yoksa hiçbir şey yapmaz. |
 | `PAYMENT_IBAN`, `PAYMENT_IBAN_HOLDER`, `PAYMENT_IBAN_BANK` | — | Tanımlıysa havale seçeneği açılır ve test ödemesi kapanır. |
 | `PAYMENT_IYZICO_API_KEY`, `_SECRET_KEY`, `_CALLBACK_URL` | — | Üçü de tanımlıysa kart seçeneği açılır. `_BASE_URL` varsayılanı sandbox'tır. |

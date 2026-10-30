@@ -16,7 +16,7 @@ RUN ./gradlew --no-daemon --console=plain bootJar -x test \
 
 FROM eclipse-temurin:21-jre
 # Photos live on a volume, never in the image: a rebuilt container must find them again.
-RUN useradd --system --uid 10001 --home-dir /app app \
+RUN useradd --system --uid 7000 --home-dir /app app \
     && mkdir -p /app /data/photos \
     && chown -R app:app /app /data
 WORKDIR /app
@@ -25,5 +25,5 @@ COPY --from=build /app.jar /app/app.jar
 ENV PHOTO_STORAGE_PATH=/data/photos \
     JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=70 -XX:+ExitOnOutOfMemoryError"
 USER app
-EXPOSE 10002
+EXPOSE 7001
 ENTRYPOINT ["java", "-jar", "/app/app.jar"]

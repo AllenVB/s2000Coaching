@@ -65,7 +65,7 @@ services:
       - photos:/data/photos
     # No curl in the image, so this opens the port the way a client would.
     healthcheck:
-      test: ['CMD-SHELL', 'bash -c "exec 3<>/dev/tcp/127.0.0.1/10002"']
+      test: ['CMD-SHELL', 'bash -c "exec 3<>/dev/tcp/127.0.0.1/7001"']
       interval: 15s
       timeout: 5s
       retries: 10
