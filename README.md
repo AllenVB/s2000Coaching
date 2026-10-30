@@ -51,6 +51,13 @@ Yönlendirme `BrowserRouter` ile yapılır; prodüksiyonda statik sunucunun bili
 
 ## Yerel geliştirme
 
+> **Windows'ta tek tık:** `baslat.bat` veritabanını, backend'i ve ön yüzü **tek pencerede** başlatır; ikisinin
+> çıktısı `loglar\backend.log` ve `loglar\frontend.log` dosyalarına yazılır, bir şey ters giderse son
+> satırlar pencerede gösterilir. Pencerede bir tuşa basmak (ya da pencereyi kapatmak) ikisini durdurur.
+> `durdur.bat` hepsini kapatır (veritabanı dahil), `sifirla.bat` onay sorarak geliştirme veritabanını siler.
+> Bu üç dosya Windows'ta denenmedi.
+
+
 **Windows'ta tek komut:** proje kökündeki `baslat.bat` dosyasına çift tıklayın (ya da CMD'de
 `baslat.bat` yazın). Betik gerekli programları kontrol eder, PostgreSQL'i açar, hazır olmasını
 bekler, backend ile frontend'i kendi pencerelerinde başlatır ve hazır olunca tarayıcıyı açar.

@@ -221,33 +221,63 @@ rem ---------------------------------------------------------------
 rem  3) Backend
 rem ---------------------------------------------------------------
 echo.
-echo [3/4] Backend baslatiliyor (kendi penceresinde)...
+echo [3/4] Backend ve frontend arka planda baslatiliyor...
 
+rem Iki program bu pencerenin ICINDE, arka planda calisir (start /B); pencere acik kaldigi surece
+rem calisirlar. Ciktilari ekrana degil loglar\ klasorundeki dosyalara yazilir: bir sey ters giderse
+rem mesaj kaybolmaz, burada son satirlari gosteririz.
 rem Ilk calistirmada Gradle bagimliliklari indirir, birkac dakika surebilir.
-rem start /D ile calisma dizini verilir; boylece komut icinde ic ice tirnak
-rem olmaz. Ic ice tirnaklari CMD tutarsiz yorumlar ve yolda bosluk varsa kirilir.
-rem "set X=%X%&&" arasinda bosluk yok: olsaydi degere bosluk eklenirdi.
-start "S2000 Backend" /D "%~dp0backend" cmd /k "set ADMIN_EMAIL=%ADMIN_EMAIL%&& set ADMIN_PASSWORD=%ADMIN_PASSWORD%&& set ADMIN_NAME=%ADMIN_NAME%&& gradlew bootRun"
+rem ADMIN_* degiskenleri yukarida bu pencerede tanimlandi; arka plandaki programlar onlari miras alir.
+if not exist "%~dp0loglar" mkdir "%~dp0loglar"
+set "BACKLOG=%~dp0loglar\backend.log"
+set "FRONTLOG=%~dp0loglar\frontend.log"
+del "%BACKLOG%" "%FRONTLOG%" >nul 2>&1
 
-echo       Backend penceresi acildi. "Started BackendApplication" yazisini bekleyin.
+start "" /B /D "%~dp0backend" cmd /c gradlew.bat bootRun > "%BACKLOG%" 2>&1
+echo       Backend baslatildi  ^(gunluk: loglar\backend.log^)
 
-rem ---------------------------------------------------------------
-rem  4) Frontend
-rem ---------------------------------------------------------------
 echo.
-echo [4/4] Frontend baslatiliyor (kendi penceresinde)...
-
-rem node_modules yoksa once kurulum yap; varsa dogrudan baslat.
+echo [4/4] Frontend baslatiliyor...
 if exist "%~dp0frontend\node_modules" (
-    start "S2000 Frontend" /D "%~dp0frontend" cmd /k "npm run dev"
+    start "" /B /D "%~dp0frontend" cmd /c npm run dev > "%FRONTLOG%" 2>&1
 ) else (
     echo       Ilk calistirma: npm paketleri kuruluyor, birkac dakika surebilir.
-    start "S2000 Frontend" /D "%~dp0frontend" cmd /k "npm install && npm run dev"
+    start "" /B /D "%~dp0frontend" cmd /c npm install ^&^& npm run dev > "%FRONTLOG%" 2>&1
 )
-
-echo       Frontend penceresi acildi.
+echo       Frontend baslatildi ^(gunluk: loglar\frontend.log^)
 
 rem ---------------------------------------------------------------
+rem  Hazir olmalarini bekle
+rem ---------------------------------------------------------------
+echo.
+echo Backend'in hazir olmasi bekleniyor ^(ilk seferde birkac dakika surebilir^)...
+set /a bdeneme=0
+:bbekle
+set /a bdeneme+=1
+curl -s -o nul http://localhost:7001/api/packages >nul 2>&1
+if not errorlevel 1 goto :bhazir
+findstr /c:"APPLICATION FAILED" /c:"BUILD FAILED" /c:"FAILURE: Build failed" "%BACKLOG%" >nul 2>&1
+if not errorlevel 1 goto :backhata
+if %bdeneme% geq 300 goto :backzaman
+timeout /t 2 /nobreak >nul
+goto :bbekle
+
+:bhazir
+echo       Backend hazir.
+echo Frontend'in hazir olmasi bekleniyor...
+set /a fdeneme=0
+:fbekle
+set /a fdeneme+=1
+curl -s -o nul http://localhost:7000 >nul 2>&1
+if not errorlevel 1 goto :fhazir
+findstr /c:"is already in use" /c:"npm ERR!" "%FRONTLOG%" >nul 2>&1
+if not errorlevel 1 goto :fronthata
+if %fdeneme% geq 150 goto :fronthata
+timeout /t 2 /nobreak >nul
+goto :fbekle
+
+:fhazir
+echo       Frontend hazir.
 echo.
 echo ====================================================
 echo   Hazir. Adresler:
@@ -261,40 +291,57 @@ echo     E-posta : %ADMIN_EMAIL%
 echo     Sifre   : %ADMIN_PASSWORD%
 echo.
 echo   NOT: SMTP tanimli olmadigi icin uyelere dogrulama kodu
-echo        e-postayla GITMEZ. Kod, backend penceresinde WARN
+echo        e-postayla GITMEZ. Kod, loglar\backend.log icinde WARN
 echo        satiri olarak yazilir; oradan okuyup girin.
 echo.
-echo   Durdurmak icin: iki pencereyi kapatin, sonra  docker compose down
+echo   Gunlukler: loglar\backend.log ve loglar\frontend.log
 echo ====================================================
 echo.
-rem Sabit sure beklemek yerine frontend gercekten cevap verene kadar yokla:
-rem ilk calistirmada npm install dakikalar surebilir, hazir derlenmisse birkac
-rem saniye. Windows 10 ve sonrasinda curl kurulu gelir.
-echo Frontend hazir olunca tarayici acilacak...
-set /a fdeneme=0
-:fbekle
-set /a fdeneme+=1
-curl -s -o nul http://localhost:7000 >nul 2>&1
-if not errorlevel 1 goto :fhazir
-if %fdeneme% geq 150 (
-    echo   Frontend 5 dakikada acilmadi. Frontend penceresindeki mesajlara bakin.
-    goto :son
-)
-timeout /t 2 /nobreak >nul
-goto :fbekle
-
-:fhazir
 start "" http://localhost:7000
-goto :son
+echo Kapatmak icin bu pencerede bir tusa basin. ^(Pencereyi kapatmak da durdurur.^)
+pause >nul
+call :durdur
+echo.
+echo Durduruldu. Veritabani calismaya devam ediyor; onu da kapatmak icin:  docker compose stop
+pause
+exit /b 0
+
+rem ---------------------------------------------------------------
+:backzaman
+echo.
+echo   HATA: Backend 10 dakikada hazir olmadi.
+goto :backgoster
+
+:backhata
+echo.
+echo   HATA: Backend baslarken hata verdi.
+:backgoster
+echo         Son satirlar ^(tamami: loglar\backend.log^):
+echo ----------------------------------------------------
+powershell -NoProfile -Command "Get-Content -Tail 30 -LiteralPath '%BACKLOG%'"
+echo ----------------------------------------------------
+call :durdur
+goto :hata
+
+:fronthata
+echo.
+echo   HATA: Frontend baslamadi. Son satirlar ^(tamami: loglar\frontend.log^):
+echo ----------------------------------------------------
+powershell -NoProfile -Command "Get-Content -Tail 30 -LiteralPath '%FRONTLOG%'"
+echo ----------------------------------------------------
+call :durdur
+goto :hata
 
 :hata
 echo.
-echo Baslatma yarida kesildi.
+echo Baslatma yarida kesildi. Yukaridaki HATA satirini ve gunluk cikisini bana gonderin.
 echo.
 pause
 exit /b 1
 
-:son
-echo Bu pencere kapatilabilir. Backend ve frontend kendi pencerelerinde calisiyor.
-pause
+rem 7000 ve 7001 portunu dinleyen programlari agaciyla birlikte kapatir.
+:durdur
+for %%p in (7000 7001) do (
+    for /f "tokens=5" %%a in ('netstat -ano ^| findstr /r /c:":%%p .*LISTENING"') do taskkill /PID %%a /T /F >nul 2>&1
+)
 exit /b 0
