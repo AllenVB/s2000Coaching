@@ -41,6 +41,7 @@ import { MemberPrintPage as AdminMemberPrintPage } from '@/pages/admin/MemberPri
 import { MemberPrintPage } from '@/pages/member/MemberPrintPage'
 import { MemberMonthlyRecordsTab } from '@/pages/admin/tabs/MemberMonthlyRecordsTab'
 import { MemberRecordsPage } from '@/pages/member/MemberRecordsPage'
+import { CalculatorsPage } from '@/pages/CalculatorsPage'
 import { LoginPage } from '@/pages/LoginPage'
 import { NotFoundPage } from '@/pages/NotFoundPage'
 
@@ -49,6 +50,7 @@ export default function App() {
     <Routes>
       <Route path="/" element={<LandingPage />} />
       <Route path="/giris" element={<LoginPage />} />
+      <Route path="/hesaplayicilar" element={<CalculatorsPage />} />
 
       <Route path="/uye" element={<MemberAreaLayout />}>
         <Route index element={<MemberTodayPage />} />

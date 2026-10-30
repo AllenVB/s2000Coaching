@@ -16,7 +16,9 @@ klasörlerdeki `DESIGN.md`).
 | Yol | Sayfa | Erişim |
 | --- | --- | --- |
 | `/` | Tanıtım sitesi, paketler ve checkout | Herkese açık |
-| `/uye` | Üye alanı | E-posta koduyla giriş yapan üyeler |
+| `/hesaplayicilar` | Kalori (Mifflin–St Jeor), makro ve VKİ hesaplayıcıları | Herkese açık; girilenler tarayıcıdan çıkmaz, kaydedilmez |
+| `/giris` | Tek giriş sayfası (üyeler ve koç) | Herkese açık |
+| `/uye` | Üye alanı | Giriş yapmış üyeler |
 | `/yonetim` | Yönetim paneli | E-posta + şifre ile giriş yapan koç hesapları |
 
 **Üye alanı** (masaüstünde sol menü, telefonda alt sekme çubuğu): `/uye` bugün · `/uye/antrenman` (ve

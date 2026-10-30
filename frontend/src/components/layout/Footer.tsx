@@ -1,4 +1,5 @@
 import type { MouseEvent } from 'react'
+import { Link } from 'react-router-dom'
 
 import { usePricingCategory } from '@/context/PricingCategoryContext'
 import { isPlainLeftClick, navigateToSection } from '@/lib/scroll'
@@ -8,6 +9,8 @@ interface FooterLink {
   label: string
   href: string
   targetId: string
+  /** A page of its own; when set the link goes there instead of to a section. */
+  to?: string
 }
 
 const programs: (FooterLink & { category: PackageCategory })[] = [
@@ -20,6 +23,7 @@ const platform: FooterLink[] = [
   { label: 'Nasıl Çalışır?', href: '#nasil-calisir', targetId: 'nasil-calisir' },
   { label: 'Başarı Hikayeleri', href: '#basari-hikayeleri', targetId: 'basari-hikayeleri' },
   { label: 'Sıkça Sorulan Sorular', href: '#sss', targetId: 'sss' },
+  { label: 'Hesaplayıcılar', href: '/hesaplayicilar', targetId: '', to: '/hesaplayicilar' },
 ]
 const legal: FooterLink[] = [
   { label: 'Kullanım Koşulları', href: '#paketler', targetId: 'paketler' },
@@ -95,7 +99,16 @@ function FooterColumn<T extends FooterLink>({
   return (
     <div className="flex flex-col space-y-2.5">
       <div className="mb-1 text-xs font-semibold uppercase tracking-wider text-text-primary">{title}</div>
-      {items.map((item) => (
+      {items.map((item) =>
+        item.to ? (
+          <Link
+            key={item.label}
+            to={item.to}
+            className="text-xs text-text-secondary transition-colors hover:text-text-primary"
+          >
+            {item.label}
+          </Link>
+        ) : (
         <a
           key={item.label}
           href={item.href}
@@ -111,7 +124,8 @@ function FooterColumn<T extends FooterLink>({
         >
           {item.label}
         </a>
-      ))}
+        ),
+      )}
     </div>
   )
 }
