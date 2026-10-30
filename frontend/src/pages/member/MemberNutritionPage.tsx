@@ -4,6 +4,7 @@ import { IntakeLog } from '@/components/member/IntakeLog'
 import { MacroSummary } from '@/components/nutrition/MacroSummary'
 import { NutritionTable } from '@/components/nutrition/NutritionTable'
 import { useMemberProfileSync } from '@/hooks/useMemberProfileSync'
+import { PrintLink } from '@/components/print/PrintLink'
 import { ComingSoonCard, PageHeading } from '@/components/ui/PageHeading'
 
 export function MemberNutritionPage() {
@@ -47,7 +48,11 @@ export function MemberNutritionPage() {
 
   return (
     <>
-      <PageHeading title={plan.name} description={plan.note ?? 'Günlük hedefleriniz ve öğünleriniz.'} />
+      <PageHeading
+        title={plan.name}
+        description={plan.note ?? 'Günlük hedefleriniz ve öğünleriniz.'}
+        action={<PrintLink />}
+      />
 
       <div className="space-y-6">
         {intakeLog}

@@ -60,6 +60,12 @@ export function MemberDetailPage() {
                   {member.fullName}
                 </h1>
                 <MemberStatusBadge status={member.status} />
+                <Link
+                  to="cikti"
+                  className="rounded-lg border border-border-strong px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wide text-text-secondary transition-colors hover:border-primary/60 hover:text-text-primary"
+                >
+                  Plan Çıktısı
+                </Link>
               </div>
               <p className="mt-2 break-all text-sm text-text-secondary">{member.email}</p>
               <p className="mt-0.5 text-xs text-text-muted">

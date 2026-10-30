@@ -37,6 +37,8 @@ import { MemberTrainingPage } from '@/pages/member/MemberTrainingPage'
 import { MemberWorkoutDayPage } from '@/pages/member/MemberWorkoutDayPage'
 import { MemberProfilePage } from '@/pages/member/MemberProfilePage'
 import { MemberTodayPage } from '@/pages/member/MemberTodayPage'
+import { MemberPrintPage as AdminMemberPrintPage } from '@/pages/admin/MemberPrintPage'
+import { MemberPrintPage } from '@/pages/member/MemberPrintPage'
 import { NotFoundPage } from '@/pages/NotFoundPage'
 
 export default function App() {
@@ -58,12 +60,14 @@ export default function App() {
         <Route path="fotograflar" element={<MemberPhotosPage />} />
         <Route path="mesajlar" element={<MemberMessagesPage />} />
         <Route path="profil" element={<MemberProfilePage />} />
+        <Route path="cikti" element={<MemberPrintPage />} />
       </Route>
 
       <Route path="/yonetim" element={<AdminAreaLayout />}>
         <Route index element={<AdminDashboardPage />} />
         <Route path="uyeler" element={<MemberListPage />} />
         <Route path="uyeler/yeni" element={<NewMemberPage />} />
+        <Route path="uyeler/:memberId/cikti" element={<AdminMemberPrintPage />} />
         <Route path="uyeler/:memberId" element={<MemberDetailPage />}>
           <Route index element={<MemberProfileTab />} />
           <Route path="antrenman" element={<MemberTrainingTab />} />

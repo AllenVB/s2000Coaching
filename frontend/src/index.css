@@ -140,3 +140,33 @@
     );
   }
 }
+
+/* The plan sheet: its own landscape A4 page, black on white whatever the screen theme is.
+   Named so that printing any other page keeps the browser's default paper. */
+@page plan {
+  size: A4 landscape;
+  margin: 10mm;
+}
+
+.plan-doc {
+  page: plan;
+}
+
+@media print {
+  /* The site declares a dark colour scheme, and the browser paints the page margins in that
+     scheme's canvas colour — a dark frame around a white sheet — unless it is switched back. */
+  :root {
+    color-scheme: light !important;
+  }
+
+  html,
+  body {
+    background: #fff !important;
+  }
+
+  /* Table shading and the orange rule are part of the sheet, not decoration to be saved ink on. */
+  .plan-doc {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}

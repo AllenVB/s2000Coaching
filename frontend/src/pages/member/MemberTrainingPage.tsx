@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 
 import { useMyTrainingPlan } from '@/api/trainingApi'
+import { PrintLink } from '@/components/print/PrintLink'
 import { ComingSoonCard, PageHeading } from '@/components/ui/PageHeading'
 import { formatDate } from '@/lib/date'
 
@@ -41,7 +42,11 @@ export function MemberTrainingPage() {
 
   return (
     <>
-      <PageHeading title={plan.name} description={plan.note ?? 'Çalışacağınız günü seçin.'} />
+      <PageHeading
+        title={plan.name}
+        description={plan.note ?? 'Çalışacağınız günü seçin.'}
+        action={<PrintLink />}
+      />
 
       <div className="space-y-3">
         {plan.days.map((day) => (
