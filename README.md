@@ -180,10 +180,25 @@ reddedilir (setleri sessizce yeniden numaralamak olurdu). Kaydedilmiş egzersizl
 değişir; hedef kg, dinlenme saniyesi ve üyenin göreceği not isteğe bağlıdır. Eski biçimde (set sayısı +
 serbest metin) yazılmış egzersizler olduğu gibi çalışır.
 
+**Egzersiz görseli.** Her egzersizin bir **demonstrasyon görseli** olabilir (ekran görüntüsü): koç, plan
+düzenleyicisinde kaydedilmiş egzersizin altından ya da **Hareketler** sayfasından **Görsel Yükle** der
+(PNG ya da JPEG, en fazla 8 MB). Görsel kataloğdaki harekete bağlıdır; o hareketi kullanan her plan ve her
+üye aynı görseli görür, değiştirmek ya da kaldırmak hepsine yansır. Yüklenen dosya çözülüp yeniden
+kodlanır (konum/cihaz gibi üst veri atılır, resim olmayan dosya reddedilir), yalnızca depolama anahtarı
+veritabanında tutulur; hareket silinirse dosyası da silinir. Üye görseli gün sayfasında egzersizin
+başında görür; görsele yalnızca giriş yapmış üye ya da koç erişir.
+
 **Üye yalnızca görüntüler.** Üye `/uye/antrenman` gün sayfasında koçun yazdığı setleri (1.set, 2.set …),
 notu ve videoyu salt okunur görür; plan üzerinde hiçbir düzenleme ucu üyeye açık değildir. Gerçekte
 kaldırdığını kaydetmek isterse **Bugünkü Antrenmanımı Kaydet** ile kayıt kutuları açılır (ağırlık takibi,
 RPE ve öneriler bu kayıttan beslenir).
+
+**Geçmiş antrenman girme.** Kayıt kutuları "Bu antrenmanı hangi gün yaptınız?" tarih seçicisiyle açılır
+(Bugün/Dün kısayolları; gelecek tarih seçilemez). `/uye/gecmis` sayfasındaki **Geçmiş Antrenman Ekle**
+bölümünden planın günü ve tarih seçilip ilgili gün sayfası o tarih için açık gelir. O güne ve tarihe zaten
+kayıt varsa değerler onunla dolu gelir, uyarı gösterilir ve kaydetmek yeni satır açmaz, o seansı günceller;
+geçmiş listesindeki her seansta **Düzenle** bağlantısı da aynı yere götürür (yalnızca aktif planın günleri
+için). Tarih değiştirilince yazılmış değerler yeni tarihin kaydıyla değiştirilir.
 
 **Antrenman 1 – 10.** Üyenin gün sayfasında her hareketin altında on kutu vardır; kutular üyenin zaten
 kaydettiği seanslardan dolar (o seansın en ağır seti), yani ağırlık tek yerden girilir. Onuncudan sonra

@@ -4,8 +4,13 @@ import com.s2000coaching.service.ExerciseService;
 import com.s2000coaching.web.dto.ExerciseResponse;
 import com.s2000coaching.web.dto.UpsertExerciseRequest;
 import jakarta.validation.Valid;
+import java.io.IOException;
 import java.util.List;
 import java.util.UUID;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.http.MediaType;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -39,6 +44,23 @@ public class AdminExerciseController {
 	public ExerciseResponse update(@PathVariable UUID exerciseId,
 			@Valid @RequestBody UpsertExerciseRequest request) {
 		return exerciseService.update(exerciseId, request);
+	}
+
+	/** Multipart "file": the demonstration image shown to members at the start of the exercise. */
+	@PutMapping(value = "/api/admin/exercises/{exerciseId}/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+	public ExerciseResponse setImage(@PathVariable UUID exerciseId, @RequestParam("file") MultipartFile file)
+			throws IOException {
+		return exerciseService.setImage(exerciseId, file.getBytes());
+	}
+
+	@DeleteMapping("/api/admin/exercises/{exerciseId}/image")
+	public ExerciseResponse removeImage(@PathVariable UUID exerciseId) {
+		return exerciseService.removeImage(exerciseId);
+	}
+
+	@GetMapping("/api/admin/exercises/{exerciseId}/image")
+	public ResponseEntity<InputStreamResource> image(@PathVariable UUID exerciseId) {
+		return ExerciseImages.respond(exerciseService.readImage(exerciseId));
 	}
 
 	@DeleteMapping("/api/admin/exercises/{exerciseId}")

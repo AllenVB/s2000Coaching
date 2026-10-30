@@ -3,6 +3,7 @@ package com.s2000coaching.web.dto;
 import com.s2000coaching.domain.Exercise;
 import com.s2000coaching.domain.MuscleGroup;
 import com.s2000coaching.service.YouTubeLink;
+import java.time.Instant;
 import java.util.UUID;
 
 /**
@@ -12,7 +13,7 @@ import java.util.UUID;
  * {@code videoUrl} still carries that, so the page can offer it as a plain link.
  */
 public record ExerciseResponse(UUID id, String name, MuscleGroup muscleGroup, String videoUrl, Video video,
-		String note) {
+		String note, boolean hasImage, Instant imageUpdatedAt) {
 
 	public record Video(String id, int startSeconds) {
 	}
@@ -22,6 +23,6 @@ public record ExerciseResponse(UUID id, String name, MuscleGroup muscleGroup, St
 				.map(parsed -> new Video(parsed.videoId(), parsed.startSeconds()))
 				.orElse(null);
 		return new ExerciseResponse(exercise.getId(), exercise.getName(), exercise.getMuscleGroup(),
-				exercise.getVideoUrl(), video, exercise.getNote());
+				exercise.getVideoUrl(), video, exercise.getNote(), exercise.hasImage(), exercise.getImageUpdatedAt());
 	}
 }

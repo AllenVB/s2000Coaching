@@ -31,6 +31,19 @@ public class Exercise {
 	@Column(columnDefinition = "text")
 	private String note;
 
+	/** The demonstration image the coach uploaded (storage key and file facts); all null when there is none. */
+	@Column(name = "image_key", length = 200)
+	private String imageKey;
+
+	@Column(name = "image_content_type", length = 50)
+	private String imageContentType;
+
+	@Column(name = "image_size_bytes")
+	private Long imageSizeBytes;
+
+	@Column(name = "image_updated_at")
+	private Instant imageUpdatedAt;
+
 	@Column(name = "created_at", nullable = false)
 	private Instant createdAt;
 
@@ -49,6 +62,40 @@ public class Exercise {
 
 	public UUID getId() {
 		return id;
+	}
+
+	public boolean hasImage() {
+		return imageKey != null;
+	}
+
+	public String getImageKey() {
+		return imageKey;
+	}
+
+	public String getImageContentType() {
+		return imageContentType;
+	}
+
+	public Long getImageSizeBytes() {
+		return imageSizeBytes;
+	}
+
+	public Instant getImageUpdatedAt() {
+		return imageUpdatedAt;
+	}
+
+	public void attachImage(String key, String contentType, long sizeBytes, Instant now) {
+		this.imageKey = key;
+		this.imageContentType = contentType;
+		this.imageSizeBytes = sizeBytes;
+		this.imageUpdatedAt = now;
+	}
+
+	public void clearImage() {
+		this.imageKey = null;
+		this.imageContentType = null;
+		this.imageSizeBytes = null;
+		this.imageUpdatedAt = null;
 	}
 
 	public String getName() {
