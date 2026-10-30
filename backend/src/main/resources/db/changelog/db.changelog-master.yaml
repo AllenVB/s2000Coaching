@@ -72,3 +72,5 @@ databaseChangeLog:
       file: db/changelog/032-training-set-reps.yaml
   - include:
       file: db/changelog/033-member-accounts.yaml
+  - include:
+      file: db/changelog/034-create-monthly-record-table.yaml

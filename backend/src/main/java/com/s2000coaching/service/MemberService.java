@@ -149,13 +149,15 @@ public class MemberService {
 				UUID.randomUUID(),
 				email,
 				request.fullName().trim(),
-				request.phone().trim(),
+				blankToEmpty(request.phone()),
 				request.heightCm(),
 				request.weightKg(),
 				request.sportsBackground().trim(),
 				MemberStatus.PENDING_VERIFICATION,
 				Instant.now());
 
+		member.setGender(request.gender());
+		member.setAge(request.age());
 		Member saved = memberRepository.save(member);
 		// Any order already placed with this address becomes part of the new member's history.
 		adminOrderService.linkOrdersTo(saved);

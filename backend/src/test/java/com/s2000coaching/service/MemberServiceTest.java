@@ -94,8 +94,8 @@ class MemberServiceTest {
 	}
 
 	private static CreateMemberRequest request(String email) {
-		return new CreateMemberRequest(email, "  Ahmet Yılmaz ", " +905551112233 ", 182,
-				new BigDecimal("84.50"), " 5 yıl fitness, 2 yıl powerlifting ");
+		return new CreateMemberRequest(email, "  Ahmet Yılmaz ", " +905551112233 ", MemberGender.MALE, 30,
+				182, new BigDecimal("84.50"), " 5 yıl fitness, 2 yıl powerlifting ");
 	}
 
 	private static Member pendingMember() {

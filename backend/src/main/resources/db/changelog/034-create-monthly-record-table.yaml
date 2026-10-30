@@ -1,0 +1,40 @@
+databaseChangeLog:
+  - changeSet:
+      id: 050-create-monthly-record-table
+      author: s2000
+      comment: >-
+        One month's body figures, entered by the member (or the coach for them) as a table: height,
+        weight and the circumferences. Every figure is optional so a month can be filled in over several
+        visits; a month exists once per member (period is "YYYY-MM"), which is what makes saving the same
+        month twice a conflict instead of a duplicate row.
+      changes:
+        - createTable:
+            tableName: monthly_record
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints: { primaryKey: true, nullable: false }
+              - column:
+                  name: member_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_monthly_record_member
+                    references: member(id)
+              - column: { name: period, type: varchar(7), constraints: { nullable: false } }
+              - column: { name: height_cm, type: "numeric(4,1)" }
+              - column: { name: weight_kg, type: "numeric(5,1)" }
+              - column: { name: shoulder_cm, type: "numeric(4,1)" }
+              - column: { name: chest_cm, type: "numeric(4,1)" }
+              - column: { name: arm_cm, type: "numeric(4,1)" }
+              - column: { name: neck_cm, type: "numeric(4,1)" }
+              - column: { name: waist_cm, type: "numeric(4,1)" }
+              - column: { name: hip_cm, type: "numeric(4,1)" }
+              - column: { name: thigh_cm, type: "numeric(4,1)" }
+              - column: { name: created_at, type: timestamp with time zone, constraints: { nullable: false } }
+              - column: { name: updated_at, type: timestamp with time zone, constraints: { nullable: false } }
+        - addUniqueConstraint:
+            tableName: monthly_record
+            columnNames: member_id, period
+            constraintName: uk_monthly_record_member_period
