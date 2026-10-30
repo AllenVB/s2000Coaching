@@ -89,9 +89,13 @@ class WorkoutLogQueriesIntegrationTest {
 		planRepository.save(plan);
 	}
 
+	private static final java.util.concurrent.atomic.AtomicInteger NUMBERS = new java.util.concurrent.atomic.AtomicInteger(10_000);
+
 	private static Member newMember() {
-		return new Member(UUID.randomUUID(), UUID.randomUUID() + "@example.com", "Test Üye", "+905551112233", 180,
-				new BigDecimal("80.00"), "yok", MemberStatus.ACTIVE, Instant.now());
+		Member member = new Member(UUID.randomUUID(), UUID.randomUUID() + "@example.com", "Test Üye", "+905551112233",
+				180, new BigDecimal("80.00"), "yok", MemberStatus.ACTIVE, Instant.now());
+		member.assignMemberNumber(NUMBERS.getAndIncrement());
+		return member;
 	}
 
 	/** One session of {@code planExercise} with three sets, the heaviest being {@code topKg}. */

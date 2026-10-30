@@ -1,3 +1,6 @@
+import { PasswordChecklist } from '@/components/ui/PasswordChecklist'
+import { isStrongPassword } from '@/lib/password'
+import { formatMemberNumber } from '@/types/member'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
@@ -62,6 +65,10 @@ export function MemberProfileTab() {
         <h2 className="mb-5 border-b border-border pb-3 text-sm font-bold uppercase tracking-wider text-text-primary">
           Üye Bilgileri
         </h2>
+        <p className="mb-4 text-xs text-text-secondary">
+          Üye No <span className="font-semibold text-text-primary">{formatMemberNumber(member.memberNumber)}</span>
+          {' '}— aynı adı taşıyan üyeleri ayırt etmek için verilir, değiştirilemez.
+        </p>
 
         <form className="space-y-4" onSubmit={handleSubmit(({ gender, age, ...values }) =>
             updateMember.mutate({ ...values, gender: gender === '' ? null : gender, age: age === '' ? null : Number(age) }),
@@ -308,7 +315,7 @@ function PendingVerificationCard({ memberId }: { memberId: string }) {
 function SetPasswordCard({ memberId, hasPassword }: { memberId: string; hasPassword: boolean }) {
   const setPassword = useSetMemberPassword(memberId)
   const [value, setValue] = useState('')
-  const tooShort = value.length > 0 && value.length < 8
+  const weak = value.length > 0 && !isStrongPassword(value)
 
   return (
     <section className="rounded-2xl border border-border bg-surface p-6">
@@ -321,7 +328,7 @@ function SetPasswordCard({ memberId, hasPassword }: { memberId: string; hasPassw
         className="mt-4 flex flex-wrap items-start gap-2"
         onSubmit={(event) => {
           event.preventDefault()
-          if (value.length >= 8) {
+          if (isStrongPassword(value)) {
             setPassword.mutate(value, { onSuccess: () => setValue('') })
           }
         }}
@@ -333,13 +340,13 @@ function SetPasswordCard({ memberId, hasPassword }: { memberId: string; hasPassw
             type="text"
             autoComplete="off"
             maxLength={64}
-            placeholder="Yeni şifre (en az 8 karakter)"
+            placeholder="Yeni şifre"
             aria-label="Yeni şifre"
             className={`${inputClasses} w-64`}
           />
-          {tooShort ? <p className="mt-1 text-[11px] text-error">En az 8 karakter olmalı.</p> : null}
+          {weak || value.length === 0 ? <div className="mt-2"><PasswordChecklist value={value} /></div> : null}
         </div>
-        <Button type="submit" variant="secondary" disabled={setPassword.isPending || value.length < 8}>
+        <Button type="submit" variant="secondary" disabled={setPassword.isPending || !isStrongPassword(value)}>
           {setPassword.isPending ? 'Kaydediliyor…' : 'Şifreyi Belirle'}
         </Button>
       </form>

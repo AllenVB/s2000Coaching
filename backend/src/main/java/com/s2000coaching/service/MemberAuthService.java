@@ -11,7 +11,6 @@ import com.s2000coaching.web.dto.MemberResponse;
 import com.s2000coaching.web.dto.MemberSessionResponse;
 import java.security.SecureRandom;
 import com.s2000coaching.domain.MemberStatus;
-import com.s2000coaching.exception.ConflictException;
 import com.s2000coaching.exception.EmailNotVerifiedException;
 import com.s2000coaching.exception.NotFoundException;
 import com.s2000coaching.web.dto.RegisterMemberRequest;
@@ -44,6 +43,7 @@ public class MemberAuthService {
 	private static final SecureRandom RANDOM = new SecureRandom();
 
 	private final MemberRepository memberRepository;
+	private final MemberIdentity memberIdentity;
 	private final MemberSessionRepository sessionRepository;
 	private final VerificationCodeService verificationCodeService;
 	private final PasswordEncoder passwordEncoder;
@@ -58,6 +58,7 @@ public class MemberAuthService {
 	private final String decoyHash;
 
 	public MemberAuthService(MemberRepository memberRepository,
+			MemberIdentity memberIdentity,
 			MemberSessionRepository sessionRepository,
 			VerificationCodeService verificationCodeService,
 			PasswordEncoder passwordEncoder,
@@ -65,6 +66,7 @@ public class MemberAuthService {
 			@Value("${app.member.lockout-duration}") Duration lockoutDuration,
 			@Value("${app.registration.verify-email}") boolean verifyEmail) {
 		this.memberRepository = memberRepository;
+		this.memberIdentity = memberIdentity;
 		this.sessionRepository = sessionRepository;
 		this.verificationCodeService = verificationCodeService;
 		this.passwordEncoder = passwordEncoder;
@@ -85,10 +87,7 @@ public class MemberAuthService {
 	@Transactional
 	public RegistrationResponse register(RegisterMemberRequest request) {
 		String email = MemberService.normalizeEmail(request.email());
-		if (memberRepository.existsByEmail(email)) {
-			throw new ConflictException("Bu e-posta adresiyle zaten bir hesap var. Giriş yapın; şifrenizi "
-					+ "bilmiyorsanız \"Şifremi unuttum\"u kullanın.");
-		}
+		memberIdentity.requireFreeEmail(email);
 
 		Instant now = Instant.now();
 		String fullName = (request.firstName().trim() + " " + request.lastName().trim()).replaceAll("\\s+", " ");
@@ -98,6 +97,7 @@ public class MemberAuthService {
 		member.setGender(request.gender());
 		member.setAge(request.age());
 		member.setPasswordHash(passwordEncoder.encode(request.password()));
+		memberIdentity.assignNumber(member);
 		Member saved = memberRepository.save(member);
 
 		if (verifyEmail) {

@@ -7,6 +7,8 @@ import { MembershipCard } from '@/components/member/MembershipCard'
 import { MemberStatusBadge } from '@/components/member/MemberStatusBadge'
 import { Button } from '@/components/ui/Button'
 import { Field, inputClasses, textareaClasses } from '@/components/ui/FormField'
+import { PasswordChecklist } from '@/components/ui/PasswordChecklist'
+import { PasswordInput } from '@/components/ui/PasswordInput'
 import { PageHeading } from '@/components/ui/PageHeading'
 import { useMemberProfileSync } from '@/hooks/useMemberProfileSync'
 import { formatDate } from '@/lib/date'
@@ -16,7 +18,7 @@ import {
   type ChangePasswordFormValues,
   type UpdateMyProfileFormValues,
 } from '@/schemas/memberSchema'
-import { genderLabel, type Member } from '@/types/member'
+import { formatMemberNumber, genderLabel, type Member } from '@/types/member'
 
 export function MemberProfilePage() {
   const { member } = useMemberProfileSync()
@@ -57,6 +59,7 @@ function ProfileCard({ member, onEdit }: { member: Member; onEdit: () => void })
 
       <dl className="space-y-3">
         <ProfileRow label="Ad Soyad" value={member.fullName} />
+        <ProfileRow label="Üye No" value={formatMemberNumber(member.memberNumber)} />
         <ProfileRow label="E-Posta" value={member.email} />
         <ProfileRow label="Cinsiyet" value={genderLabel(member.gender)} />
         <ProfileRow label="Yaş" value={member.age !== null ? String(member.age) : '—'} />
@@ -242,6 +245,7 @@ function PasswordCard({ member }: { member: Member }) {
     register,
     handleSubmit,
     reset,
+    watch,
     formState: { errors },
   } = useForm<ChangePasswordFormValues>({
     resolver: zodResolver(changePasswordSchema),
@@ -274,17 +278,18 @@ function PasswordCard({ member }: { member: Member }) {
       <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
         {member.hasPassword ? (
           <Field label="Mevcut Şifre" error={errors.currentPassword?.message}>
-            <input {...register('currentPassword')} type="password" autoComplete="current-password" className={inputClasses} />
+            <PasswordInput {...register('currentPassword')} autoComplete="current-password" />
           </Field>
         ) : null}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Field label="Yeni Şifre *" error={errors.newPassword?.message} hint="En az 8 karakter.">
-            <input {...register('newPassword')} type="password" autoComplete="new-password" className={inputClasses} />
+          <Field label="Yeni Şifre *" error={errors.newPassword?.message}>
+            <PasswordInput {...register('newPassword')} autoComplete="new-password" />
           </Field>
           <Field label="Yeni Şifre Tekrar *" error={errors.newPasswordRepeat?.message}>
-            <input {...register('newPasswordRepeat')} type="password" autoComplete="new-password" className={inputClasses} />
+            <PasswordInput {...register('newPasswordRepeat')} autoComplete="new-password" />
           </Field>
         </div>
+        <PasswordChecklist value={watch('newPassword')} />
         {changePassword.isError ? <p role="alert" className="text-xs text-error">{changePassword.error.message}</p> : null}
         {done ? <p className="text-xs text-success">Şifreniz kaydedildi.</p> : null}
         <Button type="submit" variant="secondary" disabled={changePassword.isPending}>

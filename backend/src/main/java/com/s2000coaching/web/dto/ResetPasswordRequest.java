@@ -1,5 +1,6 @@
 package com.s2000coaching.web.dto;
 
+import com.s2000coaching.validation.StrongPassword;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
@@ -7,7 +8,7 @@ import jakarta.validation.constraints.Size;
 public record ResetPasswordRequest(
 		@NotBlank @Size(max = 255) String email,
 		@NotBlank @Size(min = 6, max = 6) String code,
-		@NotBlank @Size(min = 8, max = 64) String newPassword) {
+		@NotBlank @StrongPassword String newPassword) {
 
 	@Override
 	public String toString() {

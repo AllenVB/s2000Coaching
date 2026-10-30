@@ -12,6 +12,8 @@ import { useAccountLogin } from '@/api/accountAuthApi'
 import { AuthTabs } from '@/components/auth/AuthTabs'
 import { Button } from '@/components/ui/Button'
 import { Field, inputClasses, textareaClasses } from '@/components/ui/FormField'
+import { PasswordChecklist } from '@/components/ui/PasswordChecklist'
+import { PasswordInput } from '@/components/ui/PasswordInput'
 import { CheckIcon, ShieldIcon } from '@/components/ui/icons'
 import { useAdminAuth } from '@/context/AdminAuthContext'
 import { useMemberAuth } from '@/context/MemberAuthContext'
@@ -156,7 +158,7 @@ function LoginForm({
           <input {...register('email')} type="email" autoComplete="email" className={inputClasses} />
         </Field>
         <Field label="Şifre" error={errors.password?.message}>
-          <input {...register('password')} type="password" autoComplete="current-password" className={inputClasses} />
+          <PasswordInput {...register('password')} autoComplete="current-password" />
         </Field>
 
         {login.isError && !(login.error instanceof ApiError && login.error.status === 403) ? (
@@ -197,6 +199,7 @@ function RegisterForm({
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors },
   } = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
@@ -285,13 +288,14 @@ function RegisterForm({
         </Field>
 
         <div className="grid grid-cols-2 gap-3">
-          <Field label="Şifre *" error={errors.password?.message} hint="En az 8 karakter.">
-            <input {...register('password')} type="password" autoComplete="new-password" className={inputClasses} />
+          <Field label="Şifre *" error={errors.password?.message}>
+            <PasswordInput {...register('password')} autoComplete="new-password" />
           </Field>
           <Field label="Şifre Tekrar *" error={errors.passwordRepeat?.message}>
-            <input {...register('passwordRepeat')} type="password" autoComplete="new-password" className={inputClasses} />
+            <PasswordInput {...register('passwordRepeat')} autoComplete="new-password" />
           </Field>
         </div>
+        <PasswordChecklist value={watch('password')} />
 
         <div>
           <label className="flex cursor-pointer items-start gap-2.5 text-xs leading-relaxed text-text-secondary">
@@ -426,6 +430,7 @@ function ResetForm({ email, onBack }: { email: string; onBack: () => void }) {
   const {
     register,
     handleSubmit,
+    watch,
     formState: { errors },
   } = useForm<ResetPasswordFormValues>({
     resolver: zodResolver(resetPasswordSchema),
@@ -453,13 +458,14 @@ function ResetForm({ email, onBack }: { email: string; onBack: () => void }) {
           />
         </Field>
         <div className="grid grid-cols-2 gap-3">
-          <Field label="Yeni Şifre *" error={errors.newPassword?.message} hint="En az 8 karakter.">
-            <input {...register('newPassword')} type="password" autoComplete="new-password" className={inputClasses} />
+          <Field label="Yeni Şifre *" error={errors.newPassword?.message}>
+            <PasswordInput {...register('newPassword')} autoComplete="new-password" />
           </Field>
           <Field label="Tekrar *" error={errors.newPasswordRepeat?.message}>
-            <input {...register('newPasswordRepeat')} type="password" autoComplete="new-password" className={inputClasses} />
+            <PasswordInput {...register('newPasswordRepeat')} autoComplete="new-password" />
           </Field>
         </div>
+        <PasswordChecklist value={watch('newPassword')} />
         {reset.isError ? <p role="alert" className="text-xs text-error">{reset.error.message}</p> : null}
         {requestCode.isSuccess ? <p className="text-[11px] text-success">Yeni kod gönderildi.</p> : null}
         <Button type="submit" className="w-full" disabled={reset.isPending}>

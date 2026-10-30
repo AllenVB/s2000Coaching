@@ -1,0 +1,38 @@
+databaseChangeLog:
+  - changeSet:
+      id: 051-member-number
+      author: s2000
+      comment: >-
+        A five-digit number per member ("#12345") so two people with the same name can be told apart.
+        Existing members get distinct random numbers, shuffled so the number does not reveal who joined
+        first; new members get theirs from the application. Unique and never changed afterwards.
+      changes:
+        - addColumn:
+            tableName: member
+            columns:
+              - column:
+                  name: member_number
+                  type: integer
+        - sql:
+            sql: >-
+              UPDATE member m SET member_number = pick.num
+              FROM (
+                SELECT a.id, b.num
+                FROM (SELECT id, row_number() OVER (ORDER BY id) AS rn FROM member) a
+                JOIN (
+                  SELECT num, row_number() OVER () AS rn
+                  FROM (
+                    SELECT g AS num FROM generate_series(10000, 99999) g
+                    ORDER BY random() LIMIT (SELECT count(*) FROM member)
+                  ) shuffled
+                ) b ON a.rn = b.rn
+              ) pick
+              WHERE m.id = pick.id
+        - addNotNullConstraint:
+            tableName: member
+            columnName: member_number
+            columnDataType: integer
+        - addUniqueConstraint:
+            tableName: member
+            columnNames: member_number
+            constraintName: uk_member_member_number

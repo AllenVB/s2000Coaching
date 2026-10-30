@@ -68,6 +68,14 @@ public class Member {
 
 	private Integer age;
 
+	/**
+	 * The five-digit number that tells apart two people with the same name, shown as "#12345".
+	 * Given once when the account is made and never changed, which is why the column is not
+	 * updatable and nothing in the update requests carries it.
+	 */
+	@Column(name = "member_number", nullable = false, updatable = false, unique = true)
+	private int memberNumber;
+
 	@Column(name = "failed_login_attempts", nullable = false)
 	private int failedLoginAttempts;
 
@@ -92,6 +100,18 @@ public class Member {
 
 	public UUID getId() {
 		return id;
+	}
+
+	public int getMemberNumber() {
+		return memberNumber;
+	}
+
+	/** Only for a member that has none yet; an assigned number is never replaced. */
+	public void assignMemberNumber(int number) {
+		if (memberNumber != 0) {
+			throw new IllegalStateException("Üye numarası değiştirilemez.");
+		}
+		this.memberNumber = number;
 	}
 
 	public String getEmail() {

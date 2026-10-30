@@ -33,6 +33,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class MemberService {
 
 	private final MemberRepository memberRepository;
+	private final MemberIdentity memberIdentity;
 	private final MemberVerificationCodeRepository codeRepository;
 	private final MemberSessionRepository sessionRepository;
 	private final CoachNoteRepository coachNoteRepository;
@@ -47,6 +48,7 @@ public class MemberService {
 	private final List<MemberDataEraser> erasers;
 
 	public MemberService(MemberRepository memberRepository,
+			MemberIdentity memberIdentity,
 			MemberVerificationCodeRepository codeRepository,
 			MemberSessionRepository sessionRepository,
 			CoachNoteRepository coachNoteRepository,
@@ -64,6 +66,7 @@ public class MemberService {
 			// Erasers depend on this class (to look members up), so they are resolved lazily too.
 			@Lazy List<MemberDataEraser> erasers) {
 		this.memberRepository = memberRepository;
+		this.memberIdentity = memberIdentity;
 		this.codeRepository = codeRepository;
 		this.sessionRepository = sessionRepository;
 		this.coachNoteRepository = coachNoteRepository;
@@ -99,9 +102,7 @@ public class MemberService {
 		Member member = getOrThrow(memberId);
 		String email = normalizeEmail(request.email());
 		if (!email.equals(member.getEmail())) {
-			if (memberRepository.existsByEmail(email)) {
-				throw new ConflictException("Bu e-posta ile kayıtlı bir üye zaten var: " + email);
-			}
+			memberIdentity.requireFreeEmail(email);
 			member.setEmail(email);
 		}
 		member.setFullName(request.fullName().trim());
@@ -141,9 +142,7 @@ public class MemberService {
 	@Transactional
 	public CreateMemberResponse createMember(CreateMemberRequest request) {
 		String email = normalizeEmail(request.email());
-		if (memberRepository.existsByEmail(email)) {
-			throw new ConflictException("Bu e-posta ile kayıtlı bir üye zaten var: " + email);
-		}
+		memberIdentity.requireFreeEmail(email);
 
 		Member member = new Member(
 				UUID.randomUUID(),
@@ -158,6 +157,7 @@ public class MemberService {
 
 		member.setGender(request.gender());
 		member.setAge(request.age());
+		memberIdentity.assignNumber(member);
 		Member saved = memberRepository.save(member);
 		// Any order already placed with this address becomes part of the new member's history.
 		adminOrderService.linkOrdersTo(saved);

@@ -24,10 +24,13 @@ class CoachAccountSeederTest {
 	@Mock
 	private CoachAccountRepository coachRepository;
 
+	@Mock
+	private com.s2000coaching.repository.MemberRepository memberRepository;
+
 	private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
 	private CoachAccountSeeder seeder(String email, String password, String name) {
-		return new CoachAccountSeeder(coachRepository, passwordEncoder, email, password, name);
+		return new CoachAccountSeeder(coachRepository, memberRepository, passwordEncoder, email, password, name);
 	}
 
 	private CoachAccount seedAndCapture(CoachAccountSeeder seeder) {
@@ -47,6 +50,16 @@ class CoachAccountSeederTest {
 		assertThat(saved.getFullName()).isEqualTo("Koç");
 		assertThat(saved.getPasswordHash()).isNotEqualTo("gizli-sifre");
 		assertThat(passwordEncoder.matches("gizli-sifre", saved.getPasswordHash())).isTrue();
+	}
+
+	@Test
+	void shouldNotCreateACoachWhoseAddressBelongsToAMember() {
+		when(coachRepository.findByEmail("uye@example.com")).thenReturn(Optional.empty());
+		when(memberRepository.existsByEmail("uye@example.com")).thenReturn(true);
+
+		seeder("uye@example.com", "Test-sifre1", "Koç").run(null);
+
+		verify(coachRepository, never()).save(any());
 	}
 
 	@Test

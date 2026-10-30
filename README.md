@@ -110,7 +110,20 @@ hesabını açar (ad, soyad, e-posta, yaş, cinsiyet, boy, kilo, spor geçmişi,
 E-posta doğrulaması açıkken (varsayılan, canlıda böyledir) hesap, adrese gelen 6 haneli kod girilene kadar
 giremez; yerel `baslat.bat` bunu kapatır (`REGISTRATION_VERIFY_EMAIL=false`), çünkü yerelde e-posta sunucusu
 yoktur ve kayıt olan hemen girer. Beş yanlış şifre hesabı 15 dakika kilitler; yanlış adres ile yanlış şifre aynı
-mesajı verir. Şifre en az 8 karakter, en çok 64 (bcrypt 72 baytı okur); yalnızca özeti saklanır.
+mesajı verir. Seçilen her şifre (kayıt, sıfırlama, değiştirme, koçun belirlediği) **en az 8 karakter** (koç hesabı için 10),
+en çok 64 (bcrypt 72 baytı okur) olmalı ve **bir büyük harf, bir küçük harf, bir rakam ve bir özel karakter**
+içermelidir; kurallar yazarken tek tek işaretlenir, sunucu aynı kuralı `@StrongPassword` ile zorlar. Giriş
+isteği bu kurala bağlı değildir (eski şifreli hesaplar girebilsin diye). Şifre alanlarında göz simgesi şifreyi
+gösterir/gizler. Yalnızca bcrypt özeti saklanır.
+
+**Hesap çakışması ve üye numarası.** Bir e-posta adresi tek hesaba aittir: üyeler arasında olduğu gibi **üye ile
+koç hesabı arasında da** (ikisi aynı formdan girdiği için); kayıt, koçun üye açması, üyenin e-postasını
+değiştirmesi ve `ADMIN_EMAIL` tohumlaması bunu denetler, adres büyük/küçük harf ve baştaki/sondaki boşluktan
+bağımsız karşılaştırılır ve iki isteğin yarışması veritabanındaki tekillik kısıtıyla 409'a çevrilir. Her üyeye
+kayıt anında **rastgele, benzersiz 5 haneli bir üye numarası** verilir (`#12345`; sıralı değildir, kimin önce
+katıldığını göstermez), sonradan değiştirilemez (sütun güncellenemez, hiçbir güncelleme isteği taşımaz). Üye
+yalnızca **Profil** sayfasındaki Üyelik kartında, koç üyenin Profil sekmesinde görür; aynı adı taşıyan üyeleri
+ayırt etmek içindir. Var olan üyelere geçişte rastgele numara atanır.
 **Şifremi unuttum** (ve koçun açtığı, henüz şifresi olmayan üyeler) e-posta koduyla yeni şifre seçer; şifre
 değişince o üyenin diğer oturumları kapanır. Üye yaş, telefon, boy, kilo ve spor geçmişini düzenler; **ad soyad,
 cinsiyet ve e-postayı yalnızca koç değiştirir**. Koç, üye sayfasında her bilgiyi düzenler ve üyeye şifre belirler

@@ -74,7 +74,7 @@ class AdminMemberControllerTest {
 	private static MemberResponse response(UUID id, MemberStatus status) {
 		return new MemberResponse(id, "sporcu@example.com", "Ahmet Yılmaz", "+905551112233", 182,
 				new BigDecimal("84.50"), "5 yıl fitness", status, Instant.now(),
-				status == MemberStatus.ACTIVE ? Instant.now() : null, null, true, MemberGender.MALE, 25, true);
+				status == MemberStatus.ACTIVE ? Instant.now() : null, null, true, MemberGender.MALE, 25, true, 12345);
 	}
 
 	@Test
@@ -218,9 +218,9 @@ class AdminMemberControllerTest {
 		assertThat(mvc.put().uri("/api/admin/members/" + memberId + "/password")
 				.header(HttpHeaders.AUTHORIZATION, BEARER)
 				.contentType(MediaType.APPLICATION_JSON)
-				.content("{\"newPassword\":\"koc-verdi-1\"}"))
+				.content("{\"newPassword\":\"Koc-verdi-1\"}"))
 				.hasStatus(HttpStatus.NO_CONTENT);
-		verify(memberAuthService).setPasswordAsCoach(memberId, "koc-verdi-1");
+		verify(memberAuthService).setPasswordAsCoach(memberId, "Koc-verdi-1");
 	}
 
 	@Test
@@ -233,7 +233,7 @@ class AdminMemberControllerTest {
 				.content("{\"newPassword\":\"kisa\"}")).hasStatus(HttpStatus.BAD_REQUEST);
 		assertThat(mvc.put().uri("/api/admin/members/" + memberId + "/password")
 				.contentType(MediaType.APPLICATION_JSON)
-				.content("{\"newPassword\":\"koc-verdi-1\"}")).hasStatus(HttpStatus.UNAUTHORIZED);
+				.content("{\"newPassword\":\"Koc-verdi-1\"}")).hasStatus(HttpStatus.UNAUTHORIZED);
 		verify(memberAuthService, never()).setPasswordAsCoach(any(), any());
 	}
 }

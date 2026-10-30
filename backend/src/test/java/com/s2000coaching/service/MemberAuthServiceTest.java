@@ -40,6 +40,9 @@ class MemberAuthServiceTest {
 	private MemberSessionRepository sessionRepository;
 
 	@Mock
+	private com.s2000coaching.repository.CoachAccountRepository coachRepository;
+
+	@Mock
 	private VerificationCodeService verificationCodeService;
 
 	private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(4);
@@ -48,7 +51,7 @@ class MemberAuthServiceTest {
 
 	@BeforeEach
 	void setUp() {
-		memberAuthService = new MemberAuthService(memberRepository, sessionRepository, verificationCodeService,
+		memberAuthService = new MemberAuthService(memberRepository, new MemberIdentity(memberRepository, coachRepository), sessionRepository, verificationCodeService,
 				passwordEncoder, Duration.ofDays(14), Duration.ofMinutes(15), true);
 	}
 

@@ -74,3 +74,5 @@ databaseChangeLog:
       file: db/changelog/033-member-accounts.yaml
   - include:
       file: db/changelog/034-create-monthly-record-table.yaml
+  - include:
+      file: db/changelog/035-member-number.yaml
