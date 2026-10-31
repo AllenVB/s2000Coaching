@@ -6,6 +6,7 @@ import com.s2000coaching.domain.OrderStatus;
 import com.s2000coaching.repository.CheckInRepository;
 import com.s2000coaching.repository.FormCheckRepository;
 import com.s2000coaching.repository.MeasurementRepository;
+import com.s2000coaching.repository.MemberActivityRepository;
 import com.s2000coaching.repository.MemberIntakeRepository;
 import com.s2000coaching.repository.WeeklyNutritionRepository;
 import com.s2000coaching.repository.MemberRepository;
@@ -44,6 +45,7 @@ public class AttentionService {
 	private final WorkoutLogRepository workoutLogRepository;
 	private final MeasurementRepository measurementRepository;
 	private final MemberIntakeRepository intakeRepository;
+	private final MemberActivityRepository activityRepository;
 	private final WeeklyNutritionRepository weeklyNutritionRepository;
 	private final TrainingPlanRepository trainingPlanRepository;
 	private final NutritionPlanRepository nutritionPlanRepository;
@@ -61,7 +63,8 @@ public class AttentionService {
 			TrainingPlanRepository trainingPlanRepository, NutritionPlanRepository nutritionPlanRepository,
 			MembershipRepository membershipRepository, OrderRepository orderRepository,
 			CheckInRepository checkInRepository, FormCheckRepository formCheckRepository, MemberQuestionnaireRepository questionnaireRepository,
-			MessageService messageService, Clock clock) {
+			MessageService messageService, MemberActivityRepository activityRepository, Clock clock) {
+		this.activityRepository = activityRepository;
 		this.questionnaireRepository = questionnaireRepository;
 		this.formCheckRepository = formCheckRepository;
 		this.checkInRepository = checkInRepository;
@@ -96,9 +99,15 @@ public class AttentionService {
 		Set<UUID> unansweredFormChecks = new HashSet<>(formCheckRepository.findMemberIdsWithUnansweredFormCheck());
 		Set<UUID> unansweredCheckIns = new HashSet<>(checkInRepository.findMemberIdsWithUnansweredCheckIn());
 
+		Map<UUID, LocalDate> lastDailyIntake = dates(intakeRepository.latestConsumedOnPerMember());
+		Map<UUID, Integer> overTarget = overTargetDays(today);
+		Set<UUID> stepsEver = new HashSet<>(activityRepository.findMemberIdsWithSteps());
+		Map<UUID, Integer> averageSteps = averageSteps(today);
+
 		List<Item> items = memberRepository.findAllByStatusOrderByCreatedAtDesc(MemberStatus.ACTIVE).stream()
 				.map(member -> AttentionScorer.score(signals(member, zone, lastWorkout, lastMeasurement, lastIntake,
-						membershipEnd, trainingPlans, nutritionPlans, unread, unansweredCheckIns, withQuestionnaire, needClearance, unansweredFormChecks), today))
+						membershipEnd, trainingPlans, nutritionPlans, unread, unansweredCheckIns, withQuestionnaire, needClearance, unansweredFormChecks,
+						lastDailyIntake, overTarget, stepsEver, averageSteps), today))
 				.filter(item -> item != null)
 				.sorted(Comparator.comparingInt(Item::score).reversed().thenComparing(Item::fullName))
 				.toList();
@@ -114,14 +123,53 @@ public class AttentionService {
 			Map<UUID, LocalDate> lastMeasurement, Map<UUID, LocalDate> lastIntake,
 			Map<UUID, LocalDate> membershipEnd, Set<UUID> trainingPlans, Set<UUID> nutritionPlans,
 			Set<UUID> unread, Set<UUID> unansweredCheckIns, Set<UUID> withQuestionnaire, Set<UUID> needClearance,
-			Set<UUID> unansweredFormChecks) {
+			Set<UUID> unansweredFormChecks, Map<UUID, LocalDate> lastDailyIntake, Map<UUID, Integer> overTarget,
+			Set<UUID> stepsEver, Map<UUID, Integer> averageSteps) {
 		UUID id = member.getId();
 		// Counted from the day they could first have done anything: confirming the account.
 		var joined = member.getVerifiedAt() != null ? member.getVerifiedAt() : member.getCreatedAt();
 		return new Signals(id, member.getFullName(), joined.atZone(zone).toLocalDate(), trainingPlans.contains(id),
 				nutritionPlans.contains(id), lastWorkout.get(id), lastMeasurement.get(id), lastIntake.get(id),
 				unread.contains(id), membershipEnd.get(id), unansweredCheckIns.contains(id),
-				withQuestionnaire.contains(id), needClearance.contains(id), unansweredFormChecks.contains(id));
+				withQuestionnaire.contains(id), needClearance.contains(id), unansweredFormChecks.contains(id),
+				lastDailyIntake.get(id), overTarget.getOrDefault(id, 0), stepsEver.contains(id), averageSteps.get(id));
+	}
+
+	/**
+	 * Per member, how many of the last seven days were over the calorie target of the day type the member chose.
+	 * Days with no day type, or members with no target for that type, simply do not count.
+	 */
+	private Map<UUID, Integer> overTargetDays(LocalDate today) {
+		Map<UUID, Integer[]> targets = new HashMap<>();
+		for (Object[] row : nutritionPlanRepository.activeCalorieTargets()) {
+			targets.put((UUID) row[0], new Integer[] { (Integer) row[1], (Integer) row[2] });
+		}
+		Map<UUID, Integer> counts = new HashMap<>();
+		for (Object[] row : intakeRepository.recentDays(today.minusDays(6))) {
+			Integer[] goal = targets.get((UUID) row[0]);
+			if (goal == null || row[3] == null) {
+				continue;
+			}
+			Integer target = row[3].toString().equals("DINLENME") ? goal[1] : goal[0];
+			int calories = (Integer) row[2];
+			if (target != null && target > 0 && calories > target * (1 + AttentionScorer.OVER_TARGET_MARGIN)) {
+				counts.merge((UUID) row[0], 1, Integer::sum);
+			}
+		}
+		return counts;
+	}
+
+	/** Average steps per logged day over the last seven days; a member with no step entry in the window is absent. */
+	private Map<UUID, Integer> averageSteps(LocalDate today) {
+		Map<UUID, long[]> sums = new HashMap<>();
+		for (Object[] row : activityRepository.recentSteps(today.minusDays(6))) {
+			long[] sum = sums.computeIfAbsent((UUID) row[0], k -> new long[2]);
+			sum[0] += (Integer) row[2];
+			sum[1]++;
+		}
+		Map<UUID, Integer> averages = new HashMap<>();
+		sums.forEach((id, sum) -> averages.put(id, (int) (sum[0] / sum[1])));
+		return averages;
 	}
 
 	/**

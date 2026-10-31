@@ -638,3 +638,15 @@ Testcontainers testleri runner'ın Docker'ıyla çalışır; backend testi düş
   **Geçmiş → Kardiyo & Adım:** günlük adım ve kardiyo süresi (dk); `member_activity` tablosu, koç
   `GET /api/admin/members/{id}/activity` ile okur.
 - **Form videosu:** üyenin gönderdiği form linki artık sitede oynatılmaz; yalnızca YouTube'da açan bir bağlantıdır.
+
+## Analiz, uyarılar, "Bugün" kartı
+
+- **Üye Verileri → Günlük Veriler ve Grafikler:** adım, kardiyo süresi, günlük kalori, **kalori − hedef** (üyenin seçtiği gün
+  türünün hedefine göre; tür seçilmemiş günler ya da hedefi olmayan planlar dışarıda kalır) ve su için "Grafik Oluştur".
+  Sayfanın altında üyenin aylık fotoğraflarıyla yan yana **karşılaştırma** (pozlar ve aylar seçilir, büyütülebilir).
+- **Dikkat paneli yeni uyarılar:** `NO_DAILY_INTAKE` (günlük yemek kaydı 4+ gündür yok; hiç başlamayan üye uyarılmaz),
+  `OVER_TARGET` (son 7 günün 3+ gününde gün türünün kalori hedefini %10'dan fazla aştı), `LOW_STEPS` / `NO_STEPS`
+  (adım girmeye başlamış üyenin son 7 gün ortalaması 5000'in altında / hiç adım girmedi). Hepsi tüm kadro için birkaç
+  gruplanmış sorguyla hesaplanır; eşikler `AttentionScorer`'daki sabitlerdir.
+- **Programlarım → Bugün kartı:** bugünün antrenmanı kaydedildi mi / programdaki sıradaki gün, bugünün kalori hedefi ve
+  kalan kalori (gün türüne göre), haftalık yuvarlak çizelge. Hiçbir şey ayrıca saklanmaz; girilen verilerden okunur.

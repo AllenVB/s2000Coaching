@@ -35,6 +35,26 @@ class AttentionScorerTest {
 		boolean questionnaire = true;
 		boolean clearance;
 		boolean formCheck;
+		LocalDate dailyIntake = TODAY.minusDays(1);
+		int overTargetDays;
+		boolean stepsEver;
+		Integer averageSteps;
+
+		F dailyIntake(LocalDate d) {
+			dailyIntake = d;
+			return this;
+		}
+
+		F overTarget(int days) {
+			overTargetDays = days;
+			return this;
+		}
+
+		F steps(Integer average) {
+			stepsEver = true;
+			averageSteps = average;
+			return this;
+		}
 
 		F workout(LocalDate d) {
 			workout = d;
@@ -98,7 +118,8 @@ class AttentionScorerTest {
 
 		Signals build() {
 			return new Signals(UUID.randomUUID(), "Ahmet", joined, trainingPlan, nutritionPlan, workout, measurement,
-					intake, unread, membershipEnd, unansweredCheckIn, questionnaire, clearance, formCheck);
+					intake, unread, membershipEnd, unansweredCheckIn, questionnaire, clearance, formCheck, dailyIntake,
+					overTargetDays, stepsEver, averageSteps);
 		}
 	}
 
@@ -228,5 +249,31 @@ class AttentionScorerTest {
 	@Test
 	void shouldFlagAFormCheckVideoWaitingForAnAnswer() {
 		assertThat(codes(AttentionScorer.score(with(F::formCheck), TODAY))).containsExactly("FORM_CHECK");
+	}
+
+	@Test
+	void shouldFlagAMemberWhoStoppedTheDailyFoodLog() {
+		var item = AttentionScorer.score(with(b -> b.intake(TODAY.minusDays(1)).dailyIntake(TODAY.minusDays(5))), TODAY);
+
+		assertThat(codes(item)).containsExactly("NO_DAILY_INTAKE");
+	}
+
+	@Test
+	void shouldNotChaseSomeoneWhoNeverStartedTheDailyLog() {
+		assertThat(AttentionScorer.score(with(b -> b.dailyIntake(null)), TODAY)).isNull();
+	}
+
+	@Test
+	void shouldFlagThreeDaysOverTargetButNotTwo() {
+		assertThat(codes(AttentionScorer.score(with(b -> b.overTarget(3)), TODAY))).containsExactly("OVER_TARGET");
+		assertThat(AttentionScorer.score(with(b -> b.overTarget(2)), TODAY)).isNull();
+	}
+
+	@Test
+	void shouldFlagLowOrMissingStepsOnlyForMembersWhoLogThem() {
+		assertThat(codes(AttentionScorer.score(with(b -> b.steps(3200)), TODAY))).containsExactly("LOW_STEPS");
+		assertThat(codes(AttentionScorer.score(with(b -> b.steps(null)), TODAY))).containsExactly("NO_STEPS");
+		assertThat(AttentionScorer.score(with(b -> b.steps(8000)), TODAY)).isNull();
+		assertThat(AttentionScorer.score(base(), TODAY)).isNull();
 	}
 }

@@ -23,4 +23,10 @@ public interface MemberIntakeRepository extends JpaRepository<MemberIntake, UUID
 			select i.member.id, max(i.consumedOn) from MemberIntake i group by i.member.id
 			""")
 	List<Object[]> latestConsumedOnPerMember();
+
+	/** (member id, day, calories, day type) since a date, for every member in one pass. */
+	@Query("""
+			select i.member.id, i.consumedOn, i.calories, i.dayType from MemberIntake i where i.consumedOn >= :from
+			""")
+	List<Object[]> recentDays(@org.springframework.data.repository.query.Param("from") LocalDate from);
 }
