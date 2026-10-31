@@ -30,6 +30,12 @@ public final class AttentionScorer {
 	 */
 	static final int INTAKE_QUIET_DAYS = 10;
 	static final int INTAKE_VERY_QUIET_DAYS = 17;
+	/** The daily food log is written every day, so a few quiet days already mean something. */
+	static final int DAILY_INTAKE_QUIET_DAYS = 4;
+	/** A day counts as over its target beyond this margin; a few percent either way is just estimating. */
+	static final double OVER_TARGET_MARGIN = 0.10;
+	static final int OVER_TARGET_DAYS_TO_FLAG = 3;
+	static final int LOW_AVERAGE_STEPS = 5000;
 	static final int MEMBERSHIP_ENDING_DAYS = 14;
 	/** A new member is given a few days to fill in the starting questionnaire before being chased. */
 	static final int QUESTIONNAIRE_GRACE_DAYS = 3;
@@ -41,7 +47,8 @@ public final class AttentionScorer {
 	public record Signals(UUID memberId, String fullName, LocalDate joinedOn, boolean hasTrainingPlan,
 			boolean hasNutritionPlan, LocalDate lastWorkout, LocalDate lastMeasurement, LocalDate lastIntake,
 			boolean unreadMessage, LocalDate membershipEnd, boolean unansweredCheckIn, boolean hasQuestionnaire,
-			boolean needsMedicalClearance, boolean unansweredFormCheck) {
+			boolean needsMedicalClearance, boolean unansweredFormCheck, LocalDate lastDailyIntake, int overTargetDays,
+			boolean stepsEverLogged, Integer averageSteps7) {
 	}
 
 	/** {@code code} is stable for the UI; {@code label} is what the coach reads. */
@@ -102,6 +109,29 @@ public final class AttentionScorer {
 			if (quiet >= INTAKE_QUIET_DAYS) {
 				reasons.add(new Reason("NO_INTAKE", "%d gündür haftalık beslenme kaydı yok".formatted(quiet),
 						quiet >= INTAKE_VERY_QUIET_DAYS ? 3 : 2));
+			}
+		}
+
+		boolean intakeFlagged = reasons.stream().anyMatch(r -> r.code().equals("NO_INTAKE"));
+		if (s.hasNutritionPlan() && !intakeFlagged && s.lastDailyIntake() != null) {
+			long quiet = quietDays(s.lastDailyIntake(), s.joinedOn(), today);
+			if (quiet >= DAILY_INTAKE_QUIET_DAYS) {
+				reasons.add(new Reason("NO_DAILY_INTAKE", "%d gündür günlük yemek kaydı girmedi".formatted(quiet), 2));
+			}
+		}
+
+		if (s.overTargetDays() >= OVER_TARGET_DAYS_TO_FLAG) {
+			reasons.add(new Reason("OVER_TARGET",
+					"Son 7 günün %d gününde kalori hedefini %%%d'den fazla aştı".formatted(s.overTargetDays(),
+							(int) Math.round(OVER_TARGET_MARGIN * 100)), 3));
+		}
+
+		if (s.stepsEverLogged()) {
+			if (s.averageSteps7() == null) {
+				reasons.add(new Reason("NO_STEPS", "Son 7 gündür adım sayısı girmedi", 1));
+			} else if (s.averageSteps7() < LOW_AVERAGE_STEPS) {
+				reasons.add(new Reason("LOW_STEPS",
+						"Son 7 günde günlük ortalama %d adım (düşük)".formatted(s.averageSteps7()), 2));
 			}
 		}
 

@@ -2,24 +2,31 @@ import { useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 
 import { useMember } from '@/api/adminMembersApi'
+import { useMemberActivity } from '@/api/activityApi'
 import { useMemberCheckIns } from '@/api/checkInApi'
+import { useMemberIntake } from '@/api/intakeApi'
 import { useMemberMeasurements } from '@/api/measurementsApi'
 import { useCoachRecordSource } from '@/api/monthlyRecordApi'
+import { useMemberNutritionPlans } from '@/api/nutritionApi'
+import { useMemberPhotos } from '@/api/photosApi'
 import { StudentPicker } from '@/components/admin/StudentPicker'
 import { ProgressChart, type ProgressPoint } from '@/components/charts/ProgressChart'
+import { PhotoComparison } from '@/components/member/PhotoComparison'
 import { Button } from '@/components/ui/Button'
 import { PageHeading } from '@/components/ui/PageHeading'
 import { derive } from '@/lib/bodyMetrics'
+import { CoachPhotoSourceProvider } from '@/context/PhotoSourceContext'
 import { formatDate } from '@/lib/date'
 import { formatAmount } from '@/lib/weeklyNutrition'
 import { CHECK_IN_SCALES } from '@/types/checkIn'
+import { targetsOf } from '@/types/nutrition'
 import { FIGURES, formatPeriod } from '@/types/monthlyRecord'
 
 interface Metric {
   key: string
   label: string
   unit: string
-  group: 'Aylık' | 'Haftalık'
+  group: 'Aylık' | 'Haftalık' | 'Günlük'
   /** Worked out from the tape figures rather than measured. */
   estimate?: boolean
   decimals: number
@@ -67,6 +74,11 @@ function MemberData({ memberId }: { memberId: string }) {
   const monthly = useCoachRecordSource(memberId)
   const { data: measurements } = useMemberMeasurements(memberId)
   const { data: checkIns } = useMemberCheckIns(memberId)
+  const { data: activity } = useMemberActivity(memberId)
+  const { data: intakes } = useMemberIntake(memberId)
+  const { data: plans } = useMemberNutritionPlans(memberId)
+  const { data: photos } = useMemberPhotos(memberId)
+  const activePlan = plans?.find((plan) => plan.active) ?? null
   const [shown, setShown] = useState<Set<string>>(new Set())
 
   const records = useMemo(() => [...(monthly.records ?? [])].sort((a, b) => a.period.localeCompare(b.period)), [monthly.records])
@@ -133,8 +145,57 @@ function MemberData({ memberId }: { memberId: string }) {
       decimals: 0,
       points: (checkIns ?? []).flatMap((row) => (row.dietAdherencePercent === null ? [] : [{ date: row.weekStart, value: row.dietAdherencePercent }])).sort((a, b) => a.date.localeCompare(b.date)),
     })
+    const byDate = <T extends { date: string }>(rows: T[]) => [...rows].sort((a, b) => a.date.localeCompare(b.date))
+    list.push(
+      {
+        key: 'd-steps',
+        label: 'Günlük adım',
+        unit: 'adım',
+        group: 'Günlük',
+        decimals: 0,
+        points: byDate((activity ?? []).flatMap((row) => (row.steps === null ? [] : [{ date: row.performedOn, value: row.steps }]))),
+      },
+      {
+        key: 'd-cardio',
+        label: 'Kardiyo süresi',
+        unit: 'dk',
+        group: 'Günlük',
+        decimals: 0,
+        points: byDate((activity ?? []).flatMap((row) => (row.cardioMinutes === null ? [] : [{ date: row.performedOn, value: row.cardioMinutes }]))),
+      },
+      {
+        key: 'd-kcal',
+        label: 'Günlük kalori',
+        unit: 'kcal',
+        group: 'Günlük',
+        decimals: 0,
+        points: byDate((intakes ?? []).map((row) => ({ date: row.consumedOn, value: row.calories }))),
+      },
+      {
+        // Positive = over the target of the day type the member chose; days without a type or a target are left out.
+        key: 'd-kcal-gap',
+        label: 'Kalori − hedef (gün türüne göre)',
+        unit: 'kcal',
+        group: 'Günlük',
+        decimals: 0,
+        points: byDate(
+          (intakes ?? []).flatMap((row) => {
+            const target = activePlan && row.dayType ? targetsOf(activePlan, row.dayType === 'DINLENME' ? 'REST' : 'TRAINING').calories : null
+            return target === null ? [] : [{ date: row.consumedOn, value: row.calories - target }]
+          }),
+        ),
+      },
+      {
+        key: 'd-water',
+        label: 'Su',
+        unit: 'L',
+        group: 'Günlük',
+        decimals: 1,
+        points: byDate((intakes ?? []).flatMap((row) => (row.waterLiters === null ? [] : [{ date: row.consumedOn, value: Number(row.waterLiters) }]))),
+      },
+    )
     return list
-  }, [records, derivedByPeriod, measurements, checkIns])
+  }, [records, derivedByPeriod, measurements, checkIns, activity, intakes, activePlan])
 
   const toggle = (key: string) =>
     setShown((current) => {
@@ -207,10 +268,10 @@ function MemberData({ memberId }: { memberId: string }) {
         </p>
       </section>
 
-      {(['Aylık', 'Haftalık'] as const).map((group) => (
+      {(['Aylık', 'Haftalık', 'Günlük'] as const).map((group) => (
         <section key={group} className="rounded-2xl border border-border bg-surface p-5 sm:p-6">
           <h3 className="mb-3 text-sm font-bold uppercase tracking-wider text-text-primary">
-            {group === 'Aylık' ? 'Aylık Veriler ve Grafikler' : 'Haftalık Veriler ve Grafikler'}
+            {group} Veriler ve Grafikler
           </h3>
           <ul className="divide-y divide-border/60">
             {metrics.filter((metric) => metric.group === group).map((metric) => {
@@ -257,6 +318,10 @@ function MemberData({ memberId }: { memberId: string }) {
           </ul>
         </section>
       ))}
+
+      <CoachPhotoSourceProvider>
+        <PhotoComparison photos={photos ?? []} />
+      </CoachPhotoSourceProvider>
     </div>
   )
 }

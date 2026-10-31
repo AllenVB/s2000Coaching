@@ -4,10 +4,12 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { useMyNutritionPlan } from '@/api/nutritionApi'
 import { useMyTrainingPlan } from '@/api/trainingApi'
 import { FirstSteps } from '@/components/member/FirstSteps'
+import { TodayCard } from '@/components/member/TodayCard'
 import { RenewalNotice } from '@/components/member/MembershipCard'
 import { DayTypeTabs } from '@/components/nutrition/DayTypeTabs'
 import { MacroSummary } from '@/components/nutrition/MacroSummary'
 import { NutritionTable } from '@/components/nutrition/NutritionTable'
+import { useMemberProfileSync } from '@/hooks/useMemberProfileSync'
 import { PrintLink } from '@/components/print/PrintLink'
 import { ComingSoonCard, PageHeading } from '@/components/ui/PageHeading'
 import { SectionTabs, tabFromParam } from '@/components/ui/SectionTabs'
@@ -20,6 +22,7 @@ const TABS = [
 
 /** "Programlarım": the training and nutrition programmes the coach assigned. The member only reads them. */
 export function MemberProgramsPage() {
+  const { member } = useMemberProfileSync()
   const [params, setParams] = useSearchParams()
   const tab = tabFromParam(params.get('sekme'), [...TABS])
 
@@ -34,7 +37,8 @@ export function MemberProgramsPage() {
       <div className="mt-6">
         <FirstSteps />
       </div>
-      <div>
+      {member?.healthDataConsentAt ? <TodayCard /> : null}
+      <div className="mt-6">
         <SectionTabs label="Program türü" tabs={[...TABS]} value={tab} onChange={(next) => setParams({ sekme: next }, { replace: true })} />
         {tab === 'antrenman' ? <TrainingProgram /> : <NutritionProgram />}
       </div>
