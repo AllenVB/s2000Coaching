@@ -36,7 +36,7 @@ export function CaseStudiesPage() {
     <>
       <PageHeading
         title="Vaka Çalışmaları"
-        description="Kendi ölçüm ve beslenme verinizi içe aktarın, analizi kontrol edin, sonra yayınlayın. Yayınlanan analiz ana sayfadaki Tecrübelerim bölümünde görünür."
+        description="Kendi ölçüm ve beslenme verinizi içe aktarın, analizi kontrol edin, sonra yayınlayın. Ana sayfada şu an vaka çalışması gösterilmiyor; yayınlanan analiz herkese açık vaka adresinde durur."
       />
 
       {isLoading ? (

@@ -3,11 +3,11 @@ import { useLocation } from 'react-router-dom'
 
 import { CartDrawer } from '@/components/cart/CartDrawer'
 import { CheckoutModal } from '@/components/cart/CheckoutModal'
+import { WhatsAppButton } from '@/components/layout/WhatsAppButton'
 import { Footer } from '@/components/layout/Footer'
 import { Header } from '@/components/layout/Header'
 import { PaymentResultBanner } from '@/components/layout/PaymentResultBanner'
 import { AppEcosystem } from '@/components/sections/AppEcosystem'
-import { Experience } from '@/components/sections/Experience'
 import { Faq } from '@/components/sections/Faq'
 import { FinalCta } from '@/components/sections/FinalCta'
 import { Hero } from '@/components/sections/Hero'
@@ -47,11 +47,11 @@ export function LandingPage() {
           <AppEcosystem />
           <Pricing />
           <SuccessStories />
-          <Experience />
           <Faq />
           <FinalCta />
         </main>
         <Footer />
+        <WhatsAppButton />
         <CartDrawer />
         <CheckoutModal />
       </PricingCategoryProvider>

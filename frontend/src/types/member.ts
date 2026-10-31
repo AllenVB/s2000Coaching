@@ -109,12 +109,15 @@ export interface MemberSession {
   member: Member
 }
 
-export type PhotoPose = 'ON' | 'YAN' | 'ARKA'
+export type PhotoPose = 'ON' | 'YAN' | 'ARKA' | 'ON_BICEPS' | 'ARKA_BICEPS'
 
+/** The monthly set, in the order the member is asked to take it. */
 export const PHOTO_POSES: { value: PhotoPose; label: string }[] = [
-  { value: 'ON', label: 'Ön' },
-  { value: 'YAN', label: 'Yan' },
-  { value: 'ARKA', label: 'Arka' },
+  { value: 'ON', label: 'Önden serbest duruş' },
+  { value: 'YAN', label: 'Yandan serbest duruş' },
+  { value: 'ARKA', label: 'Arkadan serbest duruş' },
+  { value: 'ON_BICEPS', label: 'Önden çift biceps' },
+  { value: 'ARKA_BICEPS', label: 'Arkadan çift biceps' },
 ]
 
 export interface ProgressPhoto {

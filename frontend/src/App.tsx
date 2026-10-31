@@ -1,4 +1,4 @@
-import { Navigate, Route, Routes } from 'react-router-dom'
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 
 import { AdminAreaLayout } from '@/components/layout/AdminAreaLayout'
 import { MemberAreaLayout } from '@/components/layout/MemberAreaLayout'
@@ -6,6 +6,9 @@ import { AdminDashboardPage } from '@/pages/admin/AdminDashboardPage'
 import { AdminMessagesPage } from '@/pages/admin/AdminMessagesPage'
 import { AdminOrdersPage } from '@/pages/admin/AdminOrdersPage'
 import { AdminSettingsPage } from '@/pages/admin/AdminSettingsPage'
+import { MemberDataPage } from '@/pages/admin/MemberDataPage'
+import { ProgramsPage } from '@/pages/admin/ProgramsPage'
+import { ExperiencePage } from '@/pages/admin/ExperiencePage'
 import { StoriesPage } from '@/pages/admin/StoriesPage'
 import { CaseStudiesPage } from '@/pages/admin/CaseStudiesPage'
 import { ExerciseCatalogPage } from '@/pages/admin/ExerciseCatalogPage'
@@ -39,6 +42,12 @@ import { LegalPage } from '@/pages/LegalPage'
 import { LoginPage } from '@/pages/LoginPage'
 import { NotFoundPage } from '@/pages/NotFoundPage'
 
+/** Redirects to a sibling route but keeps the query, which here holds the chosen student. */
+function KeepSearchRedirect({ to }: { to: string }) {
+  const { search } = useLocation()
+  return <Navigate to={{ pathname: to, search }} replace />
+}
+
 export default function App() {
   return (
     <Routes>
@@ -65,7 +74,7 @@ export default function App() {
         <Route path="verilerim" element={<Navigate to="/uye/olcumlerim?sekme=aylik" replace />} />
         <Route path="haftalik" element={<Navigate to="/uye/olcumlerim?sekme=haftalik" replace />} />
         <Route path="form-kontrol" element={<Navigate to="/uye/mesajlar?sekme=form" replace />} />
-        <Route path="hikayem" element={<Navigate to="/uye/programlarim" replace />} />
+        <Route path="hikayem" element={<Navigate to="/uye/olcumlerim?sekme=fotograflar" replace />} />
       </Route>
 
       <Route path="/yonetim" element={<AdminAreaLayout />}>
@@ -91,6 +100,13 @@ export default function App() {
         <Route path="sablonlar" element={<PlanTemplatesPage />} />
         <Route path="vaka-calismalari" element={<CaseStudiesPage />} />
         <Route path="hikayeler" element={<StoriesPage />} />
+        <Route path="tecrubelerim" element={<ExperiencePage />} />
+        <Route path="uye-verileri" element={<MemberDataPage />} />
+        <Route path="programlar" element={<ProgramsPage />}>
+          <Route index element={<KeepSearchRedirect to="antrenman" />} />
+          <Route path="antrenman" element={<MemberTrainingTab />} />
+          <Route path="beslenme" element={<MemberNutritionTab />} />
+        </Route>
         <Route path="siparisler" element={<AdminOrdersPage />} />
         <Route path="ayarlar" element={<AdminSettingsPage />} />
       </Route>

@@ -114,6 +114,26 @@ public class SuccessStoryService implements MemberDataEraser {
 		return coachView(story);
 	}
 
+	/** A photo from the coach's own device (not from a member's gallery), cleaned like any other copy. */
+	@Transactional
+	public StoryResponse addUploadedPhoto(UUID id, java.time.LocalDate takenOn, String caption, byte[] content) {
+		SuccessStory story = editable(id);
+		if (content == null || content.length == 0) {
+			throw new BadRequestException("Fotoğraf dosyası boş.");
+		}
+		long existing = photoRepository.countByStoryId(id);
+		if (existing >= MAX_PHOTOS) {
+			throw new BadRequestException("Bir hikâyeye en fazla %d fotoğraf eklenebilir.".formatted(MAX_PHOTOS));
+		}
+		PhotoSanitizer.Sanitized clean = PhotoSanitizer.sanitize(content);
+		String key = photoStorage.store(clean.content(), clean.contentType());
+		photoRepository.save(new SuccessStoryPhoto(UUID.randomUUID(), id, takenOn,
+				caption == null ? "" : caption.trim(), (int) existing, key, clean.contentType(),
+				clean.content().length, Instant.now(clock)));
+		story.voidConsent(Instant.now(clock));
+		return coachView(story);
+	}
+
 	@Transactional
 	public StoryResponse removePhoto(UUID photoId) {
 		SuccessStoryPhoto photo = photoRepository.findById(photoId)
@@ -307,7 +327,10 @@ public class SuccessStoryService implements MemberDataEraser {
 	}
 
 	private List<StoryPhotoResponse> photosOf(UUID storyId) {
+		// Oldest month first, so a story reads as a progression regardless of the order added.
 		return photoRepository.findAllByStoryIdOrderByDisplayOrderAsc(storyId).stream()
+				.sorted(java.util.Comparator.comparing(SuccessStoryPhoto::getTakenOn)
+						.thenComparing(SuccessStoryPhoto::getDisplayOrder))
 				.map(StoryPhotoResponse::from)
 				.toList();
 	}

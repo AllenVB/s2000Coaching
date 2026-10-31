@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 
+import { WhatsAppButton } from '@/components/layout/WhatsAppButton'
 import { SimplePublicHeader } from '@/components/layout/SimplePublicHeader'
 import { Button } from '@/components/ui/Button'
 import { Field, inputClasses } from '@/components/ui/FormField'
@@ -58,6 +59,7 @@ export function CalculatorsPage() {
   return (
     <div className="min-h-screen">
       <SimplePublicHeader />
+      <WhatsAppButton />
 
       <main className="mx-auto w-full max-w-[920px] px-4 py-10 sm:px-6 sm:py-14">
         <h1 className="font-display text-3xl font-extrabold uppercase tracking-tight text-text-primary sm:text-4xl">

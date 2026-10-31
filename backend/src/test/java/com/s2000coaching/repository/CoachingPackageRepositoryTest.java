@@ -23,14 +23,26 @@ class CoachingPackageRepositoryTest {
 
 		assertThat(packages).hasSize(3);
 		assertThat(packages).isSortedAccordingTo((a, b) -> a.getDisplayOrder() - b.getDisplayOrder());
-		assertThat(packages.get(1).getSlug()).isEqualTo("kocluk-6-ay");
+		// One, three and six months; the three-month tier is the highlighted one.
+		assertThat(packages).extracting(p -> p.getSlug()).containsExactly("kocluk-1-ay", "kocluk-3-ay", "kocluk-6-ay");
+		assertThat(packages).extracting(p -> p.getPriceMinor()).containsExactly(299000L, 749000L, 1249000L);
+		assertThat(packages).extracting(p -> p.isFeatured()).containsExactly(false, true, false);
 		assertThat(packages.get(1).getFeatures()).hasSize(5);
+	}
+
+	@Test
+	void shouldOfferThreeNutritionTiersWithTheSixMonthOneHighlighted() {
+		var packages = packageRepository.findByActiveTrueAndCategoryOrderByDisplayOrderAsc(PackageCategory.BESLENME);
+
+		assertThat(packages).extracting(p -> p.getSlug()).containsExactly("beslenme-1-ay", "beslenme-3-ay", "beslenme-6-ay");
+		assertThat(packages).extracting(p -> p.getPriceMinor()).containsExactly(129000L, 269000L, 459000L);
+		assertThat(packages).extracting(p -> p.isFeatured()).containsExactly(false, false, true);
 	}
 
 	@Test
 	void shouldReturnAllActivePackagesWhenCategoryIsNull() {
 		var packages = packageRepository.findByActiveTrueOrderByDisplayOrderAsc();
 
-		assertThat(packages).hasSize(7);
+		assertThat(packages).hasSize(6);
 	}
 }

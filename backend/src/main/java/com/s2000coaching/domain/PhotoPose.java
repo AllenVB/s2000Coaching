@@ -7,5 +7,8 @@ package com.s2000coaching.domain;
 public enum PhotoPose {
 	ON,
 	YAN,
-	ARKA
+	ARKA,
+	/** Front double biceps — part of the monthly five-photo set. */
+	ON_BICEPS,
+	ARKA_BICEPS
 }

@@ -24,7 +24,7 @@ klasörlerdeki `DESIGN.md`).
 **Üye alanı** (masaüstünde sol menü, telefonda alt sekme çubuğu; beş yer, hepsi telefonda da görünür):
 `/uye/programlarim` · `/uye/olcumlerim` · `/uye/gecmis` · `/uye/mesajlar` · `/uye/profil`.
 `/uye` Programlarım'a gider; eski adresler (`/uye/antrenman`, `/beslenme`, `/olcumler`, `/verilerim`, `/haftalik`,
-`/form-kontrol`) yeni yerlerine yönlenir. "Bugün" ve "Hikâyem" sayfaları kaldırıldı.
+`/form-kontrol`) yeni yerlerine yönlenir. "Bugün" ve "Hikâyem" sayfaları kaldırıldı; hikâye onay kartı artık Ölçümlerim → Fotoğraflar sekmesinin üstünde (koç bir hikâye önerdiyse görünür).
 
 - **İlk Adımlar** (Programlarım'ın üstünde): onay, başlangıç anketi, ilk aylık tablo, ilk haftalık takip ve program; yapılanlar işaretlenir, ilk dördü tamamlanıp program gelince kart kendiliğinden kaybolur (veriden hesaplanır, ayrıca saklanmaz).
 - **Programlarım** (sekmeler Antrenman / Beslenme): koçun atadığı programlar, yalnızca görüntülenir; gün
@@ -343,11 +343,15 @@ Yalnızca satırları silmek, silinme talebinde bulunmuş birinin vücut fotoğr
 
 ## Gelişim fotoğrafları
 
-Üye `/uye/fotograflar` sayfasından fotoğraf yükler, siler ve **önce/sonra karşılaştırması** yapar.
+**Aylık set:** üyeden her ay 5 fotoğraf istenir, bu sırayla: önden serbest duruş, yandan serbest duruş,
+arkadan serbest duruş, önden çift biceps, arkadan çift biceps. Aynı ay için aynı poz ikinci kez
+yüklenemez (sunucu reddeder; değiştirmek için önce silinir). Galeri aylara göre gruplanır.
+
+Üye `/uye/olcumlerim?sekme=fotograflar` sayfasından fotoğraf yükler, siler ve **önce/sonra karşılaştırması** yapar.
 Koç aynı fotoğrafları üye detayındaki **Fotoğraflar** sekmesinden görür ve silebilir, ama **yükleyemez**
 — birinin vücut fotoğrafını oraya koymak yalnızca kendi kararıdır.
 
-Karşılaştırma **yalnızca aynı duruştaki** (ön / yan / arka) iki fotoğrafı yan yana koyar; önden çekilmiş
+Karşılaştırma **yalnızca aynı duruştaki** (beş pozdan biri) iki fotoğrafı yan yana koyar; önden çekilmiş
 bir fotoğrafın yanına arkadan çekilmiş birini koymak gelişim hakkında bir şey söylemez. Varsayılan
 olarak o duruşun en eski ve en yeni fotoğrafı seçilir, yani eldeki en geniş aralık.
 
@@ -415,7 +419,10 @@ Hepsi `/uye` (üye) ve `/yonetim/uyeler/:id` (koç) altında; sağlık verisi sa
   hikâye yazar; fotoğraflar **kopyalanır** (yeniden kodlanır, GPS/cihaz bilgisi silinir) ve herkese açık
   uçlar hiçbir üye tablosuna dokunmaz. Hikâye ancak **üyenin kendi hesabından, o içeriğe açık rıza
   vermesiyle** yayınlanabilir; rıza metni kayda geçer, metin ya da fotoğraf değişirse rıza düşer, üye
-  istediği an geri çekebilir (yayından kalkar, kopyalar silinir). Hiç yayınlanmış hikâye yokken bölüm bunu
+  istediği an geri çekebilir (yayından kalkar, kopyalar silinir). Koç fotoğrafları üyenin galerisinden
+  **aylara göre gruplu** seçer ya da **kendi cihazından** yükler (aynı temizleme uygulanır); hikâyede
+  fotoğraflar en eski aydan yenisine sıralanır. Hikâyeler giriş yapmamış ziyaretçilere sitede tanıtım olarak
+  gösterilir. Hiç yayınlanmış hikâye yokken bölüm bunu
   açıkça söyler.
 - **Hatırlatma e-postaları**: her sabah 09:00'da üyeye (üyelik bitişi, haftalık değerlendirme, ölçüm) ve koça
   (ilgi bekleyenlerin özeti). SMTP yoksa **hiçbir şey gönderilmez ve gönderildi diye kaydedilmez**. Üye
@@ -575,6 +582,19 @@ değerle doldurmaz):
   (işaretleme çalıştırılmaz). Alt bilgideki bağlantılar ve ödeme penceresindeki onay cümlesi bu sayfalara gider.
 
 Herkese açık uçlar `GET /api/site` ve `GET /api/site/legal/{slug}`; üye verisi okumazlar.
+
+## Fiyatlar, WhatsApp, Programlar, Üye Verileri
+
+- **Paketler:** koçluk 1/3/6 ay = 2990 / 7490 / 12490 TL (3 aylık öne çıkar); beslenme 1/3/6 ay = 1290 / 2690 / 4590 TL
+  (6 aylık öne çıkar). 12 aylık paketler yayından kaldırıldı (silinmedi). İndirim yoksa üstü çizili fiyat gösterilmez.
+- **WhatsApp:** sağ altta yüzen yeşil düğme; numara **Ayarlar → sosyal bağlantılar → WhatsApp**'tan girilir
+  (numara girilmezse düğme görünmez). Tıklayınca hazır bir selamlama metniyle WhatsApp açılır.
+- **Tecrübelerim** ana sayfadan kaldırıldı; yalnızca `/yonetim/tecrubelerim`'de (salt okunur).
+- **Programlar** (`/yonetim/programlar`): aranabilir öğrenci seçimi + Antrenman / Beslenme sekmeleri; hazır şablon,
+  şablonu düzenleme ya da sıfırdan oluşturma. Seçim `?uye=` ile adreste kalır.
+- **Üye Verileri** (`/yonetim/uye-verileri`): aylık tablo + türetilmiş değerler (yağ %, yağsız kütle, FFMI, omuz/bel)
+  ve her satırda "Grafik Oluştur". Grafikler tarayıcıda çizilir (matplotlib gerekmez). Yağ % ve FFMI
+  **tahmindir** (ABD Donanması formülü; boyun/bel/kalça gerekir) ve tabloda yıldızla işaretlidir.
 
 ## Tecrübelerim
 

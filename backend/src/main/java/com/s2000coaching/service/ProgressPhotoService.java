@@ -92,6 +92,12 @@ public class ProgressPhotoService {
 			throw new BadRequestException(
 					"Fotoğraf en fazla %d MB olabilir.".formatted(maxBytes / (1024 * 1024)));
 		}
+		java.time.YearMonth month = java.time.YearMonth.from(takenOn);
+		if (photoRepository.existsByMemberIdAndPoseAndTakenOnBetween(member.getId(), pose,
+				month.atDay(1), month.atEndOfMonth())) {
+			throw new BadRequestException(
+					"Bu ay için bu pozun fotoğrafı zaten yüklendi. Değiştirmek için önce mevcut fotoğrafı silin.");
+		}
 		if (photoRepository.countByMemberId(member.getId()) >= maxPerMember) {
 			throw new BadRequestException(
 					"En fazla %d fotoğraf saklanabilir. Yeni yüklemek için eskilerden silin."

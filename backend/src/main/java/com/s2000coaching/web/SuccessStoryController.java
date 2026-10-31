@@ -62,6 +62,15 @@ public class SuccessStoryController {
 		return storyService.addPhoto(id, selection);
 	}
 
+	@PostMapping(value = "/api/admin/success-stories/{id}/photo-uploads", consumes = "multipart/form-data")
+	public StoryResponse uploadPhoto(@PathVariable UUID id,
+			@org.springframework.web.bind.annotation.RequestParam("file") org.springframework.web.multipart.MultipartFile file,
+			@org.springframework.web.bind.annotation.RequestParam("takenOn") java.time.LocalDate takenOn,
+			@org.springframework.web.bind.annotation.RequestParam(value = "caption", required = false) String caption)
+			throws java.io.IOException {
+		return storyService.addUploadedPhoto(id, takenOn, caption, file.getBytes());
+	}
+
 	@DeleteMapping("/api/admin/success-story-photos/{photoId}")
 	public StoryResponse removePhoto(@PathVariable UUID photoId) {
 		return storyService.removePhoto(photoId);

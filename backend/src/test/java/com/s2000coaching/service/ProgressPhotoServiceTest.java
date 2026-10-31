@@ -81,6 +81,18 @@ class ProgressPhotoServiceTest {
 	class Uploading {
 
 		@Test
+		void shouldRefuseASecondPhotoOfTheSamePoseInTheSameMonth() {
+			LocalDate day = LocalDate.now();
+			when(photoRepository.existsByMemberIdAndPoseAndTakenOnBetween(member.getId(), PhotoPose.ON_BICEPS,
+					day.withDayOfMonth(1), java.time.YearMonth.from(day).atEndOfMonth())).thenReturn(true);
+
+			assertThatThrownBy(() -> photoService.upload(member, day, PhotoPose.ON_BICEPS, "image/jpeg", JPEG, null))
+					.isInstanceOf(BadRequestException.class)
+					.hasMessageContaining("Bu ay");
+			verify(photoStorage, never()).store(any(), any());
+		}
+
+		@Test
 		void shouldStoreTheBytesAndKeepOnlyTheKey() {
 			when(photoStorage.store(JPEG, "image/jpeg")).thenReturn("ab/cd/key.jpg");
 			when(photoRepository.save(any())).thenAnswer(call -> call.getArgument(0));
