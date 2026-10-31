@@ -21,14 +21,15 @@ klasörlerdeki `DESIGN.md`).
 | `/uye` | Üye alanı | Giriş yapmış üyeler |
 | `/yonetim` | Yönetim paneli | E-posta + şifre ile giriş yapan koç hesapları |
 
-**Üye alanı** (masaüstünde sol menü, telefonda alt sekme çubuğu; altı yer, hepsi telefonda da görünür):
-`/uye/programlarim` · `/uye/olcumlerim` · `/uye/gecmis` · `/uye/fotograflar` · `/uye/mesajlar` · `/uye/profil`.
+**Üye alanı** (masaüstünde sol menü, telefonda alt sekme çubuğu; beş yer, hepsi telefonda da görünür):
+`/uye/programlarim` · `/uye/olcumlerim` · `/uye/gecmis` · `/uye/mesajlar` · `/uye/profil`.
 `/uye` Programlarım'a gider; eski adresler (`/uye/antrenman`, `/beslenme`, `/olcumler`, `/verilerim`, `/haftalik`,
 `/form-kontrol`) yeni yerlerine yönlenir. "Bugün" ve "Hikâyem" sayfaları kaldırıldı.
 
+- **İlk Adımlar** (Programlarım'ın üstünde): onay, başlangıç anketi, ilk aylık tablo, ilk haftalık takip ve program; yapılanlar işaretlenir, ilk dördü tamamlanıp program gelince kart kendiliğinden kaybolur (veriden hesaplanır, ayrıca saklanmaz).
 - **Programlarım** (sekmeler Antrenman / Beslenme): koçun atadığı programlar, yalnızca görüntülenir; gün
   sayfasında egzersiz görseli, video, setler ve notlar; beslenmede antrenman/dinlenme günü sekmesi.
-- **Ölçümlerim** (Aylık Ölçüler / Haftalık Takip): aylık tablo formu her zaman açıktır; kaydedilen ay hemen
+- **Ölçümlerim** (Aylık Ölçüler / Haftalık Takip / Fotoğraflar; `/uye/fotograflar` buraya yönlenir): aylık tablo formu her zaman açıktır; kaydedilen ay hemen
   altında görünür, geçmiş aylar da girilir. **Kaydet** "Verilerin doğru olduğundan emin misiniz? Sonradan
   değiştirilemez" onayı ister ve üye için ne düzenleme ne silme ucu vardır (düzeltmeyi yalnızca koç yapar).
   Haftalık takip tek formdur: kilo + uyku/stres/enerji/açlık + beslenmeye uyum + **istek ve şikayetler**;
@@ -38,6 +39,7 @@ klasörlerdeki `DESIGN.md`).
   silinir. Beslenmede günlük **kalori, makro (g) ve su (L)** formu ve haftalık özet/fotoğraf albümü.
 - **Mesajlar** (Mesaj At / Hareket Formu Gönder): koçla konuşma (konu düğmeleri ilk cümleyi doldurur) ve
   hareketin YouTube "listelenmemiş" video bağlantısını gönderip koçun yazılı yanıtını alma.
+- **E-posta bildirimleri**: koç bir mesaja, form videosuna ya da haftalık takibe yanıt verince üyeye "yanıt var" e-postası gider (içeriği yazılmaz, yalnızca bağlantı); hatırlatma e-postalarının anahtarına bağlıdır. Hatırlatmalara aylık tablo da eklendi: geçen ayın tablosu girilmediyse ayda bir kez.
 - **Profil**: üyelik, başlangıç anketi, bilgiler, hatırlatmalar ve en altta şifre değiştirme.
 
 `/uye/gecmis` ve `/uye/fotograflar` telefon sekme çubuğunda yoktur: çubuk genişliği sekmelere böler, altıdan sonrası

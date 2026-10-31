@@ -17,7 +17,8 @@ class ReminderPlannerTest {
 
 	private static Signals signals(boolean enabled, boolean consent, LocalDate joined, LocalDate lastMeasurement,
 			LocalDate lastCheckIn, LocalDate membershipEnd) {
-		return new Signals("Ahmet Yılmaz", enabled, consent, joined, lastMeasurement, lastCheckIn, membershipEnd);
+		// The monthly table is up to date here, so the older rules are tested on their own.
+		return new Signals("Ahmet Yılmaz", enabled, consent, joined, lastMeasurement, lastCheckIn, membershipEnd, "2026-09");
 	}
 
 	private static List<String> kinds(List<Reminder> reminders) {
@@ -114,5 +115,32 @@ class ReminderPlannerTest {
 
 		assertThat(kinds(plan)).containsExactly("MEASUREMENT");
 		assertThat(plan.get(0).occasion()).isEqualTo("none");
+	}
+
+	@Test
+	void shouldAskOnceForAMonthlyTableThatWasNotEntered() {
+		var behind = new Signals("Ahmet Yılmaz", true, true, LONG_AGO, TUESDAY, TUESDAY, null, "2026-08");
+
+		var plan = ReminderPlanner.plan(behind, TUESDAY, URL);
+
+		assertThat(kinds(plan)).containsExactly("MONTHLY_RECORD");
+		assertThat(plan.get(0).occasion()).isEqualTo("2026-09");
+		assertThat(plan.get(0).body()).contains("/uye/olcumlerim?sekme=aylik");
+	}
+
+	@Test
+	void shouldNotAskForAMonthlyTableWhenLastMonthIsInOrTheMemberIsNew() {
+		var current = new Signals("Ahmet Yılmaz", true, true, LONG_AGO, TUESDAY, TUESDAY, null, "2026-09");
+		var newcomer = new Signals("Ahmet Yılmaz", true, true, LocalDate.of(2026, 10, 20), TUESDAY, TUESDAY, null, null);
+
+		assertThat(ReminderPlanner.plan(current, TUESDAY, URL)).isEmpty();
+		assertThat(ReminderPlanner.plan(newcomer, TUESDAY, URL)).isEmpty();
+	}
+
+	@Test
+	void shouldPointTheWeeklyReminderAtTheNewFollowUpPage() {
+		var plan = ReminderPlanner.plan(signals(true, true, LONG_AGO, MONDAY, null, null), MONDAY, URL);
+
+		assertThat(plan).anySatisfy(reminder -> assertThat(reminder.body()).contains("/uye/olcumlerim?sekme=haftalik"));
 	}
 }

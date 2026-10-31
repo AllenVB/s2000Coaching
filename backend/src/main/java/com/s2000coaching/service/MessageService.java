@@ -33,9 +33,11 @@ public class MessageService {
 	private final MessageRepository messageRepository;
 	private final MemberRepository memberRepository;
 	private final MemberService memberService;
+	private final MemberNotifier memberNotifier;
 
 	public MessageService(MessageRepository messageRepository, MemberRepository memberRepository,
-			MemberService memberService) {
+			MemberService memberService, MemberNotifier memberNotifier) {
+		this.memberNotifier = memberNotifier;
 		this.messageRepository = messageRepository;
 		this.memberRepository = memberRepository;
 		this.memberService = memberService;
@@ -63,7 +65,10 @@ public class MessageService {
 
 	@Transactional
 	public MessageResponse sendAsCoach(UUID memberId, String body) {
-		return send(memberService.requireMember(memberId), MessageSender.COACH, body);
+		Member member = memberService.requireMember(memberId);
+		MessageResponse sent = send(member, MessageSender.COACH, body);
+		memberNotifier.coachReplied(member, "mesajınıza", "/uye/mesajlar");
+		return sent;
 	}
 
 	/** How many of the coach's messages the member has not opened yet. */

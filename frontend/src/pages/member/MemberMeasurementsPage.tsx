@@ -7,6 +7,7 @@ import { HealthDataConsent } from '@/components/member/HealthDataConsent'
 import { MeasurementHistory } from '@/components/member/MeasurementHistory'
 import { WeeklyCheckForm } from '@/components/member/WeeklyCheckForm'
 import { MonthlyRecordsPanel } from '@/components/records/MonthlyRecordsPanel'
+import { MemberPhotosPage } from '@/pages/member/MemberPhotosPage'
 import { PageHeading } from '@/components/ui/PageHeading'
 import { SectionTabs, tabFromParam } from '@/components/ui/SectionTabs'
 import { useMemberProfileSync } from '@/hooks/useMemberProfileSync'
@@ -14,6 +15,7 @@ import { useMemberProfileSync } from '@/hooks/useMemberProfileSync'
 const TABS = [
   { value: 'aylik', label: 'Aylık Ölçüler' },
   { value: 'haftalik', label: 'Haftalık Takip' },
+  { value: 'fotograflar', label: 'Fotoğraflar' },
 ] as const
 
 /**
@@ -33,7 +35,7 @@ export function MemberMeasurementsPage() {
     <>
       <PageHeading
         title="Ölçümlerim"
-        description="Aylık vücut ölçülerinizi ve haftalık kilo ile değerlendirmenizi girersiniz; geçmiş kayıtlarınız aşağıda durur."
+        description="Aylık vücut ölçülerinizi, haftalık kilo ile değerlendirmenizi ve gelişim fotoğraflarınızı buradan girersiniz; geçmiş kayıtlarınız altında durur."
       />
       {/* Body figures and weight are health data: nothing is shown or written before the member agrees. */}
       {!member.healthDataConsentAt ? (
@@ -41,7 +43,7 @@ export function MemberMeasurementsPage() {
       ) : (
         <>
           <SectionTabs label="Ölçüm türü" tabs={[...TABS]} value={tab} onChange={(next) => setParams({ sekme: next }, { replace: true })} />
-          {tab === 'aylik' ? <MonthlyTab /> : <WeeklyTab />}
+          {tab === 'aylik' ? <MonthlyTab /> : tab === 'haftalik' ? <WeeklyTab /> : <MemberPhotosPage embedded />}
         </>
       )}
     </>

@@ -24,11 +24,14 @@ public class CheckInService implements MemberDataEraser {
 	private final CheckInRepository checkInRepository;
 	private final MemberService memberService;
 	private final Clock clock;
+	private final MemberNotifier memberNotifier;
 
-	public CheckInService(CheckInRepository checkInRepository, MemberService memberService, Clock clock) {
+	public CheckInService(CheckInRepository checkInRepository, MemberService memberService, Clock clock,
+			MemberNotifier memberNotifier) {
 		this.checkInRepository = checkInRepository;
 		this.memberService = memberService;
 		this.clock = clock;
+		this.memberNotifier = memberNotifier;
 	}
 
 	/** The Monday of the week containing {@code day}. */
@@ -70,6 +73,7 @@ public class CheckInService implements MemberDataEraser {
 		CheckIn checkIn = checkInRepository.findById(checkInId)
 				.orElseThrow(() -> new NotFoundException("Değerlendirme bulunamadı."));
 		checkIn.reply(reply.trim(), Instant.now(clock));
+		memberNotifier.coachReplied(checkIn.getMember(), "haftalık değerlendirmenize", "/uye/olcumlerim?sekme=haftalik");
 		return CheckInResponse.from(checkIn);
 	}
 

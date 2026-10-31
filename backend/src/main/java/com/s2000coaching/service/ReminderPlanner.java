@@ -2,6 +2,7 @@ package com.s2000coaching.service;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
@@ -24,8 +25,9 @@ public final class ReminderPlanner {
 	private ReminderPlanner() {
 	}
 
+	/** {@code lastMonthlyPeriod} is the newest month ("2026-09") the member filled in a table for, or null. */
 	public record Signals(String fullName, boolean remindersEnabled, boolean hasHealthConsent, LocalDate joinedOn,
-			LocalDate lastMeasurement, LocalDate lastCheckInWeek, LocalDate membershipEnd) {
+			LocalDate lastMeasurement, LocalDate lastCheckInWeek, LocalDate membershipEnd, String lastMonthlyPeriod) {
 	}
 
 	public record Reminder(String kind, String occasion, String subject, String body) {
@@ -65,9 +67,10 @@ public final class ReminderPlanner {
 			boolean joinedBefore = s.joinedOn() != null && s.joinedOn().isBefore(today.minusDays(3));
 			boolean missing = s.lastCheckInWeek() == null || s.lastCheckInWeek().isBefore(lastWeek);
 			if (joinedBefore && missing) {
-				due.add(new Reminder("WEEKLY_CHECKIN", lastWeek.toString(), "Haftalık değerlendirmenizi gönderin",
-						greeting + "Geçen haftanın değerlendirmesini henüz göndermediniz. Bir dakikanızı alır; "
-								+ "koçunuz programınızı bu bilgilere göre ayarlıyor: " + siteUrl + "/uye/haftalik" + signature));
+				due.add(new Reminder("WEEKLY_CHECKIN", lastWeek.toString(), "Haftalık takibinizi gönderin",
+						greeting + "Geçen haftanın takibini (kilonuz, haftanın nasıl geçtiği, istek ve şikayetleriniz) "
+								+ "henüz göndermediniz. Bir dakikanızı alır; koçunuz programınızı bu bilgilere göre "
+								+ "ayarlıyor: " + siteUrl + "/uye/olcumlerim?sekme=haftalik" + signature));
 			}
 		}
 
@@ -79,7 +82,19 @@ public final class ReminderPlanner {
 				due.add(new Reminder("MEASUREMENT", s.lastMeasurement() == null ? "none" : s.lastMeasurement().toString(),
 						"Yeni ölçümünüzü girin",
 						greeting + "Son ölçümünüzün üzerinden %d günden fazla geçti. Gelişiminizin izlenebilmesi için "
-								.formatted(MEASUREMENT_QUIET_DAYS) + "kilonuzu girin: " + siteUrl + "/uye/olcumler" + signature));
+								.formatted(MEASUREMENT_QUIET_DAYS) + "kilonuzu girin: " + siteUrl + "/uye/olcumlerim?sekme=haftalik" + signature));
+			}
+		}
+
+		// Monthly tables: once a month has passed without one, ask for it once.
+		if (s.hasHealthConsent() && s.joinedOn() != null && s.joinedOn().isBefore(today.withDayOfMonth(1))) {
+			String previous = YearMonth.from(today).minusMonths(1).toString();
+			boolean missing = s.lastMonthlyPeriod() == null || s.lastMonthlyPeriod().compareTo(previous) < 0;
+			if (missing) {
+				due.add(new Reminder("MONTHLY_RECORD", previous, "Aylık ölçülerinizi girin",
+						greeting + "Geçen ayın ölçü tablosunu (boy, kilo ve çevre ölçüleriniz) henüz girmediniz. "
+								+ "Kaydedilen veriler sonradan değiştirilemediği için sakin bir anda, doğru ölçerek girin: "
+								+ siteUrl + "/uye/olcumlerim?sekme=aylik" + signature));
 			}
 		}
 		return due;

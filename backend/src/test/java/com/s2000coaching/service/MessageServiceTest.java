@@ -33,13 +33,16 @@ class MessageServiceTest {
 	@Mock
 	private MemberService memberService;
 
+	@Mock
+	private MemberNotifier notifier;
+
 	private MessageService messageService;
 	private Member member;
 	private Member other;
 
 	@BeforeEach
 	void setUp() {
-		messageService = new MessageService(messageRepository, memberRepository, memberService);
+		messageService = new MessageService(messageRepository, memberRepository, memberService, notifier);
 		member = new Member(UUID.randomUUID(), "sporcu@example.com", "Ahmet Yılmaz", "+905551112233", 182,
 				new BigDecimal("84.50"), "5 yıl fitness", MemberStatus.ACTIVE, Instant.now());
 		other = new Member(UUID.randomUUID(), "baska@example.com", "Zeynep Kaya", "+905551112244", 168,

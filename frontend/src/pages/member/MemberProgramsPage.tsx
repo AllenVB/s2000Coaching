@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom'
 
 import { useMyNutritionPlan } from '@/api/nutritionApi'
 import { useMyTrainingPlan } from '@/api/trainingApi'
+import { FirstSteps } from '@/components/member/FirstSteps'
 import { RenewalNotice } from '@/components/member/MembershipCard'
 import { DayTypeTabs } from '@/components/nutrition/DayTypeTabs'
 import { MacroSummary } from '@/components/nutrition/MacroSummary'
@@ -31,6 +32,9 @@ export function MemberProgramsPage() {
       />
       <RenewalNotice />
       <div className="mt-6">
+        <FirstSteps />
+      </div>
+      <div>
         <SectionTabs label="Program türü" tabs={[...TABS]} value={tab} onChange={(next) => setParams({ sekme: next }, { replace: true })} />
         {tab === 'antrenman' ? <TrainingProgram /> : <NutritionProgram />}
       </div>

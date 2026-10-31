@@ -15,15 +15,16 @@ import { useMemberProfileSync } from '@/hooks/useMemberProfileSync'
 import { formatDate } from '@/lib/date'
 import { PHOTO_POSES } from '@/types/member'
 
-export function MemberPhotosPage() {
+/** The photo gallery; `embedded` drops the page heading when it sits inside a tab of Ölçümlerim. */
+export function MemberPhotosPage({ embedded = false }: { embedded?: boolean }) {
   return (
     <MemberPhotoSourceProvider>
-      <PhotosView />
+      <PhotosView embedded={embedded} />
     </MemberPhotoSourceProvider>
   )
 }
 
-function PhotosView() {
+function PhotosView({ embedded }: { embedded: boolean }) {
   const { member } = useMemberProfileSync()
   const { data: photos, isLoading, isError, error } = useMyPhotos()
   const deletePhoto = useDeleteMyPhoto()
@@ -49,10 +50,16 @@ function PhotosView() {
 
   return (
     <>
-      <PageHeading
-        title="Fotoğraflar"
-        description="Tartının göstermediği değişimi gösterirler. Yalnızca siz ve koçunuz görebilir."
-      />
+      {embedded ? (
+        <p className="mb-6 text-xs leading-relaxed text-text-secondary">
+          Tartının göstermediği değişimi gösterirler. Yalnızca siz ve koçunuz görebilir.
+        </p>
+      ) : (
+        <PageHeading
+          title="Fotoğraflar"
+          description="Tartının göstermediği değişimi gösterirler. Yalnızca siz ve koçunuz görebilir."
+        />
+      )}
 
       <div className="space-y-6">
         <PhotoUploadForm />

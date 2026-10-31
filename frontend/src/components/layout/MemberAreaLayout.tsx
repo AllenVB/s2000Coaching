@@ -9,14 +9,13 @@ import { useFlushPendingWorkouts } from '@/api/trainingApi'
 import { clearCachedPlan } from '@/lib/offline'
 import { useOnlineStatus } from '@/hooks/useOnlineStatus'
 import { MemberAuthProvider, useMemberAuth } from '@/context/MemberAuthContext'
-import { ChartIcon, ChatIcon, CameraIcon, DumbbellIcon, HistoryIcon, UserIcon } from '@/components/ui/icons'
+import { ChartIcon, ChatIcon, DumbbellIcon, HistoryIcon, UserIcon } from '@/components/ui/icons'
 
-/** Six places, every one on the phone's tab bar too: nothing is hidden on a small screen. */
+/** Five places, every one on the phone's tab bar too: nothing is hidden on a small screen. */
 const navItems: PortalNavItem[] = [
   { to: '/uye/programlarim', label: 'Programlarım', icon: DumbbellIcon },
   { to: '/uye/olcumlerim', label: 'Ölçümlerim', icon: ChartIcon },
   { to: '/uye/gecmis', label: 'Geçmiş', icon: HistoryIcon },
-  { to: '/uye/fotograflar', label: 'Fotoğraflar', icon: CameraIcon },
   { to: '/uye/mesajlar', label: 'Mesajlar', icon: ChatIcon },
   { to: '/uye/profil', label: 'Profil', icon: UserIcon },
 ]

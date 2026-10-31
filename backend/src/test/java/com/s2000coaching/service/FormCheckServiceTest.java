@@ -35,13 +35,16 @@ class FormCheckServiceTest {
 	@Mock
 	private MemberService memberService;
 
+	@Mock
+	private MemberNotifier notifier;
+
 	private FormCheckService service;
 	private Member member;
 
 	@BeforeEach
 	void setUp() {
 		service = new FormCheckService(repository, memberService,
-				Clock.fixed(Instant.parse("2026-10-27T09:00:00Z"), ZoneOffset.UTC));
+				Clock.fixed(Instant.parse("2026-10-27T09:00:00Z"), ZoneOffset.UTC), notifier);
 		member = new Member(UUID.randomUUID(), "a@example.com", "Ahmet", "+905551112233", 180,
 				new BigDecimal("80"), "x", MemberStatus.ACTIVE, Instant.now());
 	}

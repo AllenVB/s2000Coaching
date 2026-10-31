@@ -9,6 +9,7 @@ import com.s2000coaching.repository.CoachAccountRepository;
 import com.s2000coaching.repository.MeasurementRepository;
 import com.s2000coaching.repository.MemberRepository;
 import com.s2000coaching.repository.MembershipRepository;
+import com.s2000coaching.repository.MonthlyRecordRepository;
 import com.s2000coaching.repository.ReminderLogRepository;
 import com.s2000coaching.service.ReminderPlanner.Reminder;
 import com.s2000coaching.service.ReminderPlanner.Signals;
@@ -49,6 +50,7 @@ public class ReminderService implements MemberDataEraser {
 	private final ReminderLogRepository reminderLogRepository;
 	private final CoachAccountRepository coachAccountRepository;
 	private final AttentionService attentionService;
+	private final MonthlyRecordRepository monthlyRecordRepository;
 	private final NotificationMailSender mailSender;
 	private final Clock clock;
 	private final String siteUrl;
@@ -57,7 +59,7 @@ public class ReminderService implements MemberDataEraser {
 	public ReminderService(MemberRepository memberRepository, MeasurementRepository measurementRepository,
 			CheckInRepository checkInRepository, MembershipRepository membershipRepository,
 			ReminderLogRepository reminderLogRepository, CoachAccountRepository coachAccountRepository,
-			AttentionService attentionService, NotificationMailSender mailSender, Clock clock,
+			AttentionService attentionService, MonthlyRecordRepository monthlyRecordRepository, NotificationMailSender mailSender, Clock clock,
 			@Value("${app.public-url}") String siteUrl, @Value("${app.reminders.enabled:true}") boolean enabled) {
 		this.memberRepository = memberRepository;
 		this.measurementRepository = measurementRepository;
@@ -66,6 +68,7 @@ public class ReminderService implements MemberDataEraser {
 		this.reminderLogRepository = reminderLogRepository;
 		this.coachAccountRepository = coachAccountRepository;
 		this.attentionService = attentionService;
+		this.monthlyRecordRepository = monthlyRecordRepository;
 		this.mailSender = mailSender;
 		this.clock = clock;
 		this.siteUrl = siteUrl.replaceAll("/+$", "");
@@ -93,6 +96,10 @@ public class ReminderService implements MemberDataEraser {
 		Map<UUID, LocalDate> lastMeasurement = dates(measurementRepository.latestMeasuredOnPerMember());
 		Map<UUID, LocalDate> lastCheckIn = dates(checkInRepository.latestWeekPerMember());
 		Map<UUID, LocalDate> membershipEnd = dates(membershipRepository.latestEndPerMember());
+		Map<UUID, String> lastMonthly = new HashMap<>();
+		for (Object[] row : monthlyRecordRepository.latestPeriodPerMember()) {
+			lastMonthly.put((UUID) row[0], (String) row[1]);
+		}
 		Set<String> alreadySent = new HashSet<>();
 		for (Object[] row : reminderLogRepository.allSent()) {
 			alreadySent.add(row[0] + "|" + row[1] + "|" + row[2]);
@@ -103,7 +110,8 @@ public class ReminderService implements MemberDataEraser {
 			var signals = new Signals(member.getFullName(), member.isRemindersEnabled(),
 					member.hasHealthDataConsent(), (member.getVerifiedAt() != null ? member.getVerifiedAt() : member.getCreatedAt())
 							.atZone(zone).toLocalDate(),
-					lastMeasurement.get(member.getId()), lastCheckIn.get(member.getId()), membershipEnd.get(member.getId()));
+					lastMeasurement.get(member.getId()), lastCheckIn.get(member.getId()), membershipEnd.get(member.getId()),
+					lastMonthly.get(member.getId()));
 			for (Reminder reminder : ReminderPlanner.plan(signals, today, siteUrl)) {
 				String key = member.getId() + "|" + reminder.kind() + "|" + reminder.occasion();
 				if (alreadySent.contains(key)) {
