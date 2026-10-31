@@ -6,7 +6,9 @@ import type { CoachingPackage } from '@/types/package'
 
 export function PricingCard({ pkg }: { pkg: CoachingPackage }) {
   const { addToCart } = useCart()
-  const discountPercent = Math.round((1 - pkg.priceMinor / pkg.originalPriceMinor) * 100)
+  // A struck-through "old" price only when there is one: equal prices mean no discount.
+  const hasDiscount = pkg.originalPriceMinor > pkg.priceMinor
+  const discountPercent = hasDiscount ? Math.round((1 - pkg.priceMinor / pkg.originalPriceMinor) * 100) : 0
 
   if (pkg.featured) {
     return (
@@ -24,7 +26,7 @@ export function PricingCard({ pkg }: { pkg: CoachingPackage }) {
             <div className="my-6 rounded-2xl border border-border bg-surface/80 p-4">
               <div className="flex flex-wrap items-baseline gap-2">
                 <span className="font-display text-3xl font-black text-primary">{formatMinor(pkg.priceMinor)}</span>
-                <span className="text-sm text-text-muted line-through">{formatMinor(pkg.originalPriceMinor)}</span>
+                {hasDiscount ? <span className="text-sm text-text-muted line-through">{formatMinor(pkg.originalPriceMinor)}</span> : null}
                 {discountPercent > 0 ? (
                   <span className="rounded-full bg-accent-orange/15 px-2 py-0.5 text-[11px] font-bold uppercase text-accent-orange">
                     -%{discountPercent}
@@ -65,7 +67,7 @@ export function PricingCard({ pkg }: { pkg: CoachingPackage }) {
             <span className="font-display text-3xl font-extrabold text-text-primary">
               {formatMinor(pkg.priceMinor)}
             </span>
-            <span className="text-xs text-text-muted line-through">{formatMinor(pkg.originalPriceMinor)}</span>
+            {hasDiscount ? <span className="text-xs text-text-muted line-through">{formatMinor(pkg.originalPriceMinor)}</span> : null}
           </div>
         </div>
 
