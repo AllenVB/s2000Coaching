@@ -1,0 +1,16 @@
+databaseChangeLog:
+  - changeSet:
+      id: 059-package-discounts
+      author: s2000
+      comment: >-
+        Struck-through list prices so the site shows a percentage discount. The biggest discount sits on the
+        featured tier of each category: coaching 3 months (-38%), nutrition 6 months (-39%); the other tiers
+        step down from there (coaching 1 mo -15%, 6 mo -34%; nutrition 1 mo -14%, 3 mo -25%). Only
+        original_price_minor changes; the selling prices stay as set in 058.
+      changes:
+        - update: { tableName: coaching_package, columns: [ { column: { name: original_price_minor, valueNumeric: 350000 } } ], where: "slug = 'kocluk-1-ay'" }
+        - update: { tableName: coaching_package, columns: [ { column: { name: original_price_minor, valueNumeric: 1200000 } } ], where: "id = '11111111-1111-4111-8111-111111111101'" }
+        - update: { tableName: coaching_package, columns: [ { column: { name: original_price_minor, valueNumeric: 1900000 } } ], where: "id = '11111111-1111-4111-8111-111111111102'" }
+        - update: { tableName: coaching_package, columns: [ { column: { name: original_price_minor, valueNumeric: 150000 } } ], where: "id = '11111111-1111-4111-8111-111111111104'" }
+        - update: { tableName: coaching_package, columns: [ { column: { name: original_price_minor, valueNumeric: 360000 } } ], where: "id = '11111111-1111-4111-8111-111111111105'" }
+        - update: { tableName: coaching_package, columns: [ { column: { name: original_price_minor, valueNumeric: 750000 } } ], where: "id = '11111111-1111-4111-8111-111111111106'" }

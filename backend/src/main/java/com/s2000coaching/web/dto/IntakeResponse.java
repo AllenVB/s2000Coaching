@@ -6,11 +6,12 @@ import java.time.LocalDate;
 import java.util.UUID;
 
 public record IntakeResponse(UUID id, LocalDate consumedOn, int calories, Integer proteinG, Integer carbsG,
-		Integer fatG, Integer sodiumMg, String note, Instant updatedAt, java.math.BigDecimal waterLiters) {
+		Integer fatG, Integer sodiumMg, String note, Instant updatedAt, java.math.BigDecimal waterLiters,
+		com.s2000coaching.domain.IntakeDayType dayType) {
 
 	public static IntakeResponse from(MemberIntake intake) {
 		return new IntakeResponse(intake.getId(), intake.getConsumedOn(), intake.getCalories(),
 				intake.getProteinG(), intake.getCarbsG(), intake.getFatG(), intake.getSodiumMg(),
-				intake.getNote(), intake.getUpdatedAt(), intake.getWaterLiters());
+				intake.getNote(), intake.getUpdatedAt(), intake.getWaterLiters(), intake.getDayType());
 	}
 }

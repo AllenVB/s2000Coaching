@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 
+import { BodyCompositionCalculator } from '@/components/calculators/BodyCompositionCalculator'
 import { WhatsAppButton } from '@/components/layout/WhatsAppButton'
 import { SimplePublicHeader } from '@/components/layout/SimplePublicHeader'
 import { Button } from '@/components/ui/Button'
@@ -66,7 +67,7 @@ export function CalculatorsPage() {
           Hesaplayıcılar
         </h1>
         <p className="mt-3 max-w-2xl text-sm leading-relaxed text-text-secondary">
-          Günlük kalori ihtiyacını, makro dağılımını ve vücut kitle indeksini tahmin et. Yazdıkların
+          Günlük kalori ihtiyacını, makro dağılımını, vücut kitle indeksini, yağ oranını, yağsız kütleni ve omuz/bel oranını tahmin et. Yazdıkların
           tarayıcından çıkmaz, hiçbir yere kaydedilmez.
         </p>
 
@@ -90,6 +91,12 @@ export function CalculatorsPage() {
             </Field>
           </div>
         </section>
+
+        <BodyCompositionCalculator
+          sex={sex}
+          heightCm={typeof heightValue === 'number' ? heightValue : null}
+          weightKg={typeof weightValue === 'number' ? weightValue : null}
+        />
 
         <section className="mt-6 rounded-2xl border border-border bg-surface p-6" aria-labelledby="kalori-baslik">
           <h2 id="kalori-baslik" className="mb-1 text-sm font-bold uppercase tracking-wider text-text-primary">

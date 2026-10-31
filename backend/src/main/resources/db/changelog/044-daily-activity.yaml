@@ -1,0 +1,56 @@
+databaseChangeLog:
+  - changeSet:
+      id: 060-intake-day-type
+      author: s2000
+      comment: >-
+        Whether a food-log day was a training day or a rest day, since the calories differ between them.
+        Optional: old rows and members who skip it stay null.
+      changes:
+        - addColumn:
+            tableName: member_intake
+            columns:
+              - column: { name: day_type, type: "varchar(12)" }
+  - changeSet:
+      id: 061-create-member-activity-table
+      author: s2000
+      comment: >-
+        Steps and cardio minutes, one row per member per day; re-submitting a date replaces that day. Either
+        figure may be empty. Health data under KVKK like measurements.
+      changes:
+        - createTable:
+            tableName: member_activity
+            columns:
+              - column:
+                  name: id
+                  type: uuid
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: member_id
+                  type: uuid
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_member_activity_member
+                    references: member(id)
+              - column:
+                  name: performed_on
+                  type: date
+                  constraints:
+                    nullable: false
+              - column: { name: steps, type: int }
+              - column: { name: cardio_minutes, type: int }
+              - column:
+                  name: created_at
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false
+              - column:
+                  name: updated_at
+                  type: timestamp with time zone
+                  constraints:
+                    nullable: false
+        - addUniqueConstraint:
+            tableName: member_activity
+            columnNames: member_id, performed_on
+            constraintName: uk_member_activity_member_day

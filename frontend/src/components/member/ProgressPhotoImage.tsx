@@ -1,3 +1,6 @@
+import { useState } from 'react'
+
+import { PhotoLightbox } from '@/components/member/PhotoLightbox'
 import { usePhotoObjectUrl } from '@/api/photosApi'
 import { formatDate } from '@/lib/date'
 import type { ProgressPhoto } from '@/types/member'
@@ -10,11 +13,17 @@ import type { ProgressPhoto } from '@/types/member'
 export function ProgressPhotoImage({
   photo,
   className = '',
+  zoomable = false,
+  caption,
 }: {
   photo: Pick<ProgressPhoto, 'id' | 'takenOn'>
   className?: string
+  /** Tapping opens the photo full size with zoom. */
+  zoomable?: boolean
+  caption?: string
 }) {
   const { url, error } = usePhotoObjectUrl(photo.id)
+  const [open, setOpen] = useState(false)
 
   if (error) {
     return (
@@ -30,11 +39,18 @@ export function ProgressPhotoImage({
     return <div className={`animate-pulse rounded-xl bg-surface-elevated ${className}`} />
   }
 
+  const alt = `${formatDate(photo.takenOn)} tarihli gelişim fotoğrafı`
+  const image = <img src={url} alt={alt} className={`rounded-xl object-cover ${className}`} />
+
+  if (!zoomable) {
+    return image
+  }
   return (
-    <img
-      src={url}
-      alt={`${formatDate(photo.takenOn)} tarihli gelişim fotoğrafı`}
-      className={`rounded-xl object-cover ${className}`}
-    />
+    <>
+      <button type="button" onClick={() => setOpen(true)} aria-label={`${alt} — büyüt`} className="block w-full cursor-zoom-in">
+        {image}
+      </button>
+      {open ? <PhotoLightbox photoId={photo.id} caption={caption ?? alt} onClose={() => setOpen(false)} /> : null}
+    </>
   )
 }

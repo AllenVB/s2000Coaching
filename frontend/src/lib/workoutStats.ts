@@ -1,12 +1,8 @@
 import type { WorkoutLog } from '@/types/training'
 
-/**
- * Total weight moved in a session: every set's weight times its reps. Bodyweight sets carry
- * no weight, so they contribute nothing here — a session made only of them returns 0, which
- * the history page shows as "—" rather than a misleading zero.
- */
-export function totalVolumeKg(log: WorkoutLog): number {
-  return log.sets.reduce((sum, set) => sum + (set.weightKg ?? 0) * set.reps, 0)
+/** How many different exercises a session had a set for (4–12 is typical, so this reads better than a kg total). */
+export function exerciseCount(log: WorkoutLog): number {
+  return new Set(log.sets.map((set) => set.planExerciseId)).size
 }
 
 export function totalReps(log: WorkoutLog): number {

@@ -5,7 +5,9 @@ import type { WorkoutLog } from '@/types/training'
 
 import { useDeleteMyWorkoutLog, useMyTrainingPlan, useMyTrainingStats, useMyWorkoutLogs } from '@/api/trainingApi'
 import { useMemberWeeklyNutrition } from '@/api/weeklyNutritionApi'
+import { ActivityLog } from '@/components/history/ActivityLog'
 import { DailyIntakeLog } from '@/components/history/DailyIntakeLog'
+import { WeekTracker } from '@/components/history/WeekTracker'
 import { WorkoutTableLogger } from '@/components/history/WorkoutTableLogger'
 import { HealthDataConsent } from '@/components/member/HealthDataConsent'
 import { WeeklyNutritionAlbum } from '@/components/nutrition/WeeklyNutritionAlbum'
@@ -16,11 +18,12 @@ import { ComingSoonCard, PageHeading } from '@/components/ui/PageHeading'
 import { SectionTabs, tabFromParam } from '@/components/ui/SectionTabs'
 import { useMemberProfileSync } from '@/hooks/useMemberProfileSync'
 import { currentMonthIso, formatDate, todayIso } from '@/lib/date'
-import { formatMonth, groupByMonth, totalReps, totalVolumeKg } from '@/lib/workoutStats'
+import { formatMonth, groupByMonth, exerciseCount, totalReps } from '@/lib/workoutStats'
 
 const TABS = [
   { value: 'antrenman', label: 'Antrenman' },
   { value: 'beslenme', label: 'Beslenme' },
+  { value: 'aktivite', label: 'Kardiyo & Adım' },
 ] as const
 
 /**
@@ -37,10 +40,16 @@ export function MemberHistoryPage() {
     <>
       <PageHeading
         title="Geçmiş"
-        description="Yaptığınız antrenmanın tekrar sayılarını ve günlük beslenmenizi buraya girersiniz; geçmiş günleri tarihini seçerek girebilir, düzeltebilirsiniz."
+        description="Yaptığınız antrenmanın tekrar sayılarını, günlük beslenmenizi, adım ve kardiyonuzu buraya girersiniz; geçmiş günleri tarihini seçerek girebilir, düzeltebilirsiniz."
       />
       <SectionTabs label="Kayıt türü" tabs={[...TABS]} value={tab} onChange={(next) => setParams({ sekme: next }, { replace: true })} />
-      {tab === 'antrenman' ? <WorkoutHistory /> : member?.healthDataConsentAt ? <NutritionHistory /> : member ? <HealthDataConsent /> : null}
+      {tab === 'antrenman' ? (
+        <WorkoutHistory />
+      ) : member?.healthDataConsentAt ? (
+        tab === 'aktivite' ? <ActivityLog /> : <NutritionHistory />
+      ) : member ? (
+        <HealthDataConsent />
+      ) : null}
     </>
   )
 }
@@ -103,6 +112,8 @@ function WorkoutHistory() {
         )}
       </div>
 
+      <WeekTracker trainedDates={new Set((logs ?? []).map((log) => log.performedOn))} />
+
       {logs && logs.length > 0 ? (
         <>
           <SummaryRow logs={logs} />
@@ -150,14 +161,14 @@ function WorkoutHistory() {
 }
 
 function SummaryRow({ logs }: { logs: WorkoutLog[] }) {
-  const volume = logs.reduce((sum, log) => sum + totalVolumeKg(log), 0)
+  const sets = logs.reduce((sum, log) => sum + log.sets.length, 0)
   const thisMonth = logs.filter((log) => log.performedOn.startsWith(currentMonthIso()))
 
   return (
     <div className="grid gap-3 sm:grid-cols-3">
       <SummaryCard label="Toplam Antrenman" value={String(logs.length)} />
       <SummaryCard label="Bu Ay" value={String(thisMonth.length)} />
-      <SummaryCard label="Toplam Kaldırılan" value={volume > 0 ? `${Math.round(volume).toLocaleString('tr-TR')} kg` : '—'} />
+      <SummaryCard label="Toplam Set" value={sets.toLocaleString('tr-TR')} />
     </div>
   )
 }
@@ -172,8 +183,6 @@ function SummaryCard({ label, value }: { label: string; value: string }) {
 }
 
 function LogRow({ log, onEdit, onDelete }: { log: WorkoutLog; onEdit?: () => void; onDelete: () => void }) {
-  const volume = totalVolumeKg(log)
-
   return (
     <li className="rounded-xl border border-border bg-surface p-4">
       <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
@@ -201,8 +210,7 @@ function LogRow({ log, onEdit, onDelete }: { log: WorkoutLog; onEdit?: () => voi
         </span>
       </div>
       <p className="mt-1.5 text-xs text-text-secondary">
-        {log.sets.length} set · {totalReps(log)} tekrar
-        {volume > 0 ? ` · ${Math.round(volume).toLocaleString('tr-TR')} kg` : ''}
+        {exerciseCount(log)} hareket · {log.sets.length} set · {totalReps(log)} tekrar
       </p>
       {log.note ? (
         <p className="mt-2 whitespace-pre-line border-t border-border pt-2 text-xs leading-relaxed text-text-secondary">{log.note}</p>

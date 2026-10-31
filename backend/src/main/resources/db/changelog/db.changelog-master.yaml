@@ -90,3 +90,7 @@ databaseChangeLog:
       file: db/changelog/041-intake-water.yaml
   - include:
       file: db/changelog/042-reprice-packages.yaml
+  - include:
+      file: db/changelog/043-package-discounts.yaml
+  - include:
+      file: db/changelog/044-daily-activity.yaml

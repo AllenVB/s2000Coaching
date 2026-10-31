@@ -122,10 +122,10 @@ function PhotoGallery({
           <h3 className="mb-3 text-xs font-bold uppercase tracking-wider text-text-secondary">
             {monthLabel(month)}
           </h3>
-          <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+          <ul className="grid grid-cols-3 gap-2.5 sm:grid-cols-4 lg:grid-cols-5">
             {monthPhotos.map((photo) => (
               <li key={photo.id}>
-                <ProgressPhotoImage photo={photo} className="aspect-[3/4] w-full bg-surface-elevated" />
+                <ProgressPhotoImage photo={photo} zoomable caption={`${monthLabel(photo.takenOn.slice(0, 7))} · ${poseLabel(photo.pose)}`} className="aspect-[3/4] w-full bg-surface-elevated" />
                 <p className="mt-2 text-xs font-semibold text-text-primary">{poseLabel(photo.pose)}</p>
                 <p className="text-[11px] text-text-muted">{formatDate(photo.takenOn)}</p>
                 <Button

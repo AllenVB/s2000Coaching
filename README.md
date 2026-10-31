@@ -586,7 +586,10 @@ Herkese açık uçlar `GET /api/site` ve `GET /api/site/legal/{slug}`; üye veri
 ## Fiyatlar, WhatsApp, Programlar, Üye Verileri
 
 - **Paketler:** koçluk 1/3/6 ay = 2990 / 7490 / 12490 TL (3 aylık öne çıkar); beslenme 1/3/6 ay = 1290 / 2690 / 4590 TL
-  (6 aylık öne çıkar). 12 aylık paketler yayından kaldırıldı (silinmedi). İndirim yoksa üstü çizili fiyat gösterilmez.
+  (6 aylık öne çıkar). 12 aylık paketler yayından kaldırıldı (silinmedi). **İndirim:** üstü çizili liste fiyatı ve yüzde
+  gösterilir; en büyük indirim öne çıkan pakette (koçluk 3 ay −%38, beslenme 6 ay −%39; diğerleri koçluk 1 ay −%15,
+  6 ay −%34; beslenme 1 ay −%14, 3 ay −%25). Liste fiyatları `043-package-discounts.yaml`'da; yalnızca
+  `original_price_minor` değişir. Üstü çizili fiyat yoksa (`original = price`) indirim gösterilmez.
 - **WhatsApp:** sağ altta yüzen yeşil düğme; numara **Ayarlar → sosyal bağlantılar → WhatsApp**'tan girilir
   (numara girilmezse düğme görünmez). Tıklayınca hazır bir selamlama metniyle WhatsApp açılır.
 - **Tecrübelerim** ana sayfadan kaldırıldı; yalnızca `/yonetim/tecrubelerim`'de (salt okunur).
@@ -614,3 +617,24 @@ cd frontend && npm run lint    # oxlint
 Aynı üçü her push ve pull request'te GitHub Actions'ta da koşar (`.github/workflows/ci.yml`).
 Testcontainers testleri runner'ın Docker'ıyla çalışır; backend testi düşerse HTML raporu iş
 çıktısı olarak yüklenir.
+
+## Hesaplayıcılar, haftalık takip, geçmiş (güncel)
+
+- **Hesaplayıcılar** (`/hesaplayicilar`): kalori/makro/VKİ'ye ek olarak **yağ oranı (ABD Donanması, tahmin), yağsız
+  kütle ve omuz/bel oranı**. Girilenler tarayıcıdan çıkmaz.
+- **Ölçümlerim → Aylık:** her tablonun (ve doldurulurken canlı olarak formun) altında otomatik hesaplanan VKİ, yağ %,
+  yağsız kütle (% ve kg), FFMI ve omuz/bel oranı görünür; yağ ve ona bağlı değerler tahmindir ve öyle etiketlidir.
+- **Ölçümlerim → Haftalık:** haftalar **Pazartesi–Pazar** bloklarıdır (son 26 hafta, açılır listeden seçilir); geçmiş
+  haftalar girilebilir, gelecek haftalar girilemez (sunucu da `@PastOrPresent` ile reddeder). Geçmiş haftanın kilosu o
+  haftanın son gününe, bu haftanınki bugüne yazılır.
+- **Ölçümlerim → Fotoğraflar:** beş pozun hepsi seçilmeden Kaydet açılmaz; Kaydet'e basınca "ayda 1 kez, sonradan
+  değiştirilemez, onaylıyor musunuz?" sorulur ve evet denince beşi birden yüklenir. Karşılaştırma: kullanıcı pozları
+  ve iki ayı seçer, seçilen her poz için önce/sonra yan yana küçük gösterilir; fotoğrafa dokununca tam boy açılır
+  (+/− ile yakınlaştırma, Esc ile kapanır). Üye KVKK gereği kendi fotoğrafını silebilmeye devam eder.
+- **Geçmiş → Antrenman:** tablonun altında Pzt–Paz için 7 yuvarlaklı haftalık çizelge (antrenman kaydı olan gün turuncu
+  tikli; oklarla önceki haftalara gidilir). "Toplam kaldırılan kg" kaldırıldı; günde 4–12 farklı hareket olduğundan
+  hacim **set sayısıyla** (hareket sayısı, set, tekrar) gösterilir, haftalık grafik de set sayısıdır.
+- **Geçmiş → Beslenme:** her güne **Antrenman günü / Dinlenme günü** seçilir (zorunlu; kalori hedefleri farklı olduğu için).
+  **Geçmiş → Kardiyo & Adım:** günlük adım ve kardiyo süresi (dk); `member_activity` tablosu, koç
+  `GET /api/admin/members/{id}/activity` ile okur.
+- **Form videosu:** üyenin gönderdiği form linki artık sitede oynatılmaz; yalnızca YouTube'da açan bir bağlantıdır.

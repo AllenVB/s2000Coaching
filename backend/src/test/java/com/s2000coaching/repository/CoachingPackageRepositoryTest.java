@@ -26,6 +26,7 @@ class CoachingPackageRepositoryTest {
 		// One, three and six months; the three-month tier is the highlighted one.
 		assertThat(packages).extracting(p -> p.getSlug()).containsExactly("kocluk-1-ay", "kocluk-3-ay", "kocluk-6-ay");
 		assertThat(packages).extracting(p -> p.getPriceMinor()).containsExactly(299000L, 749000L, 1249000L);
+		assertThat(packages).extracting(p -> p.getOriginalPriceMinor()).containsExactly(350000L, 1200000L, 1900000L);
 		assertThat(packages).extracting(p -> p.isFeatured()).containsExactly(false, true, false);
 		assertThat(packages.get(1).getFeatures()).hasSize(5);
 	}
@@ -36,6 +37,7 @@ class CoachingPackageRepositoryTest {
 
 		assertThat(packages).extracting(p -> p.getSlug()).containsExactly("beslenme-1-ay", "beslenme-3-ay", "beslenme-6-ay");
 		assertThat(packages).extracting(p -> p.getPriceMinor()).containsExactly(129000L, 269000L, 459000L);
+		assertThat(packages).extracting(p -> p.getOriginalPriceMinor()).containsExactly(150000L, 360000L, 750000L);
 		assertThat(packages).extracting(p -> p.isFeatured()).containsExactly(false, false, true);
 	}
 

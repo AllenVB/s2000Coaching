@@ -7,6 +7,8 @@ import type { MemberGender } from '@/types/member'
  * it say so. Lean mass and FFMI follow from it, so they carry the same uncertainty.
  */
 export interface DerivedMetrics {
+  /** Body-mass index, kg/m². */
+  bmi: number | null
   bodyFatPercent: number | null
   leanMassPercent: number | null
   leanMassKg: number | null
@@ -19,6 +21,7 @@ export interface DerivedMetrics {
 }
 
 const EMPTY: DerivedMetrics = {
+  bmi: null,
   bodyFatPercent: null,
   leanMassPercent: null,
   leanMassKg: null,
@@ -60,6 +63,10 @@ export function navyBodyFat(
 export function derive(record: MonthlyRecord, gender: MemberGender | null, profileHeightCm: number | null): DerivedMetrics {
   const height = record.heightCm ?? profileHeightCm
   const result: DerivedMetrics = { ...EMPTY }
+
+  if (record.weightKg !== null && height !== null && height > 0) {
+    result.bmi = record.weightKg / ((height / 100) * (height / 100))
+  }
 
   if (record.shoulderCm !== null && record.waistCm !== null && record.waistCm > 0) {
     result.shoulderWaistRatio = record.shoulderCm / record.waistCm
