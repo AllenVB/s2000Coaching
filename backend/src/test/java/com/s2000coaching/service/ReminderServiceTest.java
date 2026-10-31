@@ -40,6 +40,9 @@ class ReminderServiceTest {
 	private static final LocalDate TODAY = LocalDate.of(2026, 10, 27);
 
 	@Mock
+	private com.s2000coaching.repository.MonthlyRecordRepository monthlyRecordRepository;
+
+	@Mock
 	private MemberRepository memberRepository;
 	@Mock
 	private MeasurementRepository measurementRepository;
@@ -66,7 +69,7 @@ class ReminderServiceTest {
 
 	private ReminderService service(boolean enabled) {
 		return new ReminderService(memberRepository, measurementRepository, checkInRepository, membershipRepository,
-				reminderLogRepository, coachAccountRepository, attentionService, mailSender,
+				reminderLogRepository, coachAccountRepository, attentionService, monthlyRecordRepository, mailSender,
 				Clock.fixed(NOW, ZoneOffset.UTC), "https://s2000.example/", enabled);
 	}
 

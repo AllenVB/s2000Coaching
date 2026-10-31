@@ -25,11 +25,14 @@ public class FormCheckService implements MemberDataEraser {
 	private final FormCheckRepository formCheckRepository;
 	private final MemberService memberService;
 	private final Clock clock;
+	private final MemberNotifier memberNotifier;
 
-	public FormCheckService(FormCheckRepository formCheckRepository, MemberService memberService, Clock clock) {
+	public FormCheckService(FormCheckRepository formCheckRepository, MemberService memberService, Clock clock,
+			MemberNotifier memberNotifier) {
 		this.formCheckRepository = formCheckRepository;
 		this.memberService = memberService;
 		this.clock = clock;
+		this.memberNotifier = memberNotifier;
 	}
 
 	@Transactional(readOnly = true)
@@ -74,6 +77,7 @@ public class FormCheckService implements MemberDataEraser {
 		FormCheck check = formCheckRepository.findById(id)
 				.orElseThrow(() -> new NotFoundException("Form kontrolü bulunamadı."));
 		check.reply(reply.trim(), Instant.now(clock));
+		memberNotifier.coachReplied(check.getMember(), "form videonuza", "/uye/mesajlar?sekme=form");
 		return FormCheckResponse.from(check);
 	}
 

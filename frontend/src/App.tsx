@@ -25,7 +25,6 @@ import { MemberTrainingTab } from '@/pages/admin/tabs/MemberTrainingTab'
 import { MemberProfileTab } from '@/pages/admin/tabs/MemberProfileTab'
 import { LandingPage } from '@/pages/LandingPage'
 import { MemberHistoryPage } from '@/pages/member/MemberHistoryPage'
-import { MemberPhotosPage } from '@/pages/member/MemberPhotosPage'
 import { MemberQuestionnairePage } from '@/pages/member/MemberQuestionnairePage'
 import { MemberMeasurementsPage } from '@/pages/member/MemberMeasurementsPage'
 import { MemberMessagesPage } from '@/pages/member/MemberMessagesPage'
@@ -55,7 +54,7 @@ export default function App() {
         <Route path="olcumlerim" element={<MemberMeasurementsPage />} />
         <Route path="anket" element={<MemberQuestionnairePage />} />
         <Route path="gecmis" element={<MemberHistoryPage />} />
-        <Route path="fotograflar" element={<MemberPhotosPage />} />
+        <Route path="fotograflar" element={<Navigate to="/uye/olcumlerim?sekme=fotograflar" replace />} />
         <Route path="mesajlar" element={<MemberMessagesPage />} />
         <Route path="profil" element={<MemberProfilePage />} />
         <Route path="cikti" element={<MemberPrintPage />} />

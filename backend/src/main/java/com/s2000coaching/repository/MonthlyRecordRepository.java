@@ -14,4 +14,8 @@ public interface MonthlyRecordRepository extends JpaRepository<MonthlyRecord, UU
 	Optional<MonthlyRecord> findByMemberIdAndPeriod(UUID memberId, String period);
 
 	void deleteAllByMemberId(UUID memberId);
+
+	/** The newest month each member filled in, in one pass for the reminder job. */
+	@org.springframework.data.jpa.repository.Query("select r.member.id, max(r.period) from MonthlyRecord r group by r.member.id")
+	List<Object[]> latestPeriodPerMember();
 }
