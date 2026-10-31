@@ -405,6 +405,25 @@ export function useSaveWorkoutLog() {
   })
 }
 
+/** The member removing one of their own recorded sessions (a wrong day, a session that never happened). */
+export function useDeleteMyWorkoutLog() {
+  const { session } = useMemberAuth()
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (workoutLogId: string) =>
+      apiFetch<void>(`/api/member/workout-logs/${workoutLogId}`, {
+        method: 'DELETE',
+        headers: memberHeaders(session!.token),
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['member-training-plan'] })
+      queryClient.invalidateQueries({ queryKey: ['member-workout-logs'] })
+      queryClient.invalidateQueries({ queryKey: ['member-training-stats'] })
+    },
+  })
+}
+
 /** Records, weekly volume and next-session suggestions for the signed-in member. */
 export function useMyTrainingStats() {
   const { session } = useMemberAuth()

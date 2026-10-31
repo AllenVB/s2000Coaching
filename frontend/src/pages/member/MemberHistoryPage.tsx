@@ -3,10 +3,12 @@ import { Link } from 'react-router-dom'
 
 import type { WorkoutLog } from '@/types/training'
 
-import { useMyTrainingPlan, useMyTrainingStats, useMyWorkoutLogs } from '@/api/trainingApi'
+import { useDeleteMyWorkoutLog, useMyTrainingPlan, useMyTrainingStats, useMyWorkoutLogs } from '@/api/trainingApi'
 import { TrainingStatsView } from '@/components/training/TrainingStatsView'
 import { Button } from '@/components/ui/Button'
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { Field, inputClasses } from '@/components/ui/FormField'
+import { TrashIcon } from '@/components/ui/icons'
 import { ComingSoonCard, PageHeading } from '@/components/ui/PageHeading'
 import { currentMonthIso, formatDate, todayIso } from '@/lib/date'
 import { formatMonth, groupByMonth, totalReps, totalVolumeKg } from '@/lib/workoutStats'
@@ -18,6 +20,8 @@ export function MemberHistoryPage() {
   const { data: plan } = useMyTrainingPlan()
   // Only days of the plan the member is on can be opened again; an older plan's days are not shown.
   const activeDayIds = new Set(plan?.days.map((day) => day.id) ?? [])
+  const deleteLog = useDeleteMyWorkoutLog()
+  const [deleting, setDeleting] = useState<WorkoutLog | null>(null)
 
   if (isPending) {
     return (
@@ -83,12 +87,25 @@ export function MemberHistoryPage() {
             </h2>
             <ul className="space-y-2.5">
               {monthLogs.map((log) => (
-                <LogRow key={log.id} log={log} editable={activeDayIds.has(log.dayId)} />
+                <LogRow key={log.id} log={log} editable={activeDayIds.has(log.dayId)} onDelete={() => setDeleting(log)} />
               ))}
             </ul>
           </section>
         ))}
       </div>
+
+      {deleting ? (
+        <ConfirmDialog
+          title="Antrenmanı Sil"
+          confirmLabel="Evet, Sil"
+          tone="danger"
+          isPending={deleteLog.isPending}
+          error={deleteLog.isError ? deleteLog.error.message : null}
+          description={`${formatDate(deleting.performedOn)} tarihli "${deleting.dayName}" antrenman kaydını silmek istediğinize emin misiniz? Setleri ve notu da silinir.`}
+          onCancel={() => setDeleting(null)}
+          onConfirm={() => deleteLog.mutate(deleting.id, { onSuccess: () => setDeleting(null) })}
+        />
+      ) : null}
     </>
   )
 }
@@ -174,7 +191,7 @@ function PastWorkoutForm({ days }: { days: { id: string; name: string }[] }) {
   )
 }
 
-function LogRow({ log, editable }: { log: WorkoutLog; editable: boolean }) {
+function LogRow({ log, editable, onDelete }: { log: WorkoutLog; editable: boolean; onDelete: () => void }) {
   const volume = totalVolumeKg(log)
 
   return (
@@ -192,6 +209,14 @@ function LogRow({ log, editable }: { log: WorkoutLog; editable: boolean }) {
               Düzenle
             </Link>
           ) : null}
+          <button
+            type="button"
+            onClick={onDelete}
+            aria-label={`${formatDate(log.performedOn)} antrenmanını sil`}
+            className="text-text-muted transition-colors hover:text-error"
+          >
+            <TrashIcon className="h-4 w-4" />
+          </button>
         </span>
       </div>
       <p className="mt-1.5 text-xs text-text-secondary">
