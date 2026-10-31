@@ -86,3 +86,5 @@ databaseChangeLog:
       file: db/changelog/039-create-site-setting.yaml
   - include:
       file: db/changelog/040-exercise-image.yaml
+  - include:
+      file: db/changelog/041-intake-water.yaml

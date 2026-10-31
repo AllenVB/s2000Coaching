@@ -54,6 +54,7 @@ public class MemberIntakeService implements MemberDataEraser {
 		intake.setCarbsG(request.carbsG());
 		intake.setFatG(request.fatG());
 		intake.setSodiumMg(request.sodiumMg());
+		intake.setWaterLiters(request.waterLiters());
 		intake.setNote(request.note() == null || request.note().isBlank() ? null : request.note().trim());
 		intake.setUpdatedAt(now);
 		return IntakeResponse.from(intake);

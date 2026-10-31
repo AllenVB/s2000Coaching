@@ -70,6 +70,19 @@ class MemberIntakeServiceTest {
 		assertThat(response.note()).isEqualTo("iyi gün");
 	}
 
+	@Test
+	void shouldKeepTheWaterDrunkAndAllowLeavingItOut() {
+		member.grantHealthDataConsent(Instant.now());
+		when(intakeRepository.findByMemberIdAndConsumedOn(member.getId(), DAY)).thenReturn(Optional.empty());
+		when(intakeRepository.save(any())).thenAnswer(call -> call.getArgument(0));
+
+		var withWater = service.save(member, new UpsertIntakeRequest(DAY, 2400, null, null, null, null, null, new BigDecimal("3.5")));
+		var without = service.save(member, request(2400));
+
+		assertThat(withWater.waterLiters()).isEqualByComparingTo("3.5");
+		assertThat(without.waterLiters()).isNull();
+	}
+
 	/** Correcting a day must replace it, not add a second row the analysis would double count. */
 	@Test
 	void shouldReplaceAnExistingDayInsteadOfAddingOne() {

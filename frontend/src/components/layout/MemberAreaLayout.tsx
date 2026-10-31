@@ -9,31 +9,14 @@ import { useFlushPendingWorkouts } from '@/api/trainingApi'
 import { clearCachedPlan } from '@/lib/offline'
 import { useOnlineStatus } from '@/hooks/useOnlineStatus'
 import { MemberAuthProvider, useMemberAuth } from '@/context/MemberAuthContext'
-import {
-  AppleIcon,
-  ChartIcon,
-  ChatIcon,
-  CameraIcon,
-  ClipboardIcon,
-  DumbbellIcon,
-  HistoryIcon,
-  HomeIcon,
-  PlayIcon,
-  StarIcon,
-  UserIcon,
-} from '@/components/ui/icons'
+import { ChartIcon, ChatIcon, CameraIcon, DumbbellIcon, HistoryIcon, UserIcon } from '@/components/ui/icons'
 
+/** Six places, every one on the phone's tab bar too: nothing is hidden on a small screen. */
 const navItems: PortalNavItem[] = [
-  { to: '/uye', label: 'Bugün', icon: HomeIcon, end: true },
-  { to: '/uye/antrenman', label: 'Antrenman', icon: DumbbellIcon },
-  { to: '/uye/beslenme', label: 'Beslenme', icon: AppleIcon },
-  { to: '/uye/verilerim', label: 'Verilerim', icon: ClipboardIcon },
-  { to: '/uye/olcumler', label: 'Ölçümler', icon: ChartIcon, desktopOnly: true },
-  { to: '/uye/haftalik', label: 'Haftalık', icon: ClipboardIcon, desktopOnly: true },
-  { to: '/uye/form-kontrol', label: 'Form', icon: PlayIcon, desktopOnly: true },
-  { to: '/uye/hikayem', label: 'Hikâyem', icon: StarIcon, desktopOnly: true },
-  { to: '/uye/gecmis', label: 'Geçmiş', icon: HistoryIcon, desktopOnly: true },
-  { to: '/uye/fotograflar', label: 'Fotoğraflar', icon: CameraIcon, desktopOnly: true },
+  { to: '/uye/programlarim', label: 'Programlarım', icon: DumbbellIcon },
+  { to: '/uye/olcumlerim', label: 'Ölçümlerim', icon: ChartIcon },
+  { to: '/uye/gecmis', label: 'Geçmiş', icon: HistoryIcon },
+  { to: '/uye/fotograflar', label: 'Fotoğraflar', icon: CameraIcon },
   { to: '/uye/mesajlar', label: 'Mesajlar', icon: ChatIcon },
   { to: '/uye/profil', label: 'Profil', icon: UserIcon },
 ]

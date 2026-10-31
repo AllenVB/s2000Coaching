@@ -45,6 +45,10 @@ public class MemberIntake {
 	@Column(name = "sodium_mg")
 	private Integer sodiumMg;
 
+	/** Litres of water drunk that day; null when not written down. */
+	@Column(name = "water_liters", precision = 3, scale = 1)
+	private java.math.BigDecimal waterLiters;
+
 	@Column(columnDefinition = "text")
 	private String note;
 
@@ -108,6 +112,14 @@ public class MemberIntake {
 
 	public void setFatG(Integer fatG) {
 		this.fatG = fatG;
+	}
+
+	public java.math.BigDecimal getWaterLiters() {
+		return waterLiters;
+	}
+
+	public void setWaterLiters(java.math.BigDecimal waterLiters) {
+		this.waterLiters = waterLiters;
 	}
 
 	public Integer getSodiumMg() {

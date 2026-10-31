@@ -49,7 +49,11 @@ public class MonthlyRecordService implements MemberDataEraser {
 		return list(memberId);
 	}
 
-	/** Opens a new month. A month that already exists is a conflict: it is edited, not re-created. */
+	/**
+	 * Opens a new month. What a member has saved cannot be changed by the member afterwards — they are
+	 * asked to be sure before saving — so a month that already exists is a conflict; only the coach
+	 * corrects a row.
+	 */
 	@Transactional
 	public MonthlyRecordResponse create(UUID memberId, UpsertMonthlyRecordRequest request) {
 		Member member = memberService.requireMember(memberId);
@@ -63,7 +67,7 @@ public class MonthlyRecordService implements MemberDataEraser {
 		}
 		if (recordRepository.findByMemberIdAndPeriod(memberId, request.period()).isPresent()) {
 			throw new ConflictException(label(request.period())
-					+ " için zaten bir kayıt var; kalem simgesiyle düzenleyebilirsiniz.");
+					+ " için zaten bir kayıt var. Girilen veriler sonradan değiştirilemez; düzeltme gerekiyorsa koçunuza yazın.");
 		}
 
 		Instant now = Instant.now();
@@ -72,26 +76,13 @@ public class MonthlyRecordService implements MemberDataEraser {
 		return MonthlyRecordResponse.from(record);
 	}
 
-	/** Replaces the whole table of an existing month; the month itself never changes. */
-	@Transactional
-	public MonthlyRecordResponse update(UUID memberId, UUID recordId, UpsertMonthlyRecordRequest request) {
-		MonthlyRecord record = ownedBy(memberId, recordId);
-		requireConsent(record.getMember());
-		requireFigures(request);
-		apply(record, request, Instant.now());
-		return MonthlyRecordResponse.from(record);
-	}
-
-	@Transactional
-	public void delete(UUID memberId, UUID recordId) {
-		recordRepository.delete(ownedBy(memberId, recordId));
-	}
-
 	/** The coach edits a row without knowing whose it is; the row says. */
 	@Transactional
 	public MonthlyRecordResponse updateAsCoach(UUID recordId, UpsertMonthlyRecordRequest request) {
 		MonthlyRecord record = getOrThrow(recordId);
-		return update(record.getMember().getId(), recordId, request);
+		requireFigures(request);
+		apply(record, request, Instant.now());
+		return MonthlyRecordResponse.from(record);
 	}
 
 	@Transactional
@@ -121,15 +112,6 @@ public class MonthlyRecordService implements MemberDataEraser {
 		if (!request.hasAnyFigure()) {
 			throw new BadRequestException("En az bir değer girin.");
 		}
-	}
-
-	/** Someone else's row answers exactly like a missing one, so ids cannot be probed. */
-	private MonthlyRecord ownedBy(UUID memberId, UUID recordId) {
-		MonthlyRecord record = getOrThrow(recordId);
-		if (!record.getMember().getId().equals(memberId)) {
-			throw new NotFoundException("Kayıt bulunamadı: " + recordId);
-		}
-		return record;
 	}
 
 	private MonthlyRecord getOrThrow(UUID recordId) {
