@@ -1,8 +1,9 @@
 import { useMemberIntake } from '@/api/intakeApi'
 import { formatDate } from '@/lib/date'
+import { targetsOf, type NutritionPlan } from '@/types/nutrition'
 
 /** The coach's read of a member's food log. Read-only: only the member writes their own days. */
-export function MemberIntakeHistory({ memberId, targetCalories }: { memberId: string; targetCalories: number | null }) {
+export function MemberIntakeHistory({ memberId, plan }: { memberId: string; plan: NutritionPlan | null }) {
   const { data: entries, isLoading, isError, error } = useMemberIntake(memberId)
 
   return (
@@ -18,10 +19,18 @@ export function MemberIntakeHistory({ memberId, targetCalories }: { memberId: st
         <>
           <p className="mb-3 text-xs text-text-muted">
             Son {Math.min(entries.length, 14)} gün
-            {targetCalories ? ` · hedef ${targetCalories} kcal` : ''}
+            {plan?.targetCalories ? ` · antrenman günü hedefi ${plan.targetCalories} kcal` : ''}
+            {plan?.restTargetCalories ? ` · dinlenme günü hedefi ${plan.restTargetCalories} kcal` : ''}
           </p>
           <ul className="space-y-1.5">
-            {entries.slice(0, 14).map((entry) => (
+            {entries.slice(0, 14).map((entry) => {
+              // The target follows the day type the member chose; a day with no type has no target to compare to.
+              const target = plan && entry.dayType ? targetsOf(plan, entry.dayType === 'DINLENME' ? 'REST' : 'TRAINING').calories : null
+              // What was eaten counts by the macros when they are there (4/4/9 kcal per gram), else the typed total.
+              const macros = (entry.proteinG ?? 0) * 4 + (entry.carbsG ?? 0) * 4 + (entry.fatG ?? 0) * 9
+              const eaten = macros > 0 ? macros : entry.calories
+              const remaining = target !== null ? target - eaten : null
+              return (
               <li
                 key={entry.id}
                 className="flex flex-wrap items-baseline justify-between gap-3 rounded-lg border border-border bg-surface-elevated px-3 py-2 text-xs"
@@ -33,9 +42,18 @@ export function MemberIntakeHistory({ memberId, targetCalories }: { memberId: st
                   {entry.fatG !== null ? `Y ${entry.fatG} ` : ''}
                   {entry.sodiumMg !== null ? `Na ${entry.sodiumMg}` : ''}
                 </span>
-                <span className="font-semibold text-text-primary">{entry.calories} kcal</span>
+                <span className="font-semibold text-text-primary">
+                  {entry.dayType ? `${entry.dayType === 'DINLENME' ? 'Dinlenme' : 'Antrenman'} · ` : ''}
+                  {entry.calories} kcal
+                  {remaining !== null ? (
+                    <span className={`ml-2 font-normal ${remaining >= 0 ? 'text-success' : 'text-warning'}`}>
+                      {remaining >= 0 ? `hedefe ${remaining} kcal kaldı` : `hedefi ${-remaining} kcal aştı`}
+                    </span>
+                  ) : null}
+                </span>
               </li>
-            ))}
+              )
+            })}
           </ul>
         </>
       )}

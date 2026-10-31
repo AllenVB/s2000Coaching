@@ -189,7 +189,7 @@ export function MemberNutritionTab() {
 
       <MemberIntakeHistory
         memberId={member.id}
-        targetCalories={plans?.find((plan) => plan.active)?.targetCalories ?? null}
+        plan={plans?.find((plan) => plan.active) ?? null}
       />
 
       {deletingPlan ? (
