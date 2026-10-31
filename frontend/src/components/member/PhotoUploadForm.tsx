@@ -73,7 +73,7 @@ export function PhotoUploadForm({ photos }: { photos: ProgressPhoto[] }) {
         <h2 className="text-sm font-bold uppercase tracking-wider text-text-primary">Aylık Fotoğraflar</h2>
         <p className="mt-1.5 text-xs leading-relaxed text-text-secondary">
           Her ay 5 fotoğraf istiyoruz: aynı ışıkta ve mesafede, aynı sırayla. Beşini de seçin, sonra Kaydet'e
-          basın. Fotoğraflarınızı yalnızca siz ve koçunuz görebilir.
+          basın; kaydedilen fotoğraflar değiştirilemez ve silinemez. Fotoğraflarınızı yalnızca siz ve koçunuz görebilir.
         </p>
       </div>
 
@@ -132,7 +132,7 @@ export function PhotoUploadForm({ photos }: { photos: ProgressPhoto[] }) {
       {confirming ? (
         <ConfirmDialog
           title="Fotoğraflar kaydedilsin mi?"
-          description="Fotoğraflar ayda 1 kez yüklenebilir. Kaydettiğiniz fotoğraflar daha sonra değiştirilemez. Onaylıyor musunuz?"
+          description="Fotoğraflar ayda 1 kez yüklenebilir. Kaydettiğiniz fotoğraflar daha sonra değiştirilemez ve silinemez. Onaylıyor musunuz?"
           confirmLabel="Evet, Kaydet"
           isPending={upload.isPending}
           error={null}

@@ -193,8 +193,6 @@ class ProgressPhotoServiceTest {
 			// Not 403: a different answer would confirm the id exists.
 			assertThatThrownBy(() -> photoService.readOwn(member, theirs.getId()))
 					.isInstanceOf(NotFoundException.class);
-			assertThatThrownBy(() -> photoService.deleteOwn(member, theirs.getId()))
-					.isInstanceOf(NotFoundException.class);
 			verify(photoStorage, never()).read(any());
 			verify(photoRepository, never()).delete(any());
 		}
@@ -216,7 +214,7 @@ class ProgressPhotoServiceTest {
 			ProgressPhoto mine = photoOf(member, "ab/cd/key.jpg");
 			when(photoRepository.findById(mine.getId())).thenReturn(Optional.of(mine));
 
-			photoService.deleteOwn(member, mine.getId());
+			photoService.deleteAsCoach(mine.getId());
 
 			var order = org.mockito.Mockito.inOrder(photoStorage, photoRepository);
 			order.verify(photoStorage).delete("ab/cd/key.jpg");
@@ -233,7 +231,7 @@ class ProgressPhotoServiceTest {
 			when(photoRepository.findById(mine.getId())).thenReturn(Optional.of(mine));
 			doThrow(new PhotoStorageException("disk dolu")).when(photoStorage).delete(any());
 
-			assertThatCode(() -> photoService.deleteOwn(member, mine.getId())).doesNotThrowAnyException();
+			assertThatCode(() -> photoService.deleteAsCoach(mine.getId())).doesNotThrowAnyException();
 			verify(photoRepository).delete(mine);
 		}
 
