@@ -1,126 +1,117 @@
 import { useRef, useState } from 'react'
 
-import type { PhotoPose } from '@/types/member'
+import type { PhotoPose, ProgressPhoto } from '@/types/member'
 
 import { useUploadMyPhoto } from '@/api/photosApi'
-import { Button } from '@/components/ui/Button'
-import { Field, inputClasses, textareaClasses } from '@/components/ui/FormField'
-import { PHOTO_POSES } from '@/types/member'
+import { Field, inputClasses } from '@/components/ui/FormField'
 import { todayIso } from '@/lib/date'
+import { PHOTO_POSES } from '@/types/member'
 
 /** Mirrors `app.photos.max-size-bytes`; the server enforces it, this only says so earlier. */
 const MAX_BYTES = 8 * 1024 * 1024
 const ACCEPTED = 'image/jpeg,image/png,image/webp'
 
-export function PhotoUploadForm() {
-  const uploadPhoto = useUploadMyPhoto()
-  const fileInput = useRef<HTMLInputElement>(null)
-  const [file, setFile] = useState<File | null>(null)
-  const [takenOn, setTakenOn] = useState(todayIso)
-  const [pose, setPose] = useState<PhotoPose>('ON')
-  const [note, setNote] = useState('')
-  const [localError, setLocalError] = useState<string | null>(null)
-
-  const today = todayIso()
-
-  const pickFile = (picked: File | null) => {
-    setLocalError(null)
-    if (picked && picked.size > MAX_BYTES) {
-      setLocalError('Fotoğraf en fazla 8 MB olabilir.')
-      setFile(null)
-      return
-    }
-    setFile(picked)
-  }
-
-  const submit = (event: React.FormEvent) => {
-    event.preventDefault()
-    if (!file) {
-      setLocalError('Önce bir fotoğraf seçin.')
-      return
-    }
-    uploadPhoto.mutate(
-      { file, takenOn, pose, note: note.trim() || undefined },
-      {
-        onSuccess: () => {
-          setFile(null)
-          setNote('')
-          if (fileInput.current) {
-            fileInput.current.value = ''
-          }
-        },
-      },
-    )
-  }
+/**
+ * The monthly set: five fixed poses, one photo each. A pose already uploaded for the chosen
+ * month shows as done instead of offering a second upload, which the server would refuse.
+ */
+export function PhotoUploadForm({ photos }: { photos: ProgressPhoto[] }) {
+  const [month, setMonth] = useState(() => todayIso().slice(0, 7))
+  const done = new Set(photos.filter((p) => p.takenOn.startsWith(month)).map((p) => p.pose))
 
   return (
     <section className="rounded-2xl border border-border bg-surface p-6">
       <div className="mb-5 border-b border-border pb-3">
-        <h2 className="text-sm font-bold uppercase tracking-wider text-text-primary">
-          Fotoğraf Ekle
-        </h2>
+        <h2 className="text-sm font-bold uppercase tracking-wider text-text-primary">Aylık Fotoğraflar</h2>
         <p className="mt-1.5 text-xs leading-relaxed text-text-secondary">
-          Aynı duruşta, benzer ışıkta ve mesafede çekilen fotoğraflar karşılaştırıldığında
-          gelişim gerçekten görünür olur. Fotoğraflarınızı yalnızca siz ve koçunuz görebilir.
+          Her ay 5 fotoğraf istiyoruz: aynı ışıkta ve mesafede, aynı sırayla. Böylece gelişim aydan aya
+          gerçekten karşılaştırılabilir. Fotoğraflarınızı yalnızca siz ve koçunuz görebilir.
         </p>
       </div>
 
-      <form className="space-y-4" onSubmit={submit}>
-        <Field label="Fotoğraf *" hint="JPEG, PNG veya WebP · en fazla 8 MB">
+      <div className="mb-5 max-w-[12rem]">
+        <Field label="Ay">
           <input
-            ref={fileInput}
-            type="file"
-            accept={ACCEPTED}
-            onChange={(event) => pickFile(event.target.files?.[0] ?? null)}
-            className="block w-full text-xs text-text-secondary file:mr-3 file:h-9 file:cursor-pointer file:rounded-lg file:border-0 file:bg-surface-elevated file:px-3.5 file:text-xs file:font-semibold file:uppercase file:tracking-wide file:text-text-primary"
+            type="month"
+            value={month}
+            max={todayIso().slice(0, 7)}
+            onChange={(event) => event.target.value && setMonth(event.target.value)}
+            className={inputClasses}
           />
         </Field>
+      </div>
 
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <Field label="Çekim Tarihi *">
-            <input
-              type="date"
-              value={takenOn}
-              max={today}
-              onChange={(event) => setTakenOn(event.target.value)}
-              className={inputClasses}
-            />
-          </Field>
-
-          <Field label="Duruş *">
-            <select
-              value={pose}
-              onChange={(event) => setPose(event.target.value as PhotoPose)}
-              className={inputClasses}
-            >
-              {PHOTO_POSES.map(({ value, label }) => (
-                <option key={value} value={value}>
-                  {label}
-                </option>
-              ))}
-            </select>
-          </Field>
-        </div>
-
-        <Field label="Not">
-          <textarea
-            value={note}
-            onChange={(event) => setNote(event.target.value)}
-            placeholder="İsterseniz bu fotoğrafla ilgili bir not bırakın."
-            className={textareaClasses}
-          />
-        </Field>
-
-        {localError || uploadPhoto.isError ? (
-          <p className="rounded-xl border border-error/40 bg-error/10 p-3.5 text-xs text-error">
-            {localError ?? uploadPhoto.error?.message}
-          </p>
-        ) : null}
-
-        <Button type="submit" disabled={uploadPhoto.isPending}>
-          {uploadPhoto.isPending ? 'Yükleniyor…' : 'Fotoğrafı Yükle'}
-        </Button>
-      </form>
+      <p className="mb-3 text-xs font-medium text-text-secondary">
+        {done.size} / {PHOTO_POSES.length} fotoğraf tamam
+      </p>
+      <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        {PHOTO_POSES.map(({ value, label }, index) => (
+          <PoseSlot key={`${month}-${value}`} index={index + 1} pose={value} label={label} month={month}
+            done={done.has(value)} />
+        ))}
+      </ul>
     </section>
   )
 }
+
+function PoseSlot({ index, pose, label, month, done }: {
+  index: number
+  pose: PhotoPose
+  label: string
+  month: string
+  done: boolean
+}) {
+  const upload = useUploadMyPhoto()
+  const input = useRef<HTMLInputElement>(null)
+  const [localError, setLocalError] = useState<string | null>(null)
+
+  // The photo is dated today when the month is the current one, otherwise the first of the month.
+  const today = todayIso()
+  const takenOn = month === today.slice(0, 7) ? today : `${month}-01`
+
+  const pick = (file: File | null) => {
+    setLocalError(null)
+    if (!file) {
+      return
+    }
+    if (file.size > MAX_BYTES) {
+      setLocalError('Fotoğraf en fazla 8 MB olabilir.')
+      return
+    }
+    upload.mutate({ file, takenOn, pose }, {
+      onSettled: () => {
+        if (input.current) {
+          input.current.value = ''
+        }
+      },
+    })
+  }
+
+  return (
+    <li className={`rounded-xl border p-3.5 ${done ? 'border-success/40 bg-success/5' : 'border-border bg-surface-elevated'}`}>
+      <p className="text-xs font-semibold text-text-primary">
+        {index}. {label}
+      </p>
+      {done ? (
+        <p className="mt-1 text-[11px] text-success">Yüklendi ✓</p>
+      ) : (
+        <>
+          <input
+            ref={input}
+            type="file"
+            accept={ACCEPTED}
+            aria-label={`${label} fotoğrafı`}
+            disabled={upload.isPending}
+            onChange={(event) => pick(event.target.files?.[0] ?? null)}
+            className="mt-2 block w-full text-[11px] text-text-secondary file:mr-2 file:h-8 file:cursor-pointer file:rounded-lg file:border-0 file:bg-surface file:px-3 file:text-[11px] file:font-semibold file:uppercase file:tracking-wide file:text-text-primary"
+          />
+          {upload.isPending ? <p className="mt-1 text-[11px] text-text-muted">Yükleniyor…</p> : null}
+          {localError || upload.isError ? (
+            <p className="mt-1 text-[11px] text-error">{localError ?? upload.error?.message}</p>
+          ) : null}
+        </>
+      )}
+    </li>
+  )
+}
+

@@ -74,7 +74,7 @@ export default function App() {
         <Route path="verilerim" element={<Navigate to="/uye/olcumlerim?sekme=aylik" replace />} />
         <Route path="haftalik" element={<Navigate to="/uye/olcumlerim?sekme=haftalik" replace />} />
         <Route path="form-kontrol" element={<Navigate to="/uye/mesajlar?sekme=form" replace />} />
-        <Route path="hikayem" element={<Navigate to="/uye/programlarim" replace />} />
+        <Route path="hikayem" element={<Navigate to="/uye/olcumlerim?sekme=fotograflar" replace />} />
       </Route>
 
       <Route path="/yonetim" element={<AdminAreaLayout />}>

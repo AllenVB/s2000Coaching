@@ -120,6 +120,34 @@ class SuccessStoryServiceTest {
 		return withExif.toByteArray();
 	}
 
+	@Nested
+	class CoachUploads {
+
+		@Test
+		void shouldStoreACleanCopyAndVoidTheConsent() throws Exception {
+			var consented = story(StoryStatus.CONSENTED);
+			exists(consented);
+			when(photoRepository.countByStoryId(consented.getId())).thenReturn(0L);
+			when(photoStorage.store(any(), anyString())).thenReturn("k/new.jpg");
+
+			service.addUploadedPhoto(consented.getId(), LocalDate.of(2026, 9, 1), "1. ay", jpegWithSecretMetadata());
+
+			var saved = ArgumentCaptor.forClass(SuccessStoryPhoto.class);
+			verify(photoRepository).save(saved.capture());
+			assertThat(saved.getValue().getTakenOn()).isEqualTo(LocalDate.of(2026, 9, 1));
+			assertThat(consented.getStatus()).isEqualTo(StoryStatus.DRAFT);
+		}
+
+		@Test
+		void shouldRefuseAnEmptyFile() {
+			var draft = story(StoryStatus.DRAFT);
+			exists(draft);
+
+			assertThatThrownBy(() -> service.addUploadedPhoto(draft.getId(), LocalDate.now(), "x", new byte[0]))
+					.isInstanceOf(BadRequestException.class);
+		}
+	}
+
 	// --- the consent gate: the property this whole feature exists to guarantee -------------
 
 	@Nested

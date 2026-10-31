@@ -3,7 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAdminAuth } from '@/context/AdminAuthContext'
 import { useMemberAuth } from '@/context/MemberAuthContext'
 import { adminHeaders } from '@/lib/adminSession'
-import { apiFetch } from '@/lib/api'
+import { apiFetch, apiUpload } from '@/lib/api'
 import { memberHeaders } from '@/lib/memberSession'
 import type { CreateStoryInput, PublicStory, Story, UpdateStoryInput } from '@/types/story'
 
@@ -75,6 +75,26 @@ export const useAddStoryPhoto = () =>
       body: { progressPhotoId, caption },
     }),
   )
+
+/** A photo from the coach's own device, added straight to a story. */
+export function useUploadStoryPhoto() {
+  const { token } = useAdminAuth()
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ id, file, takenOn, caption }: { id: string; file: File; takenOn: string; caption: string }) => {
+      const body = new FormData()
+      body.append('file', file)
+      body.append('takenOn', takenOn)
+      body.append('caption', caption)
+      return apiUpload<Story>(`/api/admin/success-stories/${id}/photo-uploads`, body, adminHeaders(token!))
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ADMIN_KEY })
+      queryClient.invalidateQueries({ queryKey: PUBLIC_KEY })
+    },
+  })
+}
 
 export const useRemoveStoryPhoto = () =>
   useAdminStoryMutation((photoId: string) => ({
