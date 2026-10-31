@@ -1,4 +1,4 @@
-import { Navigate, Route, Routes } from 'react-router-dom'
+import { Navigate, Route, Routes, useLocation } from 'react-router-dom'
 
 import { AdminAreaLayout } from '@/components/layout/AdminAreaLayout'
 import { MemberAreaLayout } from '@/components/layout/MemberAreaLayout'
@@ -6,6 +6,7 @@ import { AdminDashboardPage } from '@/pages/admin/AdminDashboardPage'
 import { AdminMessagesPage } from '@/pages/admin/AdminMessagesPage'
 import { AdminOrdersPage } from '@/pages/admin/AdminOrdersPage'
 import { AdminSettingsPage } from '@/pages/admin/AdminSettingsPage'
+import { ProgramsPage } from '@/pages/admin/ProgramsPage'
 import { ExperiencePage } from '@/pages/admin/ExperiencePage'
 import { StoriesPage } from '@/pages/admin/StoriesPage'
 import { CaseStudiesPage } from '@/pages/admin/CaseStudiesPage'
@@ -39,6 +40,12 @@ import { CalculatorsPage } from '@/pages/CalculatorsPage'
 import { LegalPage } from '@/pages/LegalPage'
 import { LoginPage } from '@/pages/LoginPage'
 import { NotFoundPage } from '@/pages/NotFoundPage'
+
+/** Redirects to a sibling route but keeps the query, which here holds the chosen student. */
+function KeepSearchRedirect({ to }: { to: string }) {
+  const { search } = useLocation()
+  return <Navigate to={{ pathname: to, search }} replace />
+}
 
 export default function App() {
   return (
@@ -93,6 +100,11 @@ export default function App() {
         <Route path="vaka-calismalari" element={<CaseStudiesPage />} />
         <Route path="hikayeler" element={<StoriesPage />} />
         <Route path="tecrubelerim" element={<ExperiencePage />} />
+        <Route path="programlar" element={<ProgramsPage />}>
+          <Route index element={<KeepSearchRedirect to="antrenman" />} />
+          <Route path="antrenman" element={<MemberTrainingTab />} />
+          <Route path="beslenme" element={<MemberNutritionTab />} />
+        </Route>
         <Route path="siparisler" element={<AdminOrdersPage />} />
         <Route path="ayarlar" element={<AdminSettingsPage />} />
       </Route>
