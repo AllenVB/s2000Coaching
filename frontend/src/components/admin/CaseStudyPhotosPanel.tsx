@@ -186,7 +186,7 @@ function PanelBody({ study }: { study: CaseStudy }) {
             <p className="mb-3 text-xs leading-relaxed text-text-secondary">
               Fotoğraflar açık.{' '}
               {study.published
-                ? 'Ana sayfadaki Tecrübelerim bölümünde herkes görebiliyor.'
+                ? 'Herkese açık vaka adresinde herkes görebiliyor (ana sayfada şu an gösterilmiyor).'
                 : 'Ancak vaka çalışması yayında olmadığı için şu an kimse göremiyor.'}
             </p>
             <Button

@@ -6,6 +6,7 @@ import { AdminDashboardPage } from '@/pages/admin/AdminDashboardPage'
 import { AdminMessagesPage } from '@/pages/admin/AdminMessagesPage'
 import { AdminOrdersPage } from '@/pages/admin/AdminOrdersPage'
 import { AdminSettingsPage } from '@/pages/admin/AdminSettingsPage'
+import { ExperiencePage } from '@/pages/admin/ExperiencePage'
 import { StoriesPage } from '@/pages/admin/StoriesPage'
 import { CaseStudiesPage } from '@/pages/admin/CaseStudiesPage'
 import { ExerciseCatalogPage } from '@/pages/admin/ExerciseCatalogPage'
@@ -91,6 +92,7 @@ export default function App() {
         <Route path="sablonlar" element={<PlanTemplatesPage />} />
         <Route path="vaka-calismalari" element={<CaseStudiesPage />} />
         <Route path="hikayeler" element={<StoriesPage />} />
+        <Route path="tecrubelerim" element={<ExperiencePage />} />
         <Route path="siparisler" element={<AdminOrdersPage />} />
         <Route path="ayarlar" element={<AdminSettingsPage />} />
       </Route>
