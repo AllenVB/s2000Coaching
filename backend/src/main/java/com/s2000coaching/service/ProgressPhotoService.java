@@ -129,14 +129,10 @@ public class ProgressPhotoService {
 		return read(getOrThrow(photoId));
 	}
 
-	@Transactional
-	public void deleteOwn(Member member, UUID photoId) {
-		ProgressPhoto photo = getOrThrow(photoId);
-		if (!photo.getMember().getId().equals(member.getId())) {
-			throw new NotFoundException("Fotoğraf bulunamadı.");
-		}
-		delete(photo);
-	}
+	/*
+	 * There is deliberately no member-side delete: the monthly set is final once saved. The coach can remove a
+	 * photo (deleteAsCoach), and deleting the whole account removes them all (deleteAllOfMember).
+	 */
 
 	@Transactional
 	public void deleteAsCoach(UUID photoId) {

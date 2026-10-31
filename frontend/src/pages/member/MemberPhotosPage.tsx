@@ -1,15 +1,11 @@
-import { useState } from 'react'
-
 import type { ProgressPhoto } from '@/types/member'
 
-import { useDeleteMyPhoto, useMyPhotos } from '@/api/photosApi'
+import { useMyPhotos } from '@/api/photosApi'
 import { HealthDataConsent } from '@/components/member/HealthDataConsent'
 import { PhotoComparison } from '@/components/member/PhotoComparison'
 import { StoryConsentPanel } from '@/components/member/StoryConsentPanel'
 import { PhotoUploadForm } from '@/components/member/PhotoUploadForm'
 import { ProgressPhotoImage } from '@/components/member/ProgressPhotoImage'
-import { Button } from '@/components/ui/Button'
-import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { ComingSoonCard, PageHeading } from '@/components/ui/PageHeading'
 import { MemberPhotoSourceProvider } from '@/context/PhotoSourceContext'
 import { useMemberProfileSync } from '@/hooks/useMemberProfileSync'
@@ -28,8 +24,6 @@ export function MemberPhotosPage({ embedded = false }: { embedded?: boolean }) {
 function PhotosView({ embedded }: { embedded: boolean }) {
   const { member } = useMemberProfileSync()
   const { data: photos, isLoading, isError, error } = useMyPhotos()
-  const deletePhoto = useDeleteMyPhoto()
-  const [confirming, setConfirming] = useState<ProgressPhoto | null>(null)
 
   if (!member) {
     return null
@@ -75,7 +69,7 @@ function PhotosView({ embedded }: { embedded: boolean }) {
         ) : photos?.length ? (
           <>
             <PhotoComparison photos={photos} />
-            <PhotoGallery photos={photos} onDelete={setConfirming} />
+            <PhotoGallery photos={photos} />
           </>
         ) : (
           <ComingSoonCard
@@ -85,31 +79,11 @@ function PhotosView({ embedded }: { embedded: boolean }) {
         )}
       </div>
 
-      {confirming ? (
-        <ConfirmDialog
-          title="Fotoğrafı Sil"
-          confirmLabel="Evet, Sil"
-          tone="danger"
-          isPending={deletePhoto.isPending}
-          error={deletePhoto.isError ? deletePhoto.error.message : null}
-          description={`${formatDate(confirming.takenOn)} tarihli fotoğraf kalıcı olarak silinecek. Bu işlem geri alınamaz.`}
-          onCancel={() => setConfirming(null)}
-          onConfirm={() =>
-            deletePhoto.mutate({ photoId: confirming.id }, { onSuccess: () => setConfirming(null) })
-          }
-        />
-      ) : null}
     </>
   )
 }
 
-function PhotoGallery({
-  photos,
-  onDelete,
-}: {
-  photos: ProgressPhoto[]
-  onDelete: (photo: ProgressPhoto) => void
-}) {
+function PhotoGallery({ photos }: { photos: ProgressPhoto[] }) {
   const months = groupByMonth(photos)
   return (
     <section className="rounded-2xl border border-border bg-surface p-6">
@@ -128,15 +102,6 @@ function PhotoGallery({
                 <ProgressPhotoImage photo={photo} zoomable caption={`${monthLabel(photo.takenOn.slice(0, 7))} · ${poseLabel(photo.pose)}`} className="aspect-[3/4] w-full bg-surface-elevated" />
                 <p className="mt-2 text-xs font-semibold text-text-primary">{poseLabel(photo.pose)}</p>
                 <p className="text-[11px] text-text-muted">{formatDate(photo.takenOn)}</p>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="mt-1 px-0"
-                  onClick={() => onDelete(photo)}
-                >
-                  Sil
-                </Button>
               </li>
             ))}
           </ul>

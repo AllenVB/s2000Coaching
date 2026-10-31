@@ -1,0 +1,20 @@
+databaseChangeLog:
+  - changeSet:
+      id: 062-seed-whatsapp-number
+      author: s2000
+      comment: >-
+        The coach's WhatsApp number for the site's WhatsApp button, stored the way the settings editor stores
+        it (a wa.me link). Only inserted when no number has been set yet, so a number the coach has already
+        entered in the settings page is never overwritten.
+      preConditions:
+        - onFail: MARK_RAN
+        - sqlCheck:
+            expectedResult: 0
+            sql: "select count(*) from site_setting where setting_key = 'social.whatsapp'"
+      changes:
+        - insert:
+            tableName: site_setting
+            columns:
+              - column: { name: setting_key, value: "social.whatsapp" }
+              - column: { name: setting_value, value: "https://wa.me/905444530125" }
+              - column: { name: updated_at, valueComputed: "now()" }

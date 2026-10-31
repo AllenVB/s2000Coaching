@@ -14,7 +14,6 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -69,14 +68,5 @@ public class MemberPhotoController {
 				.contentLength(photo.sizeBytes())
 				.header(HttpHeaders.CACHE_CONTROL, "private, max-age=3600")
 				.body(new InputStreamResource(photo.content()));
-	}
-
-	@DeleteMapping("/api/member/photos/{photoId}")
-	public ResponseEntity<Void> delete(
-			@RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization,
-			@PathVariable UUID photoId) {
-		Member member = memberAuthService.requireMember(authorization);
-		photoService.deleteOwn(member, photoId);
-		return ResponseEntity.noContent().build();
 	}
 }

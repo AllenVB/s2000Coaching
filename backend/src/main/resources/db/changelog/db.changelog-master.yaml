@@ -94,3 +94,5 @@ databaseChangeLog:
       file: db/changelog/043-package-discounts.yaml
   - include:
       file: db/changelog/044-daily-activity.yaml
+  - include:
+      file: db/changelog/045-whatsapp-number.yaml

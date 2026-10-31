@@ -56,24 +56,6 @@ export function useUploadMyPhoto() {
   })
 }
 
-export function useDeleteMyPhoto() {
-  const { session } = useMemberAuth()
-  const queryClient = useQueryClient()
-
-  return useMutation({
-    mutationFn: ({ photoId }: { photoId: string }) =>
-      apiFetch<void>(`/api/member/photos/${photoId}`, {
-        method: 'DELETE',
-        headers: memberHeaders(session!.token),
-      }),
-    onSuccess: (_result, { photoId }) => {
-      queryClient.setQueryData<ProgressPhoto[]>(MEMBER_KEY, (old) =>
-        old?.filter((photo) => photo.id !== photoId),
-      )
-    },
-  })
-}
-
 /**
  * The image bytes as an object URL, released when the component goes away.
  *

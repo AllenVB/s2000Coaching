@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 
+import { useMyNutritionPlan } from '@/api/nutritionApi'
 import { useMyWorkoutLogs } from '@/api/trainingApi'
 import { useDeleteMyIntake, useMyIntake, useSaveMyIntake } from '@/api/intakeApi'
 import { Button } from '@/components/ui/Button'
@@ -8,6 +9,7 @@ import { Field, inputClasses } from '@/components/ui/FormField'
 import { TrashIcon } from '@/components/ui/icons'
 import { formatDate, todayIso } from '@/lib/date'
 import { formatAmount } from '@/lib/weeklyNutrition'
+import { targetsOf } from '@/types/nutrition'
 import { parseFigure } from '@/types/monthlyRecord'
 import { DAY_TYPES, type Intake, type IntakeDayType } from '@/types/intake'
 
@@ -116,6 +118,12 @@ function IntakeForm({ date, onDate, existing }: { date: string; onDate: (date: s
   const [dayType, setDayType] = useState<IntakeDayType | ''>(existing?.dayType ?? '')
   const [error, setError] = useState<string | null>(null)
   const today = todayIso()
+  const { data: plan } = useMyNutritionPlan()
+  // The target follows the chosen day type: a training day and a rest day have different calories.
+  const targets = plan && dayType !== '' ? targetsOf(plan, dayType === 'DINLENME' ? 'REST' : 'TRAINING') : null
+  const macroKcal = macroCalories(carbs, fat, protein)
+  // What was eaten, by macros when they are filled in (4/4/9 kcal per gram), else by the calorie field.
+  const eaten = macroKcal ?? (typeof parseFigure(calories) === 'number' ? (parseFigure(calories) as number) : null)
 
   const submit = (event: React.FormEvent) => {
     event.preventDefault()
@@ -186,6 +194,19 @@ function IntakeForm({ date, onDate, existing }: { date: string; onDate: (date: s
           <input value={protein} onChange={(event) => setProtein(event.target.value)} type="text" inputMode="numeric" autoComplete="off" className={inputClasses} />
         </Field>
       </div>
+      {dayType !== '' ? (
+        <TargetRemaining
+          dayLabel={DAY_TYPES.find((type) => type.value === dayType)?.label ?? ''}
+          target={targets?.calories ?? null}
+          eaten={eaten}
+          fromMacros={macroKcal !== null}
+          remainingMacros={targets ? [
+            ['Karbonhidrat', targets.carbsG, parseFigure(carbs)],
+            ['Yağ', targets.fatG, parseFigure(fat)],
+            ['Protein', targets.proteinG, parseFigure(protein)],
+          ] : []}
+        />
+      ) : null}
       {existing ? <p className="mt-3 text-xs text-warning">Bu tarih için kayıt var; kaydederseniz güncellenir.</p> : null}
       {error ? (
         <p role="alert" className="mt-3 text-xs text-error">
@@ -198,5 +219,70 @@ function IntakeForm({ date, onDate, existing }: { date: string; onDate: (date: s
         {save.isPending ? 'Kaydediliyor…' : existing ? 'Güncelle' : 'Kaydet'}
       </Button>
     </form>
+  )
+}
+
+/** Calories implied by the typed macros (4 kcal per gram of carbohydrate and protein, 9 of fat); null when none is typed. */
+function macroCalories(carbs: string, fat: string, protein: string): number | null {
+  const grams = [carbs, fat, protein].map((text) => {
+    const value = parseFigure(text)
+    return typeof value === 'number' ? value : 0
+  })
+  return grams.some((value) => value > 0) ? Math.round(grams[0] * 4 + grams[1] * 9 + grams[2] * 4) : null
+}
+
+function TargetRemaining({
+  dayLabel,
+  target,
+  eaten,
+  fromMacros,
+  remainingMacros,
+}: {
+  dayLabel: string
+  target: number | null
+  eaten: number | null
+  fromMacros: boolean
+  remainingMacros: [string, number | null, number | null | 'invalid'][]
+}) {
+  if (target === null) {
+    return (
+      <p className="mt-3 rounded-xl border border-border bg-surface-elevated p-3 text-xs text-text-muted">
+        {dayLabel} için koçunuzun belirlediği bir kalori hedefi yok.
+      </p>
+    )
+  }
+  const remaining = eaten === null ? null : target - eaten
+  return (
+    <div className="mt-3 rounded-xl border border-primary/30 bg-primary/5 p-3.5 text-xs" aria-live="polite">
+      <p className="text-text-primary">
+        {dayLabel} hedefi: <strong>{formatAmount(target)} kcal</strong>
+        {eaten !== null ? (
+          <>
+            {' '}· {fromMacros ? 'makrolarınıza göre' : 'girdiğiniz'} {formatAmount(eaten)} kcal
+          </>
+        ) : null}
+      </p>
+      {remaining !== null ? (
+        <p className={`mt-1 font-semibold ${remaining >= 0 ? 'text-success' : 'text-warning'}`}>
+          {remaining >= 0
+            ? `Hedefe kalan: ${formatAmount(remaining)} kcal`
+            : `Hedefi ${formatAmount(-remaining)} kcal aştınız`}
+        </p>
+      ) : (
+        <p className="mt-1 text-text-muted">Makrolarınızı ya da kalorinizi yazınca hedefe kalan burada görünür.</p>
+      )}
+      {remainingMacros.some(([, goal]) => goal !== null) ? (
+        <p className="mt-1 text-text-secondary">
+          Kalan makro:{' '}
+          {remainingMacros
+            .filter(([, goal]) => goal !== null)
+            .map(([name, goal, typed]) => {
+              const left = (goal as number) - (typeof typed === 'number' ? typed : 0)
+              return `${name} ${left >= 0 ? `${formatAmount(left)} g` : `${formatAmount(-left)} g fazla`}`
+            })
+            .join(' · ')}
+        </p>
+      ) : null}
+    </div>
   )
 }

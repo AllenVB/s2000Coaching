@@ -113,14 +113,11 @@ class MemberPhotoControllerTest {
 	}
 
 	@Test
-	void shouldReturn204WhenDeletingOwnPhoto() {
-		Member member = member();
-		UUID photoId = UUID.randomUUID();
-		when(memberAuthService.requireMember(BEARER)).thenReturn(member);
+	void shouldNotOfferMembersAWayToDeleteTheirPhotos() {
+		when(memberAuthService.requireMember(BEARER)).thenReturn(member());
 
-		assertThat(mvc.delete().uri("/api/member/photos/" + photoId)
+		assertThat(mvc.delete().uri("/api/member/photos/" + UUID.randomUUID())
 				.header(HttpHeaders.AUTHORIZATION, BEARER))
-				.hasStatus(HttpStatus.NO_CONTENT);
-		verify(photoService).deleteOwn(member, photoId);
+				.hasStatus(HttpStatus.NOT_FOUND);
 	}
 }
