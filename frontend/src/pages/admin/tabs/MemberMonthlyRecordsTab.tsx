@@ -13,7 +13,7 @@ export function MemberMonthlyRecordsTab() {
         Üyenin aylık veri tabloları. Üye kendisi girer; isterseniz sizin de ekleyip düzeltmeniz mümkün. Üye sağlık
         verisi işleme onayını vermemişse kayıt eklenemez.
       </p>
-      <MonthlyRecordsPanel source={source} />
+      <MonthlyRecordsPanel source={source} gender={member.gender} profileHeightCm={member.heightCm} />
     </div>
   )
 }

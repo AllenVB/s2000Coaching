@@ -49,6 +49,11 @@ public class MemberIntake {
 	@Column(name = "water_liters", precision = 3, scale = 1)
 	private java.math.BigDecimal waterLiters;
 
+	/** Training or rest day; null when the member did not say. */
+	@jakarta.persistence.Enumerated(jakarta.persistence.EnumType.STRING)
+	@Column(name = "day_type", length = 12)
+	private IntakeDayType dayType;
+
 	@Column(columnDefinition = "text")
 	private String note;
 
@@ -120,6 +125,14 @@ public class MemberIntake {
 
 	public void setWaterLiters(java.math.BigDecimal waterLiters) {
 		this.waterLiters = waterLiters;
+	}
+
+	public IntakeDayType getDayType() {
+		return dayType;
+	}
+
+	public void setDayType(IntakeDayType dayType) {
+		this.dayType = dayType;
 	}
 
 	public Integer getSodiumMg() {

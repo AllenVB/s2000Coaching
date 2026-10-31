@@ -1,5 +1,7 @@
 import { useSearchParams } from 'react-router-dom'
 
+import type { Member } from '@/types/member'
+
 import { useDeleteMyMeasurement, useMyMeasurements } from '@/api/measurementsApi'
 import { useMemberRecordSource } from '@/api/monthlyRecordApi'
 import { MeasurementProgress } from '@/components/charts/MeasurementProgress'
@@ -43,14 +45,14 @@ export function MemberMeasurementsPage() {
       ) : (
         <>
           <SectionTabs label="Ölçüm türü" tabs={[...TABS]} value={tab} onChange={(next) => setParams({ sekme: next }, { replace: true })} />
-          {tab === 'aylik' ? <MonthlyTab /> : tab === 'haftalik' ? <WeeklyTab /> : <MemberPhotosPage embedded />}
+          {tab === 'aylik' ? <MonthlyTab gender={member.gender} heightCm={member.heightCm} /> : tab === 'haftalik' ? <WeeklyTab /> : <MemberPhotosPage embedded />}
         </>
       )}
     </>
   )
 }
 
-function MonthlyTab() {
+function MonthlyTab({ gender, heightCm }: { gender: Member['gender']; heightCm: number | null }) {
   const source = useMemberRecordSource()
   return (
     <div className="space-y-4">
@@ -58,7 +60,7 @@ function MonthlyTab() {
         Her ay için bir tablo doldurun. <strong className="text-text-primary">Kaydettiğiniz veriler sonradan değiştirilemez</strong>;
         kaydetmeden önce doğruluğunu onaylamanız istenir. Geçmiş aylar için de giriş yapabilirsiniz.
       </p>
-      <MonthlyRecordsPanel source={source} immutable />
+      <MonthlyRecordsPanel source={source} immutable gender={gender} profileHeightCm={heightCm} />
     </div>
   )
 }

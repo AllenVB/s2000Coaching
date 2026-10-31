@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 
+import { useMyWorkoutLogs } from '@/api/trainingApi'
 import { useDeleteMyIntake, useMyIntake, useSaveMyIntake } from '@/api/intakeApi'
 import { Button } from '@/components/ui/Button'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
@@ -8,7 +9,7 @@ import { TrashIcon } from '@/components/ui/icons'
 import { formatDate, todayIso } from '@/lib/date'
 import { formatAmount } from '@/lib/weeklyNutrition'
 import { parseFigure } from '@/types/monthlyRecord'
-import type { Intake } from '@/types/intake'
+import { DAY_TYPES, type Intake, type IntakeDayType } from '@/types/intake'
 
 function numberOrNull(text: string): number | null | 'invalid' {
   return parseFigure(text)
@@ -35,10 +36,11 @@ export function DailyIntakeLog() {
         <section className="rounded-2xl border border-border bg-surface p-6">
           <h2 className="mb-4 text-sm font-bold uppercase tracking-wider text-text-primary">Girdiğim Günler</h2>
           <div className="-mx-2 overflow-x-auto">
-            <table className="w-full min-w-[460px] border-collapse text-sm">
+            <table className="w-full min-w-[520px] border-collapse text-sm">
               <thead>
                 <tr className="border-b border-border text-[11px] font-semibold uppercase tracking-wider text-text-muted">
                   <th className="px-2 py-2 text-left">Tarih</th>
+                  <th className="px-2 py-2 text-left">Gün</th>
                   <th className="px-2 py-2 text-right">Kalori</th>
                   <th className="px-2 py-2 text-right">K / Y / P (g)</th>
                   <th className="px-2 py-2 text-right">Su</th>
@@ -49,6 +51,9 @@ export function DailyIntakeLog() {
                 {intakes.map((row) => (
                   <tr key={row.id} className="border-b border-border/60">
                     <td className="px-2 py-2 text-text-primary">{formatDate(row.consumedOn)}</td>
+                    <td className="px-2 py-2 text-text-secondary">
+                      {DAY_TYPES.find((type) => type.value === row.dayType)?.label.replace(' günü', '') ?? '—'}
+                    </td>
                     <td className="px-2 py-2 text-right text-text-primary">{formatAmount(row.calories)} kcal</td>
                     <td className="px-2 py-2 text-right text-text-secondary">
                       {[row.carbsG, row.fatG, row.proteinG].map((value) => value ?? '—').join(' / ')}
@@ -105,6 +110,10 @@ function IntakeForm({ date, onDate, existing }: { date: string; onDate: (date: s
   const [fat, setFat] = useState(existing?.fatG != null ? String(existing.fatG) : '')
   const [protein, setProtein] = useState(existing?.proteinG != null ? String(existing.proteinG) : '')
   const [water, setWater] = useState(existing?.waterLiters != null ? String(existing.waterLiters) : '')
+  const { data: workoutLogs } = useMyWorkoutLogs()
+  // Suggested from the workout log, but the member decides: nothing is saved unless they pick one.
+  const suggested: IntakeDayType | null = workoutLogs?.some((log) => log.performedOn === date) ? 'ANTRENMAN' : null
+  const [dayType, setDayType] = useState<IntakeDayType | ''>(existing?.dayType ?? '')
   const [error, setError] = useState<string | null>(null)
   const today = todayIso()
 
@@ -113,6 +122,10 @@ function IntakeForm({ date, onDate, existing }: { date: string; onDate: (date: s
     setError(null)
     const kcal = numberOrNull(calories)
     const [c, f, p, w] = [carbs, fat, protein, water].map(numberOrNull)
+    if (dayType === '') {
+      setError('Önce o günün antrenman mı dinlenme günü mü olduğunu seçin.')
+      return
+    }
     if (kcal === null || kcal === 'invalid' || kcal > 20000) {
       setError('O gün aldığınız kaloriyi yazın (0 – 20.000).')
       return
@@ -128,6 +141,7 @@ function IntakeForm({ date, onDate, existing }: { date: string; onDate: (date: s
       fatG: f === null ? null : Math.round(f as number),
       proteinG: p === null ? null : Math.round(p as number),
       waterLiters: w as number | null,
+      dayType,
     })
   }
 
@@ -147,6 +161,14 @@ function IntakeForm({ date, onDate, existing }: { date: string; onDate: (date: s
             onChange={(event) => event.target.value && onDate(event.target.value)}
             className={inputClasses}
           />
+        </Field>
+        <Field label="Gün türü *" hint={dayType === '' && suggested ? 'O gün antrenman kaydınız var.' : 'Kaloriler antrenman ve dinlenme gününe göre değişir.'}>
+          <select value={dayType} onChange={(event) => setDayType(event.target.value as IntakeDayType | '')} className={inputClasses}>
+            <option value="">Seçin</option>
+            {DAY_TYPES.map((type) => (
+              <option key={type.value} value={type.value}>{type.label}</option>
+            ))}
+          </select>
         </Field>
         <Field label="Kalori (kcal) *">
           <input value={calories} onChange={(event) => setCalories(event.target.value)} type="text" inputMode="numeric" autoComplete="off" placeholder="örn. 2400" className={inputClasses} />

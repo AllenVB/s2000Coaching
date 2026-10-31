@@ -1,10 +1,12 @@
 import { useState, type FormEvent } from 'react'
 
 import type { RecordSource } from '@/api/monthlyRecordApi'
+import { DerivedFigures } from '@/components/records/DerivedFigures'
 import { Button } from '@/components/ui/Button'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { PencilIcon, PlusIcon, TrashIcon } from '@/components/ui/icons'
 import { currentMonthIso } from '@/lib/date'
+import type { MemberGender } from '@/types/member'
 import {
   FIGURES,
   formatPeriod,
@@ -21,7 +23,18 @@ const INPUT_CLASS =
  * Month-by-month body figures as tables: one table per month, a pencil to change it, a bin to
  * remove it. Used for the member's own page and, with another source, for the coach.
  */
-export function MonthlyRecordsPanel({ source, immutable = false }: { source: RecordSource; immutable?: boolean }) {
+export function MonthlyRecordsPanel({
+  source,
+  immutable = false,
+  gender = null,
+  profileHeightCm = null,
+}: {
+  source: RecordSource
+  immutable?: boolean
+  /** Used for the derived values (body fat needs the sex). */
+  gender?: MemberGender | null
+  profileHeightCm?: number | null
+}) {
   const [editing, setEditing] = useState<'new' | string | null>(null)
   // A saved month is final for the member: the form is always open for the next one, asks "are you
   // sure" before saving, and the cards have neither pencil nor bin. Only the coach corrects a row.
@@ -53,6 +66,8 @@ export function MonthlyRecordsPanel({ source, immutable = false }: { source: Rec
       {immutable ? (
         <RecordForm
           key={formVersion}
+          gender={gender}
+          profileHeightCm={profileHeightCm}
           existing={records}
           source={source}
           confirmBeforeSaving
@@ -71,6 +86,8 @@ export function MonthlyRecordsPanel({ source, immutable = false }: { source: Rec
 
       {!immutable && editing === 'new' ? (
         <RecordForm
+          gender={gender}
+          profileHeightCm={profileHeightCm}
           existing={records}
           source={source}
           onDone={() => setEditing(null)}
@@ -95,6 +112,8 @@ export function MonthlyRecordsPanel({ source, immutable = false }: { source: Rec
         !immutable && editing === record.id ? (
           <RecordForm
             key={record.id}
+            gender={gender}
+            profileHeightCm={profileHeightCm}
             record={record}
             existing={records}
             source={source}
@@ -104,6 +123,8 @@ export function MonthlyRecordsPanel({ source, immutable = false }: { source: Rec
           <RecordCard
             key={record.id}
             record={record}
+            gender={gender}
+            profileHeightCm={profileHeightCm}
             onEdit={immutable ? undefined : () => setEditing(record.id)}
             onDelete={
               immutable
@@ -135,10 +156,14 @@ export function MonthlyRecordsPanel({ source, immutable = false }: { source: Rec
 
 function RecordCard({
   record,
+  gender,
+  profileHeightCm,
   onEdit,
   onDelete,
 }: {
   record: MonthlyRecord
+  gender: MemberGender | null
+  profileHeightCm: number | null
   onEdit?: () => void
   onDelete?: () => void
 }) {
@@ -185,17 +210,22 @@ function RecordCard({
           })}
         </tbody>
       </table>
+      <DerivedFigures figures={record} gender={gender} profileHeightCm={profileHeightCm} />
     </section>
   )
 }
 
 function RecordForm({
+  gender,
+  profileHeightCm,
   record,
   existing,
   source,
   onDone,
   confirmBeforeSaving = false,
 }: {
+  gender: MemberGender | null
+  profileHeightCm: number | null
   record?: MonthlyRecord
   existing: MonthlyRecord[]
   source: RecordSource
@@ -333,6 +363,8 @@ function RecordForm({
         </tbody>
       </table>
 
+      <DerivedFigures figures={liveFigures(values)} gender={gender} profileHeightCm={profileHeightCm} />
+
       {error ? (
         <p role="alert" className="mt-4 text-sm text-error">
           {error}
@@ -360,4 +392,16 @@ function RecordForm({
       ) : null}
     </form>
   )
+}
+
+/** The form's text fields as numbers; anything unreadable counts as not entered. */
+function liveFigures(values: Record<FigureKey, string>): Omit<MonthlyRecord, 'id' | 'period' | 'updatedAt'> {
+  const read = (key: FigureKey): number | null => {
+    const parsed = parseFigure(values[key])
+    return typeof parsed === 'number' ? parsed : null
+  }
+  return Object.fromEntries(FIGURES.map((figure) => [figure.key, read(figure.key)])) as Omit<
+    MonthlyRecord,
+    'id' | 'period' | 'updatedAt'
+  >
 }

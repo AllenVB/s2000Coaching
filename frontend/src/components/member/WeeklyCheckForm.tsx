@@ -1,11 +1,11 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 
 import { useMyCheckIns, useSaveMyCheckIn } from '@/api/checkInApi'
 import { useSaveMyMeasurement } from '@/api/measurementsApi'
 import { CheckInSummary } from '@/components/member/CheckInSummary'
 import { Button } from '@/components/ui/Button'
 import { Field, inputClasses, textareaClasses } from '@/components/ui/FormField'
-import { formatDate, todayIso } from '@/lib/date'
+import { formatWeek, recentWeeks, weighInDate } from '@/lib/weeks'
 import { CHECK_IN_SCALES } from '@/types/checkIn'
 import { parseFigure } from '@/types/monthlyRecord'
 
@@ -20,6 +20,10 @@ export function WeeklyCheckForm() {
   const saveCheckIn = useSaveMyCheckIn()
   const saveMeasurement = useSaveMyMeasurement()
 
+  const weeks = useMemo(() => recentWeeks(26), [])
+  const [weekStart, setWeekStart] = useState(weeks[0].start)
+  const week = weeks.find((entry) => entry.start === weekStart) ?? weeks[0]
+  const alreadySent = checkIns?.some((checkIn) => checkIn.weekStart === week.start) ?? false
   const [weight, setWeight] = useState('')
   const [values, setValues] = useState<Record<string, number>>({ sleep: 3, stress: 3, energy: 3, hunger: 3 })
   const [diet, setDiet] = useState('')
@@ -35,7 +39,7 @@ export function WeeklyCheckForm() {
 
     const weightValue = parseFigure(weight)
     if (weightValue === null || weightValue === 'invalid' || weightValue < 30 || weightValue > 300) {
-      setError('Bu haftaki kilonuzu 30 ile 300 kg arasında girin.')
+      setError('Seçtiğiniz haftanın kilosunu 30 ile 300 kg arasında girin.')
       return
     }
     const dietValue = diet.trim() === '' ? null : Number(diet)
@@ -46,9 +50,9 @@ export function WeeklyCheckForm() {
 
     setIsSending(true)
     try {
-      await saveMeasurement.mutateAsync({ measuredOn: todayIso(), weightKg: weightValue })
+      await saveMeasurement.mutateAsync({ measuredOn: weighInDate(week), weightKg: weightValue })
       await saveCheckIn.mutateAsync({
-        weekOf: todayIso(),
+        weekOf: week.start,
         sleep: values.sleep,
         stress: values.stress,
         energy: values.energy,
@@ -70,11 +74,30 @@ export function WeeklyCheckForm() {
     <div className="space-y-6">
       <form className="space-y-5 rounded-2xl border border-border bg-surface p-6" onSubmit={submit} noValidate>
         <div>
-          <h2 className="text-sm font-bold uppercase tracking-wider text-text-primary">Bu Haftanın Takibi</h2>
+          <h2 className="text-sm font-bold uppercase tracking-wider text-text-primary">Haftalık Takip</h2>
           <p className="mt-1.5 text-xs leading-relaxed text-text-secondary">
-            Haftada bir, tercihen aynı gün ve aynı saatte tartının. Aynı haftayı tekrar gönderirseniz güncellenir.
+            Haftalar Pazartesi–Pazar arasıdır. Geçmiş haftaları da girebilirsiniz; gelecek haftalar girilemez.
+            Aynı haftayı tekrar gönderirseniz güncellenir.
           </p>
         </div>
+
+        <Field label="Hafta *" hint={alreadySent ? 'Bu hafta daha önce gönderildi; tekrar gönderirseniz güncellenir.' : undefined}>
+          <select
+            value={week.start}
+            onChange={(event) => {
+              setWeekStart(event.target.value)
+              setSent(false)
+            }}
+            className={`${inputClasses} max-w-sm`}
+          >
+            {weeks.map((entry, index) => (
+              <option key={entry.start} value={entry.start}>
+                {formatWeek(entry)}
+                {index === 0 ? ' (bu hafta)' : ''}
+              </option>
+            ))}
+          </select>
+        </Field>
 
         <Field label="Kilo (kg) *">
           <input
@@ -145,10 +168,10 @@ export function WeeklyCheckForm() {
             {error}
           </p>
         ) : null}
-        {sent ? <p className="text-xs text-success">Bu haftanın takibi koçunuza iletildi.</p> : null}
+        {sent ? <p className="text-xs text-success">Seçtiğiniz haftanın takibi koçunuza iletildi.</p> : null}
 
         <Button type="submit" disabled={isSending}>
-          {isSending ? 'Gönderiliyor…' : 'Bu Haftayı Gönder'}
+          {isSending ? 'Gönderiliyor…' : 'Haftayı Gönder'}
         </Button>
       </form>
 
@@ -157,7 +180,7 @@ export function WeeklyCheckForm() {
           <h2 className="text-[11px] font-semibold uppercase tracking-wider text-text-muted">Geçmiş Haftalar</h2>
           {checkIns.map((checkIn) => (
             <article key={checkIn.id} className="rounded-2xl border border-border bg-surface p-5">
-              <p className="mb-2 text-sm font-semibold text-text-primary">{formatDate(checkIn.weekStart)} haftası</p>
+              <p className="mb-2 text-sm font-semibold text-text-primary">{formatWeek({ start: checkIn.weekStart, end: weekEnd(checkIn.weekStart) })}</p>
               <CheckInSummary checkIn={checkIn} />
               {checkIn.note ? (
                 <p className="mt-3 text-xs leading-relaxed text-text-secondary">
@@ -179,4 +202,8 @@ export function WeeklyCheckForm() {
       ) : null}
     </div>
   )
+}
+
+function weekEnd(start: string): string {
+  return recentWeeks(1, start)[0].end
 }

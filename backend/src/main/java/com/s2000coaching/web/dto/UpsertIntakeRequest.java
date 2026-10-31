@@ -17,11 +17,18 @@ public record UpsertIntakeRequest(
 		@Min(0) @Max(50000) Integer sodiumMg,
 		@Size(max = 1000) String note,
 		@jakarta.validation.constraints.DecimalMin("0.0") @jakarta.validation.constraints.DecimalMax("20.0")
-		java.math.BigDecimal waterLiters) {
+		java.math.BigDecimal waterLiters,
+		com.s2000coaching.domain.IntakeDayType dayType) {
+
+	/** The shape from before the day type was recorded. */
+	public UpsertIntakeRequest(LocalDate consumedOn, Integer calories, Integer proteinG, Integer carbsG, Integer fatG,
+			Integer sodiumMg, String note, java.math.BigDecimal waterLiters) {
+		this(consumedOn, calories, proteinG, carbsG, fatG, sodiumMg, note, waterLiters, null);
+	}
 
 	/** The shape from before water was recorded. */
 	public UpsertIntakeRequest(LocalDate consumedOn, Integer calories, Integer proteinG, Integer carbsG, Integer fatG,
 			Integer sodiumMg, String note) {
-		this(consumedOn, calories, proteinG, carbsG, fatG, sodiumMg, note, null);
+		this(consumedOn, calories, proteinG, carbsG, fatG, sodiumMg, note, null, null);
 	}
 }

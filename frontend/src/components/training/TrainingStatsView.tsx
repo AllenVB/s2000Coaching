@@ -8,7 +8,7 @@ import type { TrainingStats } from '@/types/training'
  */
 export function TrainingStatsView({ stats }: { stats: TrainingStats }) {
   const withBest = stats.exercises.filter((exercise) => exercise.best !== null)
-  const maxVolume = Math.max(1, ...stats.weeklyVolume.map((week) => week.volumeKg))
+  const maxSets = Math.max(1, ...stats.weeklyVolume.map((week) => week.sets))
   const hasVolume = stats.weeklyVolume.some((week) => week.sets > 0)
 
   return (
@@ -57,23 +57,23 @@ export function TrainingStatsView({ stats }: { stats: TrainingStats }) {
 
       <section className="rounded-2xl border border-border bg-surface p-6">
         <h2 className="mb-1 text-sm font-bold uppercase tracking-wider text-text-primary">
-          Haftalık Hacim (son {stats.weeklyVolume.length} hafta)
+          Haftalık Set Hacmi (son {stats.weeklyVolume.length} hafta)
         </h2>
-        <p className="mb-4 text-xs text-text-muted">Toplam ağırlık × tekrar. Ağırlığı girilmeyen setler hacme girmez.</p>
+        <p className="mb-4 text-xs text-text-muted">Haftada yapılan toplam set sayısı. Günde 4–12 farklı hareket yapıldığı için kaldırılan toplam kiloyu değil, hareketlerden bağımsız olan set sayısını esas alırız; fare ile üzerine gelince ağırlıklı setlerin tonajı da görünür.</p>
         {!hasVolume ? (
           <p className="text-sm italic text-text-muted">Bu dönemde kayıtlı antrenman yok.</p>
         ) : (
           <div
             className="flex h-32 items-end gap-1.5"
             role="img"
-            aria-label="Haftalık antrenman hacmi çubuk grafiği"
+            aria-label="Haftalık set sayısı çubuk grafiği"
           >
             {stats.weeklyVolume.map((week) => (
               <div key={week.weekStart} className="group flex h-full flex-1 flex-col justify-end">
                 <div
                   className="w-full rounded-t bg-primary/80 transition-colors group-hover:bg-primary"
-                  style={{ height: `${Math.max(week.volumeKg > 0 ? 4 : 0, (week.volumeKg / maxVolume) * 100)}%` }}
-                  title={`${formatDate(week.weekStart)} haftası: ${week.volumeKg} kg · ${week.sets} set`}
+                  style={{ height: `${Math.max(week.sets > 0 ? 4 : 0, (week.sets / maxSets) * 100)}%` }}
+                  title={`${formatDate(week.weekStart)} haftası: ${week.sets} set${week.volumeKg > 0 ? ` · ağırlıklı setlerde ${week.volumeKg} kg` : ''}`}
                 />
               </div>
             ))}
