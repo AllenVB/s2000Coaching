@@ -29,6 +29,15 @@ export function recentWeeks(count: number): string[] {
   return Array.from({ length: count }, (_, index) => format(thisMonday - index * 7 * DAY_MS))
 }
 
+/** How far back a week may be filled in; the server allows the same number of weeks. */
+export const MAX_WEEKS_BACK = 156
+
+/** The earliest Monday that can still be entered. */
+export function earliestWeek(): string {
+  const thisMonday = parse(mondayOf(todayIso()))
+  return format(thisMonday - MAX_WEEKS_BACK * 7 * DAY_MS)
+}
+
 export function addDays(iso: string, days: number): string {
   return format(parse(iso) + days * DAY_MS)
 }

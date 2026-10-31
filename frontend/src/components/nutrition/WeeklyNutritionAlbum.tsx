@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/Button'
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog'
 import { Field, inputClasses } from '@/components/ui/FormField'
 import { PencilIcon, TrashIcon } from '@/components/ui/icons'
-import { formatAmount, formatWeek, macrosOf, recentWeeks } from '@/lib/weeklyNutrition'
+import { addDays, earliestWeek, formatAmount, formatWeek, macrosOf, mondayOf, recentWeeks } from '@/lib/weeklyNutrition'
 import type { WeeklyNutrition } from '@/types/weeklyNutrition'
 
 /** Mirrors `app.photos.max-size-bytes`; the server enforces it, this only says so earlier. */
@@ -255,10 +255,14 @@ function WeekForm({
   /** Leaves the edit that a card's pencil started. */
   onCancel: () => void
 }) {
-  const weeks = useMemo(() => recentWeeks(WEEKS_OFFERED), [])
+  const recent = useMemo(() => recentWeeks(WEEKS_OFFERED), [])
   const byWeek = useMemo(() => new Map(entries.map((entry) => [entry.weekStart, entry])), [entries])
 
-  const [weekStart, setWeekStart] = useState(initialWeek ?? weeks[0])
+  const [weekStart, setWeekStart] = useState(initialWeek ?? recent[0])
+  // The list is the last year; an older week picked by date (or opened from its card) is added to it.
+  const weeks = recent.includes(weekStart) ? recent : [...recent, weekStart].sort().reverse()
+  // The latest weeks with nothing entered yet: the quickest way to catch up on a week that was missed.
+  const missing = recent.slice(1, 9).filter((week) => !byWeek.has(week)).slice(0, 4)
   const existing = byWeek.get(weekStart)
   const [calories, setCalories] = useState(existing ? String(existing.calories) : '')
   const [carbs, setCarbs] = useState(existing ? String(existing.carbsPercent) : '')
@@ -392,6 +396,46 @@ function WeekForm({
             ))}
           </select>
         </Field>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <Field label="Ya da bir tarih seçin" hint="Seçtiğiniz günün haftası (pazartesi–pazar) açılır; en fazla 3 yıl geriye.">
+            <input
+              type="date"
+              value={weekStart}
+              min={earliestWeek()}
+              max={addDays(recent[0], 6)}
+              aria-label="Haftayı tarihten seç"
+              onChange={(event) => {
+                const picked = event.target.value
+                if (!picked) {
+                  return
+                }
+                if (mondayOf(picked) < earliestWeek()) {
+                  setError('En fazla 3 yıl geriye gidilebilir.')
+                  return
+                }
+                chooseWeek(mondayOf(picked))
+              }}
+              className={inputClasses}
+            />
+          </Field>
+          {missing.length > 0 ? (
+            <div>
+              <span className="mb-1.5 block text-xs font-medium text-text-secondary">Girilmemiş son haftalar</span>
+              <div className="flex flex-wrap gap-2">
+                {missing.map((week) => (
+                  <button
+                    key={week}
+                    type="button"
+                    onClick={() => chooseWeek(week)}
+                    className="rounded-full border border-dashed border-border-strong px-3 py-1.5 text-[11px] font-semibold text-text-secondary transition-colors hover:border-primary hover:text-primary"
+                  >
+                    {formatWeek(week)}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : null}
+        </div>
         {existing ? (
           <p className="text-[11px] text-text-muted">Bu hafta için kayıt var; kaydederseniz güncellenir.</p>
         ) : null}

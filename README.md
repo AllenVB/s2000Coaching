@@ -199,6 +199,8 @@ bölümünden planın günü ve tarih seçilip ilgili gün sayfası o tarih içi
 kayıt varsa değerler onunla dolu gelir, uyarı gösterilir ve kaydetmek yeni satır açmaz, o seansı günceller;
 geçmiş listesindeki her seansta **Düzenle** bağlantısı da aynı yere götürür (yalnızca aktif planın günleri
 için). Tarih değiştirilince yazılmış değerler yeni tarihin kaydıyla değiştirilir.
+Yanlış girilen ya da hiç yapılmamış bir seans geçmiş listesindeki çöp kutusuyla (onay sorarak) silinir;
+silme tarih sınırına bağlı değildir.
 
 **Antrenman 1 – 10.** Üyenin gün sayfasında her hareketin altında on kutu vardır; kutular üyenin zaten
 kaydettiği seanslardan dolar (o seansın en ağır seti), yani ağırlık tek yerden girilir. Onuncudan sonra
@@ -364,7 +366,9 @@ Hepsi `/uye` (üye) ve `/yonetim/uyeler/:id` (koç) altında; sağlık verisi sa
   (toplam tam 100 olmalı, değilse kaydedilmez) ve haftaya **tek bir fotoğraf** ekleyebilir. Gramajlar
   otomatik hesaplanır (karbonhidrat ve protein 4, yağ 9 kcal/g) ve **haftalık toplam ile günlük ortalama**
   (hafta ÷ 7) kartta gösterilir; gram değerleri saklanmaz, kalori ve yüzdelerden her seferinde türetilir.
-  Aynı hafta tekrar kaydedilirse güncellenir (kalemle düzenle, çöp kutusuyla sil); gelecek haftalar ve üç
+  Aynı hafta tekrar kaydedilirse güncellenir (kalemle düzenle, çöp kutusuyla sil); **geçmiş haftalar** da girilir: hafta listesi son bir yılı verir, **tarih seçiciyle**
+  seçilen günün haftası (pazartesi–pazar) üç yıl geriye kadar açılır ve "Girilmemiş son haftalar" düğmeleri
+  eksik kalan son haftaları tek dokunuşla açar; gelecek haftalar ve üç
   yıldan eski haftalar girilemez. Koç aynı albümü üye detayı → Beslenme sekmesinde okur (fotoğraflar dahil).
   Sağlık verisidir: onay olmadan yazılmaz, üye silinince satırlar ve fotoğraf dosyaları da silinir. Eski
   günlük yemek kaydı ekranı kaldırıldı; daha önce girilmiş günlük kayıtlar koçun sekmesinde durur.
