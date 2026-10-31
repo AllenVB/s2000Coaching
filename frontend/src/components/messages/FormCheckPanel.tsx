@@ -4,12 +4,11 @@ import { useCreateFormCheck, useDeleteFormCheck, useMyFormChecks } from '@/api/f
 import { FormCheckVideo } from '@/components/training/FormCheckVideo'
 import { Button } from '@/components/ui/Button'
 import { Field, inputClasses, textareaClasses } from '@/components/ui/FormField'
-import { PageHeading } from '@/components/ui/PageHeading'
 import { TrashIcon } from '@/components/ui/icons'
 import { formatDate } from '@/lib/date'
 
-/** Send the coach a clip of a lift to look at; the answer comes back on the same card. */
-export function MemberFormCheckPage() {
+/** Send the coach a link to a clip of a lift to look at; the answer comes back on the same card. */
+export function FormCheckPanel() {
   const { data: checks } = useMyFormChecks()
   const create = useCreateFormCheck()
   const remove = useDeleteFormCheck()
@@ -34,11 +33,6 @@ export function MemberFormCheckPage() {
 
   return (
     <>
-      <PageHeading
-        title="Form Kontrolü"
-        description="Bir hareketin kısa videosunu çekin, koçunuz izleyip yazılı geri bildirim versin."
-      />
-
       <div className="space-y-6">
         <form className="space-y-4 rounded-2xl border border-border bg-surface p-6" onSubmit={submit}>
           <ol className="list-decimal space-y-1 pl-5 text-xs leading-relaxed text-text-secondary">

@@ -1,61 +1,90 @@
+import { useSearchParams } from 'react-router-dom'
+
 import { useDeleteMyMeasurement, useMyMeasurements } from '@/api/measurementsApi'
+import { useMemberRecordSource } from '@/api/monthlyRecordApi'
 import { MeasurementProgress } from '@/components/charts/MeasurementProgress'
 import { HealthDataConsent } from '@/components/member/HealthDataConsent'
-import { MeasurementForm } from '@/components/member/MeasurementForm'
 import { MeasurementHistory } from '@/components/member/MeasurementHistory'
+import { WeeklyCheckForm } from '@/components/member/WeeklyCheckForm'
+import { MonthlyRecordsPanel } from '@/components/records/MonthlyRecordsPanel'
 import { PageHeading } from '@/components/ui/PageHeading'
+import { SectionTabs, tabFromParam } from '@/components/ui/SectionTabs'
 import { useMemberProfileSync } from '@/hooks/useMemberProfileSync'
 
+const TABS = [
+  { value: 'aylik', label: 'Aylık Ölçüler' },
+  { value: 'haftalik', label: 'Haftalık Takip' },
+] as const
+
+/**
+ * "Ölçümlerim": the monthly body tables (final once saved, past months stay on the page) and the
+ * weekly follow-up (weight, how the week went, wishes and complaints) with its chart and history.
+ */
 export function MemberMeasurementsPage() {
   const { member } = useMemberProfileSync()
-  const { data: measurements, isLoading, isError, error } = useMyMeasurements()
-  const deleteMeasurement = useDeleteMyMeasurement()
+  const [params, setParams] = useSearchParams()
+  const tab = tabFromParam(params.get('sekme'), [...TABS])
 
   if (!member) {
     return null
   }
 
-  // Health data is special-category under KVKK: nothing is shown or written before consent.
-  if (!member.healthDataConsentAt) {
-    return (
-      <>
-        <PageHeading
-          title="Ölçümler"
-          description="Haftalık ölçümlerinizi girmeye başlamak için önce onay vermeniz gerekiyor."
-        />
-        <HealthDataConsent />
-      </>
-    )
-  }
-
   return (
     <>
       <PageHeading
-        title="Ölçümler"
-        description="Haftada bir, tercihen aynı gün ve aynı saatte ölçün — eğilimi okunur kılan budur."
+        title="Ölçümlerim"
+        description="Aylık vücut ölçülerinizi ve haftalık kilo ile değerlendirmenizi girersiniz; geçmiş kayıtlarınız aşağıda durur."
       />
-
-      <div className="space-y-6">
-        <MeasurementForm />
-
-        {isLoading ? (
-          <div className="h-48 animate-pulse rounded-2xl border border-border bg-surface" />
-        ) : isError ? (
-          <p className="rounded-xl border border-error/40 bg-error/10 p-3.5 text-xs text-error">
-            Ölçümler yüklenemedi: {error.message}
-          </p>
-        ) : measurements ? (
-          <>
-            <MeasurementProgress measurements={measurements} />
-            <MeasurementHistory
-              measurements={measurements}
-              onDelete={(measurementId) => deleteMeasurement.mutate({ measurementId })}
-              isDeleting={deleteMeasurement.isPending}
-              deleteError={deleteMeasurement.isError ? deleteMeasurement.error.message : null}
-            />
-          </>
-        ) : null}
-      </div>
+      {/* Body figures and weight are health data: nothing is shown or written before the member agrees. */}
+      {!member.healthDataConsentAt ? (
+        <HealthDataConsent />
+      ) : (
+        <>
+          <SectionTabs label="Ölçüm türü" tabs={[...TABS]} value={tab} onChange={(next) => setParams({ sekme: next }, { replace: true })} />
+          {tab === 'aylik' ? <MonthlyTab /> : <WeeklyTab />}
+        </>
+      )}
     </>
+  )
+}
+
+function MonthlyTab() {
+  const source = useMemberRecordSource()
+  return (
+    <div className="space-y-4">
+      <p className="rounded-xl border border-border bg-surface p-4 text-xs leading-relaxed text-text-secondary">
+        Her ay için bir tablo doldurun. <strong className="text-text-primary">Kaydettiğiniz veriler sonradan değiştirilemez</strong>;
+        kaydetmeden önce doğruluğunu onaylamanız istenir. Geçmiş aylar için de giriş yapabilirsiniz.
+      </p>
+      <MonthlyRecordsPanel source={source} immutable />
+    </div>
+  )
+}
+
+function WeeklyTab() {
+  const { data: measurements, isLoading, isError, error } = useMyMeasurements()
+  const deleteMeasurement = useDeleteMyMeasurement()
+
+  return (
+    <div className="space-y-6">
+      <WeeklyCheckForm />
+      {isLoading ? (
+        <div className="h-48 animate-pulse rounded-2xl border border-border bg-surface" />
+      ) : isError ? (
+        <p className="rounded-xl border border-error/40 bg-error/10 p-3.5 text-xs text-error">
+          Ölçümler yüklenemedi: {error.message}
+        </p>
+      ) : measurements ? (
+        <>
+          <MeasurementProgress measurements={measurements} />
+          <MeasurementHistory
+            measurements={measurements}
+            onDelete={(measurementId) => deleteMeasurement.mutate({ measurementId })}
+            isDeleting={deleteMeasurement.isPending}
+            deleteError={deleteMeasurement.isError ? deleteMeasurement.error.message : null}
+          />
+        </>
+      ) : null}
+    </div>
   )
 }

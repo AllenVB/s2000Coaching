@@ -1,4 +1,4 @@
-import { Route, Routes } from 'react-router-dom'
+import { Navigate, Route, Routes } from 'react-router-dom'
 
 import { AdminAreaLayout } from '@/components/layout/AdminAreaLayout'
 import { MemberAreaLayout } from '@/components/layout/MemberAreaLayout'
@@ -26,21 +26,15 @@ import { MemberProfileTab } from '@/pages/admin/tabs/MemberProfileTab'
 import { LandingPage } from '@/pages/LandingPage'
 import { MemberHistoryPage } from '@/pages/member/MemberHistoryPage'
 import { MemberPhotosPage } from '@/pages/member/MemberPhotosPage'
-import { MemberStoryPage } from '@/pages/member/MemberStoryPage'
-import { MemberFormCheckPage } from '@/pages/member/MemberFormCheckPage'
 import { MemberQuestionnairePage } from '@/pages/member/MemberQuestionnairePage'
-import { MemberCheckInPage } from '@/pages/member/MemberCheckInPage'
 import { MemberMeasurementsPage } from '@/pages/member/MemberMeasurementsPage'
 import { MemberMessagesPage } from '@/pages/member/MemberMessagesPage'
-import { MemberNutritionPage } from '@/pages/member/MemberNutritionPage'
-import { MemberTrainingPage } from '@/pages/member/MemberTrainingPage'
 import { MemberWorkoutDayPage } from '@/pages/member/MemberWorkoutDayPage'
+import { MemberProgramsPage } from '@/pages/member/MemberProgramsPage'
 import { MemberProfilePage } from '@/pages/member/MemberProfilePage'
-import { MemberTodayPage } from '@/pages/member/MemberTodayPage'
 import { MemberPrintPage as AdminMemberPrintPage } from '@/pages/admin/MemberPrintPage'
 import { MemberPrintPage } from '@/pages/member/MemberPrintPage'
 import { MemberMonthlyRecordsTab } from '@/pages/admin/tabs/MemberMonthlyRecordsTab'
-import { MemberRecordsPage } from '@/pages/member/MemberRecordsPage'
 import { CalculatorsPage } from '@/pages/CalculatorsPage'
 import { LegalPage } from '@/pages/LegalPage'
 import { LoginPage } from '@/pages/LoginPage'
@@ -55,21 +49,24 @@ export default function App() {
       <Route path="/yasal/:slug" element={<LegalPage />} />
 
       <Route path="/uye" element={<MemberAreaLayout />}>
-        <Route index element={<MemberTodayPage />} />
-        <Route path="antrenman" element={<MemberTrainingPage />} />
-        <Route path="antrenman/:dayId" element={<MemberWorkoutDayPage />} />
-        <Route path="beslenme" element={<MemberNutritionPage />} />
-        <Route path="olcumler" element={<MemberMeasurementsPage />} />
-        <Route path="verilerim" element={<MemberRecordsPage />} />
-        <Route path="haftalik" element={<MemberCheckInPage />} />
+        <Route index element={<Navigate to="/uye/programlarim" replace />} />
+        <Route path="programlarim" element={<MemberProgramsPage />} />
+        <Route path="programlarim/antrenman/:dayId" element={<MemberWorkoutDayPage />} />
+        <Route path="olcumlerim" element={<MemberMeasurementsPage />} />
         <Route path="anket" element={<MemberQuestionnairePage />} />
-        <Route path="form-kontrol" element={<MemberFormCheckPage />} />
-        <Route path="hikayem" element={<MemberStoryPage />} />
         <Route path="gecmis" element={<MemberHistoryPage />} />
         <Route path="fotograflar" element={<MemberPhotosPage />} />
         <Route path="mesajlar" element={<MemberMessagesPage />} />
         <Route path="profil" element={<MemberProfilePage />} />
         <Route path="cikti" element={<MemberPrintPage />} />
+        {/* Addresses from before the member area was reorganised (bookmarks, old e-mails). */}
+        <Route path="antrenman" element={<Navigate to="/uye/programlarim?sekme=antrenman" replace />} />
+        <Route path="beslenme" element={<Navigate to="/uye/programlarim?sekme=beslenme" replace />} />
+        <Route path="olcumler" element={<Navigate to="/uye/olcumlerim?sekme=haftalik" replace />} />
+        <Route path="verilerim" element={<Navigate to="/uye/olcumlerim?sekme=aylik" replace />} />
+        <Route path="haftalik" element={<Navigate to="/uye/olcumlerim?sekme=haftalik" replace />} />
+        <Route path="form-kontrol" element={<Navigate to="/uye/mesajlar?sekme=form" replace />} />
+        <Route path="hikayem" element={<Navigate to="/uye/programlarim" replace />} />
       </Route>
 
       <Route path="/yonetim" element={<AdminAreaLayout />}>

@@ -1,8 +1,10 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
+import { Link } from 'react-router-dom'
 
 import { useChangeMemberPassword, useSetReminders, useUpdateMyProfile } from '@/api/memberAuthApi'
+import { useMyQuestionnaire } from '@/api/questionnaireApi'
 import { MembershipCard } from '@/components/member/MembershipCard'
 import { MemberStatusBadge } from '@/components/member/MemberStatusBadge'
 import { Button } from '@/components/ui/Button'
@@ -37,15 +39,42 @@ export function MemberProfilePage() {
 
       <div className="space-y-6">
         <MembershipCard />
-        <PasswordCard member={member} />
-        <RemindersCard member={member} />
+        <QuestionnaireCard />
         {editing ? (
           <ProfileForm member={member} onDone={() => setEditing(false)} />
         ) : (
           <ProfileCard member={member} onEdit={() => setEditing(true)} />
         )}
+        <RemindersCard member={member} />
+        {/* Changing the password is rare and consequential, so it sits last. */}
+        <PasswordCard member={member} />
       </div>
     </>
+  )
+}
+
+/** The starting questionnaire: asked for until it is filled in, and always there to look at or redo. */
+function QuestionnaireCard() {
+  const { data: questionnaire } = useMyQuestionnaire()
+  const filled = Boolean(questionnaire?.answers)
+
+  return (
+    <section className={`flex flex-wrap items-center justify-between gap-4 rounded-2xl border p-5 ${filled ? 'border-border bg-surface' : 'border-primary/30 bg-primary/5'}`}>
+      <div>
+        <h2 className="text-sm font-bold uppercase tracking-wider text-text-primary">Başlangıç Anketi</h2>
+        <p className="mt-1 text-xs leading-relaxed text-text-secondary">
+          {filled
+            ? 'Anketinizi doldurdunuz; durumunuz değişirse yeniden doldurabilirsiniz.'
+            : 'Koçunuzun size uygun ve güvenli bir program yazabilmesi için kısa bir sağlık ve hedef anketi.'}
+        </p>
+      </div>
+      <Link
+        to="/uye/anket"
+        className="inline-flex h-10 items-center justify-center rounded-xl bg-primary px-4 text-xs font-semibold uppercase tracking-wide text-canvas transition-colors hover:bg-primary-hover"
+      >
+        {filled ? 'Anketi Gör' : 'Anketi Doldur'}
+      </Link>
+    </section>
   )
 }
 

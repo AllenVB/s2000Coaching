@@ -1,0 +1,12 @@
+databaseChangeLog:
+  - changeSet:
+      id: 057-intake-water
+      author: s2000
+      comment: >-
+        The daily food log also records the water drunk that day, in litres. Optional like the macros:
+        an empty value means "not written down", not zero.
+      changes:
+        - addColumn:
+            tableName: member_intake
+            columns:
+              - column: { name: water_liters, type: "numeric(3,1)" }

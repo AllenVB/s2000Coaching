@@ -21,8 +21,11 @@ const INPUT_CLASS =
  * Month-by-month body figures as tables: one table per month, a pencil to change it, a bin to
  * remove it. Used for the member's own page and, with another source, for the coach.
  */
-export function MonthlyRecordsPanel({ source }: { source: RecordSource }) {
+export function MonthlyRecordsPanel({ source, immutable = false }: { source: RecordSource; immutable?: boolean }) {
   const [editing, setEditing] = useState<'new' | string | null>(null)
+  // A saved month is final for the member: the form is always open for the next one, asks "are you
+  // sure" before saving, and the cards have neither pencil nor bin. Only the coach corrects a row.
+  const [formVersion, setFormVersion] = useState(0)
   const [deleting, setDeleting] = useState<MonthlyRecord | null>(null)
   const [deleteError, setDeleteError] = useState<string | null>(null)
   const [isDeleting, setIsDeleting] = useState(false)
@@ -47,7 +50,17 @@ export function MonthlyRecordsPanel({ source }: { source: RecordSource }) {
 
   return (
     <div className="space-y-6">
-      {editing === null ? (
+      {immutable ? (
+        <RecordForm
+          key={formVersion}
+          existing={records}
+          source={source}
+          confirmBeforeSaving
+          onDone={() => setFormVersion((version) => version + 1)}
+        />
+      ) : null}
+
+      {!immutable && editing === null ? (
         <div>
           <Button onClick={() => setEditing('new')}>
             <PlusIcon className="h-4 w-4" />
@@ -56,7 +69,7 @@ export function MonthlyRecordsPanel({ source }: { source: RecordSource }) {
         </div>
       ) : null}
 
-      {editing === 'new' ? (
+      {!immutable && editing === 'new' ? (
         <RecordForm
           existing={records}
           source={source}
@@ -72,12 +85,14 @@ export function MonthlyRecordsPanel({ source }: { source: RecordSource }) {
       ) : null}
       {!source.isLoading && !source.error && records.length === 0 && editing !== 'new' ? (
         <p className="rounded-2xl border border-border bg-surface p-6 text-sm italic text-text-muted">
-          Henüz bir ay eklenmedi. “Yeni Ay Ekle” ile ilk tablonu oluştur.
+          {immutable
+            ? 'Henüz kayıtlı bir ayınız yok. Yukarıdaki tabloyu doldurup kaydedin.'
+            : 'Henüz bir ay eklenmedi. “Yeni Ay Ekle” ile ilk tablonu oluştur.'}
         </p>
       ) : null}
 
       {records.map((record) =>
-        editing === record.id ? (
+        !immutable && editing === record.id ? (
           <RecordForm
             key={record.id}
             record={record}
@@ -89,11 +104,15 @@ export function MonthlyRecordsPanel({ source }: { source: RecordSource }) {
           <RecordCard
             key={record.id}
             record={record}
-            onEdit={() => setEditing(record.id)}
-            onDelete={() => {
-              setDeleteError(null)
-              setDeleting(record)
-            }}
+            onEdit={immutable ? undefined : () => setEditing(record.id)}
+            onDelete={
+              immutable
+                ? undefined
+                : () => {
+                    setDeleteError(null)
+                    setDeleting(record)
+                  }
+            }
           />
         ),
       )}
@@ -120,32 +139,34 @@ function RecordCard({
   onDelete,
 }: {
   record: MonthlyRecord
-  onEdit: () => void
-  onDelete: () => void
+  onEdit?: () => void
+  onDelete?: () => void
 }) {
   const label = formatPeriod(record.period)
   return (
     <section className="rounded-2xl border border-border bg-surface p-5 sm:p-6">
       <header className="mb-4 flex items-center justify-between border-b border-border pb-3">
         <h2 className="text-sm font-bold uppercase tracking-wider text-text-primary">{label}</h2>
-        <div className="flex items-center gap-3">
-          <button
-            type="button"
-            onClick={onEdit}
-            aria-label={`${label} verilerini düzenle`}
-            className="text-text-muted transition-colors hover:text-primary"
-          >
-            <PencilIcon className="h-4 w-4" />
-          </button>
-          <button
-            type="button"
-            onClick={onDelete}
-            aria-label={`${label} verilerini sil`}
-            className="text-text-muted transition-colors hover:text-error"
-          >
-            <TrashIcon className="h-4 w-4" />
-          </button>
-        </div>
+        {onEdit && onDelete ? (
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={onEdit}
+              aria-label={`${label} verilerini düzenle`}
+              className="text-text-muted transition-colors hover:text-primary"
+            >
+              <PencilIcon className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              onClick={onDelete}
+              aria-label={`${label} verilerini sil`}
+              className="text-text-muted transition-colors hover:text-error"
+            >
+              <TrashIcon className="h-4 w-4" />
+            </button>
+          </div>
+        ) : null}
       </header>
       <table className="w-full border-collapse text-sm">
         <tbody>
@@ -173,14 +194,27 @@ function RecordForm({
   existing,
   source,
   onDone,
+  confirmBeforeSaving = false,
 }: {
   record?: MonthlyRecord
   existing: MonthlyRecord[]
   source: RecordSource
   onDone: () => void
+  /** Ask "are you sure, this cannot be changed" before the table is saved. */
+  confirmBeforeSaving?: boolean
 }) {
   const thisMonth = currentMonthIso()
-  const [period, setPeriod] = useState(record?.period ?? thisMonth)
+  // The month a member most likely means: the latest one, going back from this month, with no table yet.
+  const firstFreeMonth = () => {
+    let month = thisMonth
+    for (let step = 0; step < 240 && existing.some((row) => row.period === month); step += 1) {
+      const [year, number] = month.split('-').map(Number)
+      month = number === 1 ? `${year - 1}-12` : `${year}-${String(number - 1).padStart(2, '0')}`
+    }
+    return month
+  }
+  const [period, setPeriod] = useState(record?.period ?? firstFreeMonth())
+  const [pending, setPending] = useState<MonthlyRecordInput | null>(null)
   const [values, setValues] = useState<Record<FigureKey, string>>(() =>
     Object.fromEntries(FIGURES.map((figure) => [figure.key, record?.[figure.key]?.toString() ?? ''])) as Record<
       FigureKey,
@@ -200,7 +234,11 @@ function RecordForm({
         return
       }
       if (existing.some((row) => row.period === period)) {
-        setError(`${formatPeriod(period)} için zaten bir tablo var; kalem simgesiyle düzenleyin.`)
+        setError(
+          confirmBeforeSaving
+            ? `${formatPeriod(period)} için zaten kayıt var; kaydedilen veriler değiştirilemez. Düzeltme için koçunuza yazın.`
+            : `${formatPeriod(period)} için zaten bir tablo var; kalem simgesiyle düzenleyin.`,
+        )
         return
       }
     }
@@ -219,6 +257,14 @@ function RecordForm({
       return
     }
 
+    if (confirmBeforeSaving) {
+      setPending(input)
+      return
+    }
+    await commit(input)
+  }
+
+  const commit = async (input: MonthlyRecordInput) => {
     setIsSaving(true)
     try {
       if (record) {
@@ -228,6 +274,7 @@ function RecordForm({
       }
       onDone()
     } catch (saveError) {
+      setPending(null)
       setError(saveError instanceof Error ? saveError.message : 'Kaydedilemedi.')
     } finally {
       setIsSaving(false)
@@ -242,7 +289,7 @@ function RecordForm({
     >
       <header className="mb-4 flex flex-wrap items-center justify-between gap-3 border-b border-border pb-3">
         <h2 className="text-sm font-bold uppercase tracking-wider text-text-primary">
-          {record ? `${formatPeriod(record.period)} verilerini düzenle` : 'Yeni ay'}
+          {record ? `${formatPeriod(record.period)} verilerini düzenle` : confirmBeforeSaving ? 'Yeni Ölçü Girişi' : 'Yeni ay'}
         </h2>
         {record ? null : (
           <label className="flex items-center gap-2 text-sm text-text-secondary">
@@ -300,6 +347,17 @@ function RecordForm({
           Vazgeç
         </Button>
       </div>
+      {pending ? (
+        <ConfirmDialog
+          title="Verileri Kaydet"
+          confirmLabel="Evet, Kaydet"
+          isPending={isSaving}
+          error={error}
+          description={`${formatPeriod(period)} ayı için girdiğiniz verilerin doğru olduğundan emin misiniz? Kaydedilen veriler sonradan değiştirilemez ve silinemez.`}
+          onCancel={() => setPending(null)}
+          onConfirm={() => commit(pending)}
+        />
+      ) : null}
     </form>
   )
 }

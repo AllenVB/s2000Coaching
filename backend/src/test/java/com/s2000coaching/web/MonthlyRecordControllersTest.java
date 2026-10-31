@@ -92,19 +92,17 @@ class MonthlyRecordControllersTest {
 	@Test
 	void shouldRefuseEverythingWithoutASession() {
 		assertThat(mvc.get().uri("/api/member/monthly-records")).hasStatus(HttpStatus.UNAUTHORIZED);
-		assertThat(mvc.delete().uri("/api/member/monthly-records/" + UUID.randomUUID())).hasStatus(HttpStatus.UNAUTHORIZED);
 	}
 
+	/** What a member saved is final for them: there is no route to change or remove it. */
 	@Test
-	void shouldEditAndDeleteByIdAsTheMember() {
+	void shouldNotOfferTheMemberAWayToEditOrDeleteASavedMonth() {
 		UUID id = UUID.randomUUID();
-		when(recordService.update(any(), any(), any())).thenReturn(response());
 
 		assertThat(mvc.put().uri("/api/member/monthly-records/" + id).header(HttpHeaders.AUTHORIZATION, MEMBER)
-				.contentType(MediaType.APPLICATION_JSON).content(BODY)).hasStatus(HttpStatus.OK);
+				.contentType(MediaType.APPLICATION_JSON).content(BODY)).hasStatus4xxClientError();
 		assertThat(mvc.delete().uri("/api/member/monthly-records/" + id).header(HttpHeaders.AUTHORIZATION, MEMBER))
-				.hasStatus(HttpStatus.NO_CONTENT);
-		verify(recordService).delete(memberId, id);
+				.hasStatus4xxClientError();
 	}
 
 	@Test

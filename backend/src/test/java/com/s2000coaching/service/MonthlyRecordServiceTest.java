@@ -69,7 +69,7 @@ class MonthlyRecordServiceTest {
 	}
 
 	@Test
-	void shouldRefuseAMonthThatAlreadyHasATableAndPointToEditing() {
+	void shouldRefuseAMonthThatAlreadyHasATableAndSendTheMemberToTheCoach() {
 		when(memberService.requireMember(member.getId())).thenReturn(member);
 		when(recordRepository.findByMemberIdAndPeriod(member.getId(), "2026-10"))
 				.thenReturn(Optional.of(new MonthlyRecord(UUID.randomUUID(), member, "2026-10", Instant.now())));
@@ -77,7 +77,7 @@ class MonthlyRecordServiceTest {
 		assertThatThrownBy(() -> service.create(member.getId(), table("2026-10", "80", null)))
 				.isInstanceOf(ConflictException.class)
 				.hasMessageContaining("10/2026")
-				.hasMessageContaining("düzenle");
+				.hasMessageContaining("değiştirilemez");
 		verify(recordRepository, never()).save(any());
 	}
 
@@ -113,47 +113,6 @@ class MonthlyRecordServiceTest {
 		assertThatThrownBy(() -> service.create(noConsent.getId(), table("2026-10", "70", null)))
 				.isInstanceOf(BadRequestException.class).hasMessageContaining("onay");
 		verify(recordRepository, never()).save(any());
-	}
-
-	@Test
-	void shouldReplaceTheWholeTableOnEditAndKeepTheMonth() {
-		MonthlyRecord record = new MonthlyRecord(UUID.randomUUID(), member, "2026-09", Instant.now());
-		record.setFigures(new BigDecimal("184"), new BigDecimal("80"), null, null, null, null, new BigDecimal("90"), null,
-				null, Instant.now());
-		when(recordRepository.findById(record.getId())).thenReturn(Optional.of(record));
-
-		var edited = service.update(member.getId(), record.getId(), table("2030-01", "79.2", null));
-
-		assertThat(edited.period()).isEqualTo("2026-09");
-		assertThat(edited.weightKg()).isEqualByComparingTo("79.2");
-		// The form always sends the whole table: a figure left empty is cleared, not kept.
-		assertThat(edited.waistCm()).isNull();
-	}
-
-	@Test
-	void shouldAnswerAnotherMembersRowLikeAMissingOne() {
-		Member other = new Member(UUID.randomUUID(), "o@example.com", "Oya", "", 170, new BigDecimal("60"), "yok",
-				MemberStatus.ACTIVE, Instant.now());
-		MonthlyRecord record = new MonthlyRecord(UUID.randomUUID(), other, "2026-09", Instant.now());
-		when(recordRepository.findById(record.getId())).thenReturn(Optional.of(record));
-
-		assertThatThrownBy(() -> service.update(member.getId(), record.getId(), table("2026-09", "80", null)))
-				.isInstanceOf(NotFoundException.class);
-		assertThatThrownBy(() -> service.delete(member.getId(), record.getId()))
-				.isInstanceOf(NotFoundException.class);
-		verify(recordRepository, never()).delete(any());
-	}
-
-	@Test
-	void shouldAlwaysAllowDeletingOwnDataEvenWithoutConsent() {
-		member = new Member(UUID.randomUUID(), "c@example.com", "Can", "", 180, new BigDecimal("70"), "yok",
-				MemberStatus.ACTIVE, Instant.now());
-		MonthlyRecord record = new MonthlyRecord(UUID.randomUUID(), member, "2026-09", Instant.now());
-		when(recordRepository.findById(record.getId())).thenReturn(Optional.of(record));
-
-		service.delete(member.getId(), record.getId());
-
-		verify(recordRepository).delete(record);
 	}
 
 	@Test
