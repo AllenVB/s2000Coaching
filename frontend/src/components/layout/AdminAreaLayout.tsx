@@ -24,6 +24,7 @@ const navItems: PortalNavItem[] = [
   { to: '/yonetim/uyeler', label: 'Üyeler', icon: UsersIcon },
   { to: '/yonetim/mesajlar', label: 'Mesajlar', icon: ChatIcon },
   { to: '/yonetim/programlar', label: 'Programlar', icon: DumbbellIcon },
+  { to: '/yonetim/uye-verileri', label: 'Üye Verileri', icon: ChartIcon },
   { to: '/yonetim/sablonlar', label: 'Şablonlar', icon: ClipboardIcon },
   { to: '/yonetim/hareketler', label: 'Hareketler', icon: DumbbellIcon, desktopOnly: true },
   { to: '/yonetim/vaka-calismalari', label: 'Vakalar', icon: ChartIcon, desktopOnly: true },

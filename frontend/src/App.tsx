@@ -6,6 +6,7 @@ import { AdminDashboardPage } from '@/pages/admin/AdminDashboardPage'
 import { AdminMessagesPage } from '@/pages/admin/AdminMessagesPage'
 import { AdminOrdersPage } from '@/pages/admin/AdminOrdersPage'
 import { AdminSettingsPage } from '@/pages/admin/AdminSettingsPage'
+import { MemberDataPage } from '@/pages/admin/MemberDataPage'
 import { ProgramsPage } from '@/pages/admin/ProgramsPage'
 import { ExperiencePage } from '@/pages/admin/ExperiencePage'
 import { StoriesPage } from '@/pages/admin/StoriesPage'
@@ -100,6 +101,7 @@ export default function App() {
         <Route path="vaka-calismalari" element={<CaseStudiesPage />} />
         <Route path="hikayeler" element={<StoriesPage />} />
         <Route path="tecrubelerim" element={<ExperiencePage />} />
+        <Route path="uye-verileri" element={<MemberDataPage />} />
         <Route path="programlar" element={<ProgramsPage />}>
           <Route index element={<KeepSearchRedirect to="antrenman" />} />
           <Route path="antrenman" element={<MemberTrainingTab />} />
