@@ -8,7 +8,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import java.util.List;
 import java.util.UUID;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -32,7 +31,7 @@ public class LeadController {
 	@PostMapping("/api/leads")
 	public ResponseEntity<Void> submit(@Valid @RequestBody CreateLeadRequest request, HttpServletRequest http) {
 		leadService.submit(request, clientAddress(http));
-		return ResponseEntity.status(HttpStatus.CREATED).build();
+		return ResponseEntity.noContent().build();
 	}
 
 	@GetMapping("/api/admin/leads")
