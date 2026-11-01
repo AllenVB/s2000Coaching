@@ -3,11 +3,13 @@ import { useForm } from 'react-hook-form'
 
 import { useEffect, useState } from 'react'
 
+import { useCheckCoupon, type CouponCheck } from '@/api/couponsApi'
 import { useCreateOrder, usePaymentMethods } from '@/api/ordersApi'
 import { Button } from '@/components/ui/Button'
 import { Field, inputClasses } from '@/components/ui/FormField'
 import { CheckIcon, CloseIcon } from '@/components/ui/icons'
 import { useCart } from '@/context/CartContext'
+import { readMemberSession } from '@/lib/memberSession'
 import { formatMinor } from '@/lib/money'
 import { checkoutSchema, type CheckoutFormValues } from '@/schemas/checkoutSchema'
 import type { PaymentMethod } from '@/types/order'
@@ -16,6 +18,9 @@ export function CheckoutModal() {
   const { selectedPackage, isCheckoutOpen, closeCheckout, removeFromCart } = useCart()
   const createOrder = useCreateOrder()
   const { data: methods } = usePaymentMethods()
+  const checkCoupon = useCheckCoupon()
+  const [couponInput, setCouponInput] = useState('')
+  const [coupon, setCoupon] = useState<CouponCheck | null>(null)
   const [chosenMethod, setChosenMethod] = useState<PaymentMethod | null>(null)
   // The first offered method until the buyer picks another.
   const method = chosenMethod ?? methods?.[0]?.method ?? null
@@ -39,6 +44,17 @@ export function CheckoutModal() {
     defaultValues: { customerName: '', email: '', phone: '', cityAge: '', kvkkConsent: false },
   })
 
+  // A signed-in member renewing should not retype who they are: fill what the account already knows.
+  useEffect(() => {
+    if (!isCheckoutOpen) {
+      return
+    }
+    const member = readMemberSession()?.member
+    if (member) {
+      reset({ customerName: member.fullName, email: member.email, phone: member.phone, cityAge: '', kvkkConsent: false })
+    }
+  }, [isCheckoutOpen, reset])
+
   if (!isCheckoutOpen || !selectedPackage) {
     return null
   }
@@ -46,6 +62,9 @@ export function CheckoutModal() {
   const handleClose = () => {
     closeCheckout()
     createOrder.reset()
+    checkCoupon.reset()
+    setCoupon(null)
+    setCouponInput('')
     reset()
   }
 
@@ -63,6 +82,7 @@ export function CheckoutModal() {
       packageId: selectedPackage.id,
       kvkkConsent: values.kvkkConsent,
       paymentMethod: method ?? undefined,
+      couponCode: coupon?.code,
     })
   }
 
@@ -292,9 +312,47 @@ export function CheckoutModal() {
                       <span>İndirim</span>
                       <span>-{formatMinor(discountAmount)}</span>
                     </div>
+                    {coupon ? (
+                      <div className="flex items-center justify-between text-primary">
+                        <span>İndirim kodu ({coupon.code}, %{coupon.percentOff})</span>
+                        <span>-{formatMinor(selectedPackage.priceMinor - coupon.discountedMinor)}</span>
+                      </div>
+                    ) : null}
                     <div className="flex items-center justify-between border-t border-border pt-3 text-sm font-bold">
                       <span className="text-text-primary">Toplam Ödenecek</span>
-                      <span className="text-lg text-primary">{formatMinor(selectedPackage.priceMinor)}</span>
+                      <span className="text-lg text-primary">{formatMinor(coupon?.discountedMinor ?? selectedPackage.priceMinor)}</span>
+                    </div>
+                    <div className="pt-3">
+                      <label htmlFor="coupon-code" className="mb-1 block text-[11px] font-semibold uppercase tracking-wider text-text-muted">
+                        İndirim kodun var mı?
+                      </label>
+                      <div className="flex gap-2">
+                        <input
+                          id="coupon-code"
+                          value={couponInput}
+                          onChange={(event) => {
+                            setCouponInput(event.target.value)
+                            setCoupon(null)
+                          }}
+                          autoComplete="off"
+                          className={`${inputClasses} h-10 flex-1 uppercase`}
+                        />
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="secondary"
+                          disabled={couponInput.trim() === '' || checkCoupon.isPending}
+                          onClick={() =>
+                            checkCoupon.mutate(
+                              { code: couponInput.trim(), packageId: selectedPackage.id },
+                              { onSuccess: setCoupon },
+                            )
+                          }
+                        >
+                          Uygula
+                        </Button>
+                      </div>
+                      {checkCoupon.isError && !coupon ? <p className="mt-1 text-[11px] text-error">{checkCoupon.error.message}</p> : null}
                     </div>
                   </div>
                 </div>

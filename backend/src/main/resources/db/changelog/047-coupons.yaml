@@ -1,0 +1,28 @@
+databaseChangeLog:
+  - changeSet:
+      id: 064-create-coupon-table
+      author: s2000
+      comment: >-
+        Percentage discount codes. A code can have a use limit and an end date; the use counter is raised with
+        one conditional UPDATE so two buyers cannot both take the last use.
+      changes:
+        - createTable:
+            tableName: coupon
+            columns:
+              - column: { name: id, type: uuid, constraints: { primaryKey: true, nullable: false } }
+              - column: { name: code, type: "varchar(40)", constraints: { nullable: false, unique: true, uniqueConstraintName: uk_coupon_code } }
+              - column: { name: percent_off, type: int, constraints: { nullable: false } }
+              - column: { name: max_uses, type: int }
+              - column: { name: used_count, type: int, defaultValueNumeric: 0, constraints: { nullable: false } }
+              - column: { name: expires_on, type: date }
+              - column: { name: active, type: boolean, defaultValueBoolean: true, constraints: { nullable: false } }
+              - column: { name: created_at, type: "timestamp with time zone", constraints: { nullable: false } }
+  - changeSet:
+      id: 065-order-coupon-code
+      author: s2000
+      comment: "Which code (if any) an order was bought with; the price on the order is already the discounted one."
+      changes:
+        - addColumn:
+            tableName: customer_order
+            columns:
+              - column: { name: coupon_code, type: "varchar(40)" }

@@ -47,17 +47,17 @@ public final class ReminderPlanner {
 			if (left > 1 && left <= MEMBERSHIP_NOTICE_DAYS) {
 				due.add(new Reminder("MEMBERSHIP_ENDING", occasion, "Üyeliğiniz %d gün sonra bitiyor".formatted(left),
 						greeting + "Üyelik süreniz %s tarihinde sona eriyor. Kesintisiz devam etmek için koçunuzla "
-								.formatted(s.membershipEnd()) + "iletişime geçip yenileyebilirsiniz. Yenilemeyi erken yaparsanız kalan "
+								.formatted(s.membershipEnd()) + "iletişime geçip ya da şuradan yenileyebilirsiniz: " + siteUrl + "/#paketler\nYenilemeyi erken yaparsanız kalan "
 								+ "günleriniz kaybolmaz; yeni süre bitişin üstüne eklenir." + signature));
 			} else if (left >= 0 && left <= 1) {
 				due.add(new Reminder("MEMBERSHIP_LAST_DAY", occasion,
 						left == 0 ? "Üyeliğiniz bugün bitiyor" : "Üyeliğiniz yarın bitiyor",
-						greeting + "Üyelik süreniz %s tarihinde sona eriyor. Devam etmek için koçunuza yazın."
-								.formatted(s.membershipEnd()) + signature));
+						greeting + "Üyelik süreniz %s tarihinde sona eriyor. Devam etmek için koçunuza yazın ya da paketinizi yenileyin: "
+								.formatted(s.membershipEnd()) + siteUrl + "/#paketler" + signature));
 			} else if (left < 0 && left >= -MEMBERSHIP_NOTICE_DAYS) {
 				due.add(new Reminder("MEMBERSHIP_ENDED", occasion, "Üyelik süreniz doldu",
 						greeting + "Üyelik süreniz %s tarihinde sona erdi. Birlikte devam etmek isterseniz koçunuza "
-								.formatted(s.membershipEnd()) + "yazmanız yeterli." + signature));
+								.formatted(s.membershipEnd()) + "yazmanız ya da şuradan yenilemeniz yeterli: " + siteUrl + "/#paketler" + signature));
 			}
 		}
 

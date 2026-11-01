@@ -1,0 +1,30 @@
+databaseChangeLog:
+  - changeSet:
+      id: 063-create-lead-table
+      author: s2000
+      comment: >-
+        Free pre-assessment requests from the home page: someone who is not ready to buy leaves a few
+        details and the coach contacts them. Not a member and not an order. Personal data given with the
+        person's consent to be contacted (stored as consent_at); the coach can delete a request.
+      changes:
+        - createTable:
+            tableName: lead
+            columns:
+              - column: { name: id, type: uuid, constraints: { primaryKey: true, nullable: false } }
+              - column: { name: full_name, type: "varchar(160)", constraints: { nullable: false } }
+              - column: { name: phone, type: "varchar(40)", constraints: { nullable: false } }
+              - column: { name: email, type: "varchar(255)" }
+              - column: { name: goal, type: "varchar(40)", constraints: { nullable: false } }
+              - column: { name: level, type: "varchar(40)" }
+              - column: { name: height_cm, type: int }
+              - column: { name: weight_kg, type: "numeric(5,1)" }
+              - column: { name: note, type: text }
+              - column: { name: status, type: "varchar(16)", constraints: { nullable: false } }
+              - column: { name: consent_at, type: "timestamp with time zone", constraints: { nullable: false } }
+              - column: { name: created_at, type: "timestamp with time zone", constraints: { nullable: false } }
+        - createIndex:
+            tableName: lead
+            indexName: ix_lead_status_created
+            columns:
+              - column: { name: status }
+              - column: { name: created_at }

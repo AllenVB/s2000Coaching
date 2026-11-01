@@ -37,6 +37,9 @@ class OrderServiceTest {
 	@Mock
 	private PackageService packageService;
 
+	@Mock
+	private CouponService couponService;
+
 	private CoachingPackage sixMonthPackage;
 
 	@BeforeEach
@@ -48,12 +51,26 @@ class OrderServiceTest {
 	private OrderService service(String iban) {
 		var bank = new BankTransferPaymentGateway(iban, iban.isBlank() ? "" : "Süleyman Arlı", "Banka");
 		return new OrderService(orderRepository, packageService,
-				new PaymentMethods(List.of(new MockPaymentGateway(), bank)));
+				new PaymentMethods(List.of(new MockPaymentGateway(), bank)), couponService);
 	}
 
 	private CreateOrderRequest request(PaymentMethod method) {
 		return new CreateOrderRequest("Ayşe Yılmaz", "ayse@example.com", "+905551112233", "34, İstanbul",
 				sixMonthPackage.getId(), true, method);
+	}
+
+	@Test
+	void shouldChargeTheDiscountedPriceWhenACodeIsGiven() {
+		var coupon = new com.s2000coaching.domain.Coupon(UUID.randomUUID(), "YAZ20", 20, null, null, java.time.Instant.now());
+		when(packageService.getActiveOrThrow(sixMonthPackage.getId())).thenReturn(sixMonthPackage);
+		when(couponService.redeem("yaz20")).thenReturn(coupon);
+		when(orderRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+		var withCode = new CreateOrderRequest("Ayşe Yılmaz", "ayse@example.com", "+905551112233", "34, İstanbul",
+				sixMonthPackage.getId(), true, null, "yaz20");
+		OrderResponse response = service("").createOrder(withCode, "203.0.113.9");
+
+		assertThat(response.priceMinor()).isEqualTo(552000L);
 	}
 
 	@Nested

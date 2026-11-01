@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { Navigate, Outlet } from 'react-router-dom'
 
+import { useLeads } from '@/api/leadsApi'
 import { useCoachUnreadMessages } from '@/api/messagesApi'
 
 import { PortalHeader } from '@/components/layout/PortalHeader'
@@ -30,7 +31,9 @@ const navItems: PortalNavItem[] = [
   { to: '/yonetim/vaka-calismalari', label: 'Vakalar', icon: ChartIcon, desktopOnly: true },
   { to: '/yonetim/hikayeler', label: 'Hikâyeler', icon: StarIcon, desktopOnly: true },
   { to: '/yonetim/tecrubelerim', label: 'Tecrübelerim', icon: ClipboardIcon, desktopOnly: true },
+  { to: '/yonetim/basvurular', label: 'Başvurular', icon: UsersIcon },
   { to: '/yonetim/siparisler', label: 'Siparişler', icon: ReceiptIcon },
+  { to: '/yonetim/kodlar', label: 'Kodlar', icon: ReceiptIcon, desktopOnly: true },
   { to: '/yonetim/ayarlar', label: 'Ayarlar', icon: SettingsIcon },
 ]
 
@@ -47,13 +50,19 @@ function AdminAreaShell() {
   const { session, token } = useAdminAuth()
   const handleSignOut = useAdminSignOut()
   const { data: unread } = useCoachUnreadMessages()
+  const { data: leads } = useLeads()
+  const newLeads = leads?.filter((lead) => lead.status === 'NEW').length ?? 0
 
   const items = useMemo(
     () =>
       navItems.map((item) =>
-        item.to === '/yonetim/mesajlar' ? { ...item, badge: unread?.unread ?? 0 } : item,
+        item.to === '/yonetim/mesajlar'
+          ? { ...item, badge: unread?.unread ?? 0 }
+          : item.to === '/yonetim/basvurular'
+            ? { ...item, badge: newLeads }
+            : item,
       ),
-    [unread],
+    [unread, newLeads],
   )
 
   // There is one sign-in page for everybody; management has no entrance of its own.
