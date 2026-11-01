@@ -23,4 +23,6 @@ public interface CheckInRepository extends JpaRepository<CheckIn, UUID> {
 	/** The newest week each member reported, in one pass for the reminder job. */
 	@Query("select c.member.id, max(c.weekStart) from CheckIn c group by c.member.id")
 	List<Object[]> latestWeekPerMember();
+
+	long countByWeekStartGreaterThanEqual(java.time.LocalDate from);
 }

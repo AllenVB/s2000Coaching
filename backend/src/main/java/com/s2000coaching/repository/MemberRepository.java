@@ -20,4 +20,6 @@ public interface MemberRepository extends JpaRepository<Member, UUID> {
 	List<Member> findAllByStatusOrderByCreatedAtDesc(MemberStatus status);
 
 	long countByStatus(MemberStatus status);
+
+	long countByCreatedAtGreaterThanEqual(java.time.Instant from);
 }

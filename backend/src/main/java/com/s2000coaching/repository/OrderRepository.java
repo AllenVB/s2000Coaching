@@ -23,4 +23,11 @@ public interface OrderRepository extends JpaRepository<Order, UUID> {
 
 	/** The order a card provider's token was issued for. */
 	Optional<Order> findByPaymentReference(String paymentReference);
+
+	/** (number of paid orders, total in minor units) since a moment. */
+	@org.springframework.data.jpa.repository.Query("""
+			select count(o), coalesce(sum(o.priceMinor), 0) from Order o
+			where o.createdAt >= :from and o.status in (com.s2000coaching.domain.OrderStatus.PAID, com.s2000coaching.domain.OrderStatus.MOCK_PAID)
+			""")
+	List<Object[]> paidSince(@org.springframework.data.repository.query.Param("from") java.time.Instant from);
 }

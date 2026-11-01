@@ -8,4 +8,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface LeadRepository extends JpaRepository<Lead, UUID> {
 
 	List<Lead> findAllByOrderByCreatedAtDesc();
+
+	long countByStatus(com.s2000coaching.domain.LeadStatus status);
+
+	long countByCreatedAtGreaterThanEqual(java.time.Instant from);
 }
