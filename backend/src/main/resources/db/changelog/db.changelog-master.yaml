@@ -102,3 +102,5 @@ databaseChangeLog:
       file: db/changelog/047-coupons.yaml
   - include:
       file: db/changelog/048-member-goals.yaml
+  - include:
+      file: db/changelog/049-push-subscription.yaml

@@ -59,6 +59,9 @@ class ReminderServiceTest {
 	@Mock
 	private NotificationMailSender mailSender;
 
+	@Mock
+	private PushService pushService;
+
 	private Member member;
 
 	@BeforeEach
@@ -70,11 +73,15 @@ class ReminderServiceTest {
 	private ReminderService service(boolean enabled) {
 		return new ReminderService(memberRepository, measurementRepository, checkInRepository, membershipRepository,
 				reminderLogRepository, coachAccountRepository, attentionService, monthlyRecordRepository, mailSender,
-				Clock.fixed(NOW, ZoneOffset.UTC), "https://s2000.example/", enabled);
+				pushService, Clock.fixed(NOW, ZoneOffset.UTC), "https://s2000.example/", enabled);
 	}
 
 	private void oneMemberWithAMembershipEndingInAWeek() {
-		when(mailSender.delivers()).thenReturn(true);
+		oneMemberWithAMembershipEndingInAWeek(true);
+	}
+
+	private void oneMemberWithAMembershipEndingInAWeek(boolean mailDelivers) {
+		when(mailSender.delivers()).thenReturn(mailDelivers);
 		when(memberRepository.findAllByStatusOrderByCreatedAtDesc(MemberStatus.ACTIVE)).thenReturn(List.of(member));
 		when(measurementRepository.latestMeasuredOnPerMember())
 				.thenReturn(List.<Object[]>of(new Object[] {member.getId(), TODAY}));
@@ -82,7 +89,7 @@ class ReminderServiceTest {
 		when(membershipRepository.latestEndPerMember())
 				.thenReturn(List.<Object[]>of(new Object[] {member.getId(), TODAY.plusDays(7)}));
 		when(reminderLogRepository.allSent()).thenReturn(List.of());
-		when(attentionService.load()).thenReturn(new AttentionResponse(List.of(), List.of()));
+		org.mockito.Mockito.lenient().when(attentionService.load()).thenReturn(new AttentionResponse(List.of(), List.of()));
 	}
 
 	/** Without SMTP nothing may be recorded as sent, or turning SMTP on later would find it "done". */
@@ -94,6 +101,18 @@ class ReminderServiceTest {
 
 		verify(memberRepository, never()).findAllByStatusOrderByCreatedAtDesc(any());
 		verify(reminderLogRepository, never()).save(any());
+	}
+
+	@Test
+	void shouldNotifyThePhoneAndRecordItEvenWithoutAMailServer() {
+		oneMemberWithAMembershipEndingInAWeek(false);
+		when(pushService.enabled()).thenReturn(true);
+		when(pushService.notify(eq(member), anyString(), anyString(), eq("/uye/programlarim"))).thenReturn(true);
+
+		assertThat(service(true).run()).isEqualTo(1);
+
+		verify(mailSender, never()).send(anyString(), anyString(), anyString());
+		verify(reminderLogRepository).save(any());
 	}
 
 	@Test

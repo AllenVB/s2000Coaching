@@ -81,6 +81,12 @@ app:
     code-retention: ${CLEANUP_CODE_RETENTION:7d}
   # Used in the links inside e-mails to members.
   public-url: ${PUBLIC_URL:http://localhost:7000}
+  # Phone notifications (Web Push). Off until a VAPID key pair is set; generate one with
+  # `npx web-push generate-vapid-keys`. The subject is a mailto: or https: address the push services can reach.
+  push:
+    public-key: ${PUSH_VAPID_PUBLIC:}
+    private-key: ${PUSH_VAPID_PRIVATE:}
+    subject: ${PUSH_SUBJECT:mailto:admin@example.com}
   reminders:
     # Daily at 09:00 Istanbul time. Does nothing while spring.mail.host is not set.
     enabled: ${REMINDERS_ENABLED:true}
