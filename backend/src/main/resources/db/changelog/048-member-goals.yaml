@@ -1,0 +1,13 @@
+databaseChangeLog:
+  - changeSet:
+      id: 066-member-goals
+      author: s2000
+      comment: >-
+        The member's own targets, shown as a progress bar: goal weight and goal body-fat percentage. Both
+        optional; empty means "no goal set".
+      changes:
+        - addColumn:
+            tableName: member
+            columns:
+              - column: { name: goal_weight_kg, type: "numeric(5,1)" }
+              - column: { name: goal_body_fat_percent, type: "numeric(4,1)" }

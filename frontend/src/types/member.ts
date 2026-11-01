@@ -35,6 +35,9 @@ export interface Member {
   hasPassword: boolean
   /** Five digits, given once and never changed; people see it as "#12345". */
   memberNumber: number
+  /** The member's own targets; null when not set. */
+  goalWeightKg: number | null
+  goalBodyFatPercent: number | null
 }
 
 /**

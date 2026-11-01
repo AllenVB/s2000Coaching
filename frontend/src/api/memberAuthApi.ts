@@ -146,3 +146,22 @@ export function useMemberLogout() {
       }),
   })
 }
+
+/** The member's own targets (goal weight and goal body-fat %); a null clears one. */
+export function useSetGoals() {
+  const { session, updateMember } = useMemberAuth()
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (goals: { goalWeightKg: number | null; goalBodyFatPercent: number | null }) =>
+      apiFetch<Member>('/api/member/goals', {
+        method: 'PUT',
+        headers: memberHeaders(session!.token),
+        body: JSON.stringify(goals),
+      }),
+    onSuccess: (member) => {
+      updateMember(member)
+      queryClient.setQueryData<Member>(['member-profile'], member)
+    },
+  })
+}
