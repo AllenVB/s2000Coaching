@@ -162,6 +162,22 @@ Bu listeyi atlamayın. Her madde gerçek bir "üye geldi ama çalışmadı" duru
 
 Denemeler bitince test üyesini ve test siparişlerini silin.
 
+### Yayına almadan önce ve sonra otomatik kontrol
+
+```bash
+deploy/check.sh pre     # `up` komutundan önce
+deploy/check.sh post    # site açıldıktan sonra
+```
+
+`pre`: `deploy/.env` dolu mu ve örnek değerler (ör. `ornek.com`) kalmış mı, `PUBLIC_URL` https ile mi başlıyor, alan adı bir
+IP'ye çözülüyor mu ve **bu sunucunun dış IP'sini** mi gösteriyor (sertifika alınabilmesi için şart), 80/443 portları boş mu,
+e-posta sunucusuna bağlanılabiliyor mu. `post`: ana sayfa ve `/api/site` açılıyor mu, uygulama içi adresler yenilenince
+çalışıyor mu, http https'e yönleniyor mu, **sertifika geçerli mi ve kaç gün var**, güvenlik başlıkları var mı.
+Her satır OK / UYARI / HATA yazar; HATA varsa çıkış kodu 1'dir.
+
+Bu betik e-posta **göndermez**: SMTP bilgileri doğru mu diye yığın açıldıktan sonra Ayarlar'daki **test e-postası** ile bakın
+(hata olursa nedeni ekranda yazar).
+
 ## 8. Yedekleme
 
 Yedeklenmesi gereken iki şey var: **veritabanı** ve **üyelerin fotoğrafları**. İkisini birden alan betik hazır:
@@ -181,6 +197,32 @@ deploy/backup.sh
 Yedek klasörünü düzenli olarak **başka bir yere** kopyalayın: örneğin başka bir sağlayıcıdaki depolama alanına
 [`restic`](https://restic.net) ile (şifreli, tekrar eden yedeği kendisi yönetir) ya da `rclone`/`rsync` ile.
 Dosyalarda sağlık verisi olduğu için **şifreli** saklayın ve erişimi kısıtlayın.
+
+Kopyayı kendiliğinden almak için `deploy/.env` içine `BACKUP_COPY_CMD` yazın; `backup.sh` her yedekten sonra onu
+çalıştırır (`BACKUP_DIR` ve `STAMP` değişkenleri kullanılabilir). Kopya başarısız olursa betik de başarısız olur,
+yani cron size e-posta atar. Örnek (şifreli bir `rclone` "crypt" uzak hedefi kurduktan sonra):
+
+```
+BACKUP_COPY_CMD=rclone copy "$BACKUP_DIR" s2000crypt: --include "*-$STAMP.*"
+```
+
+### Yedeğin gerçekten geri yüklenebildiğini kendiliğinden kontrol etme
+
+```bash
+deploy/verify-backup.sh
+```
+
+En yeni yedeği **canlı veritabanına dokunmadan**, geçici bir PostgreSQL kapsayıcısına yükler ve şunlara bakar:
+dump okunabiliyor mu, içinde koç hesabı ve şema geçmişi var mı, veritabanının işaret ettiği **her fotoğraf dosyası
+arşivde mi**, ve yedek 36 saatten (`BACKUP_MAX_AGE_HOURS`) eski değil mi (eskiyse gece yedeği durmuş demektir).
+Sorun varsa nedenini yazar ve sıfırdan farklı kodla çıkar. Haftada bir çalıştırın:
+
+```bash
+( crontab -l 2>/dev/null; echo '30 4 * * 1 /opt/s2000/deploy/verify-backup.sh >> /var/log/s2000-backup.log 2>&1' ) | crontab -
+```
+
+Betiği bir dump ile (sağlam, bozuk, fotoğrafı eksik arşiv, bayat yedek) denedim; her durumda doğru sonuç verdi.
+Cron'un kendisi ve `rclone` ile sunucu dışına kopyalama bu ortamda denenmedi.
 
 ### Geri yükleme
 

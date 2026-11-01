@@ -44,6 +44,9 @@ public class Order {
 	@Column(nullable = false)
 	private OrderStatus status;
 
+	@Column(name = "coupon_code", length = 40)
+	private String couponCode;
+
 	@Column(name = "kvkk_consent", nullable = false)
 	private boolean kvkkConsent;
 
@@ -120,6 +123,14 @@ public class Order {
 
 	public long getPriceMinor() {
 		return priceMinor;
+	}
+
+	public String getCouponCode() {
+		return couponCode;
+	}
+
+	public void setCouponCode(String couponCode) {
+		this.couponCode = couponCode;
 	}
 
 	public OrderStatus getStatus() {

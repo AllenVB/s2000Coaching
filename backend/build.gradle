@@ -29,6 +29,12 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-webmvc'
 	// Card payments (iyzico). Used only when the API keys are configured.
 	implementation 'com.iyzipay:iyzipay-java:2.0.133'
+	// Web Push (phone notifications). Used only when the VAPID keys are configured.
+	implementation 'nl.martijndwars:web-push:5.1.2'
+	implementation 'org.bouncycastle:bcprov-jdk18on:1.78.1'
+	implementation 'org.bitbucket.b_c:jose4j:0.7.9'
+	implementation 'org.apache.httpcomponents:httpcore:4.4.16'
+	implementation 'org.apache.httpcomponents:httpclient:4.5.14'
 	runtimeOnly 'org.postgresql:postgresql'
 	testImplementation 'org.springframework.boot:spring-boot-starter-data-jpa-test'
 	testImplementation 'org.springframework.boot:spring-boot-starter-liquibase-test'

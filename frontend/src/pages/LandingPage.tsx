@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 
 import { CartDrawer } from '@/components/cart/CartDrawer'
+import { FreeAssessment } from '@/components/sections/FreeAssessment'
 import { CheckoutModal } from '@/components/cart/CheckoutModal'
 import { WhatsAppButton } from '@/components/layout/WhatsAppButton'
 import { Footer } from '@/components/layout/Footer'
@@ -46,6 +47,7 @@ export function LandingPage() {
           <HowItWorks />
           <AppEcosystem />
           <Pricing />
+          <FreeAssessment />
           <SuccessStories />
           <Faq />
           <FinalCta />

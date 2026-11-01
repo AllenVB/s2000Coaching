@@ -61,6 +61,10 @@ jobs:
         working-directory: frontend
         run: npm run lint
 
+      - name: Unit tests
+        working-directory: frontend
+        run: npm test
+
       # `npm run build` is `tsc -b && vite build`, so this type-checks as well as bundles.
       - name: Build
         working-directory: frontend

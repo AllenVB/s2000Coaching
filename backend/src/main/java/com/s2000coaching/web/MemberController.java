@@ -64,6 +64,21 @@ public class MemberController {
 	public record RemindersRequest(boolean enabled) {
 	}
 
+	@PutMapping("/api/member/goals")
+	public MemberResponse setGoals(
+			@RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false) String authorization,
+			@jakarta.validation.Valid @RequestBody GoalsRequest request) {
+		return memberService.setGoals(memberAuthService.requireMember(authorization).getId(), request.goalWeightKg(),
+				request.goalBodyFatPercent());
+	}
+
+	public record GoalsRequest(
+			@jakarta.validation.constraints.DecimalMin("30.0") @jakarta.validation.constraints.DecimalMax("300.0")
+			java.math.BigDecimal goalWeightKg,
+			@jakarta.validation.constraints.DecimalMin("3.0") @jakarta.validation.constraints.DecimalMax("60.0")
+			java.math.BigDecimal goalBodyFatPercent) {
+	}
+
 	/**
 	 * Records the member's consent to health-data processing. Required before any measurement
 	 * can be saved; re-posting is a no-op that keeps the original timestamp.

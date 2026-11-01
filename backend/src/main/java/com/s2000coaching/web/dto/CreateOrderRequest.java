@@ -15,5 +15,13 @@ public record CreateOrderRequest(
 		@NotNull UUID packageId,
 		@AssertTrue(message = "KVKK onamı zorunludur") boolean kvkkConsent,
 		/** Null means the first available method. */
-		com.s2000coaching.domain.PaymentMethod paymentMethod) {
+		com.s2000coaching.domain.PaymentMethod paymentMethod,
+		/** Optional discount code; blank means none. */
+		@Size(max = 40) String couponCode) {
+
+	/** The shape from before discount codes existed. */
+	public CreateOrderRequest(String customerName, String email, String phone, String cityAge, UUID packageId,
+			boolean kvkkConsent, com.s2000coaching.domain.PaymentMethod paymentMethod) {
+		this(customerName, email, phone, cityAge, packageId, kvkkConsent, paymentMethod, null);
+	}
 }

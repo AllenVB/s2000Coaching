@@ -8,6 +8,9 @@ import { AdminOrdersPage } from '@/pages/admin/AdminOrdersPage'
 import { AdminSettingsPage } from '@/pages/admin/AdminSettingsPage'
 import { MemberDataPage } from '@/pages/admin/MemberDataPage'
 import { ProgramsPage } from '@/pages/admin/ProgramsPage'
+import { BulkAssignPage } from '@/pages/admin/BulkAssignPage'
+import { CouponsPage } from '@/pages/admin/CouponsPage'
+import { LeadsPage } from '@/pages/admin/LeadsPage'
 import { ExperiencePage } from '@/pages/admin/ExperiencePage'
 import { StoriesPage } from '@/pages/admin/StoriesPage'
 import { CaseStudiesPage } from '@/pages/admin/CaseStudiesPage'
@@ -101,7 +104,10 @@ export default function App() {
         <Route path="vaka-calismalari" element={<CaseStudiesPage />} />
         <Route path="hikayeler" element={<StoriesPage />} />
         <Route path="tecrubelerim" element={<ExperiencePage />} />
+        <Route path="basvurular" element={<LeadsPage />} />
+        <Route path="kodlar" element={<CouponsPage />} />
         <Route path="uye-verileri" element={<MemberDataPage />} />
+        <Route path="programlar/toplu" element={<BulkAssignPage />} />
         <Route path="programlar" element={<ProgramsPage />}>
           <Route index element={<KeepSearchRedirect to="antrenman" />} />
           <Route path="antrenman" element={<MemberTrainingTab />} />

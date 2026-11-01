@@ -74,7 +74,7 @@ class AdminMemberControllerTest {
 	private static MemberResponse response(UUID id, MemberStatus status) {
 		return new MemberResponse(id, "sporcu@example.com", "Ahmet Yılmaz", "+905551112233", 182,
 				new BigDecimal("84.50"), "5 yıl fitness", status, Instant.now(),
-				status == MemberStatus.ACTIVE ? Instant.now() : null, null, true, MemberGender.MALE, 25, true, 12345);
+				status == MemberStatus.ACTIVE ? Instant.now() : null, null, true, MemberGender.MALE, 25, true, 12345, null, null);
 	}
 
 	@Test

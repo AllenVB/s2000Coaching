@@ -52,6 +52,7 @@ public class ReminderService implements MemberDataEraser {
 	private final AttentionService attentionService;
 	private final MonthlyRecordRepository monthlyRecordRepository;
 	private final NotificationMailSender mailSender;
+	private final PushService pushService;
 	private final Clock clock;
 	private final String siteUrl;
 	private final boolean enabled;
@@ -59,7 +60,7 @@ public class ReminderService implements MemberDataEraser {
 	public ReminderService(MemberRepository memberRepository, MeasurementRepository measurementRepository,
 			CheckInRepository checkInRepository, MembershipRepository membershipRepository,
 			ReminderLogRepository reminderLogRepository, CoachAccountRepository coachAccountRepository,
-			AttentionService attentionService, MonthlyRecordRepository monthlyRecordRepository, NotificationMailSender mailSender, Clock clock,
+			AttentionService attentionService, MonthlyRecordRepository monthlyRecordRepository, NotificationMailSender mailSender, PushService pushService, Clock clock,
 			@Value("${app.public-url}") String siteUrl, @Value("${app.reminders.enabled:true}") boolean enabled) {
 		this.memberRepository = memberRepository;
 		this.measurementRepository = measurementRepository;
@@ -70,6 +71,7 @@ public class ReminderService implements MemberDataEraser {
 		this.attentionService = attentionService;
 		this.monthlyRecordRepository = monthlyRecordRepository;
 		this.mailSender = mailSender;
+		this.pushService = pushService;
 		this.clock = clock;
 		this.siteUrl = siteUrl.replaceAll("/+$", "");
 		this.enabled = enabled;
@@ -86,8 +88,10 @@ public class ReminderService implements MemberDataEraser {
 		if (!enabled) {
 			return 0;
 		}
-		if (!mailSender.delivers()) {
-			log.info("Hatırlatmalar atlandı: SMTP yapılandırılmadı (spring.mail.host).");
+		boolean canMail = mailSender.delivers();
+		boolean canPush = pushService.enabled();
+		if (!canMail && !canPush) {
+			log.info("Hatırlatmalar atlandı: ne SMTP (spring.mail.host) ne de bildirim anahtarları yapılandırıldı.");
 			return 0;
 		}
 		LocalDate today = LocalDate.now(clock);
@@ -117,16 +121,31 @@ public class ReminderService implements MemberDataEraser {
 				if (alreadySent.contains(key)) {
 					continue;
 				}
-				if (mailSender.send(member.getEmail(), reminder.subject(), reminder.body())) {
+				// E-mail and the phone notification are independent channels; either one reaching the member counts.
+				boolean mailed = canMail && mailSender.send(member.getEmail(), reminder.subject(), reminder.body());
+				boolean pushed = canPush && pushService.notify(member, reminder.subject(), "Ayrıntılar için uygulamayı açın.",
+						pathFor(reminder.kind()));
+				if (mailed || pushed) {
 					reminderLogRepository.save(new ReminderLog(UUID.randomUUID(), member, reminder.kind(),
 							reminder.occasion(), Instant.now(clock)));
 					sent++;
 				}
 			}
 		}
-		sent += sendCoachDigest();
+		if (canMail) {
+			sent += sendCoachDigest();
+		}
 		log.info("Hatırlatma çalışması bitti: {} e-posta gönderildi.", sent);
 		return sent;
+	}
+
+	/** Where tapping the notification lands. */
+	static String pathFor(String kind) {
+		return switch (kind) {
+			case "WEEKLY_CHECKIN" -> "/uye/olcumlerim?sekme=haftalik";
+			case "MEASUREMENT", "MONTHLY_RECORD" -> "/uye/olcumlerim?sekme=aylik";
+			default -> "/uye/programlarim";
+		};
 	}
 
 	private int sendCoachDigest() {

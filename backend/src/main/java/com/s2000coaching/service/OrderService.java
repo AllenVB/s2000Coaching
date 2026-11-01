@@ -28,9 +28,11 @@ public class OrderService {
 	private final OrderRepository orderRepository;
 	private final PackageService packageService;
 	private final PaymentMethods paymentMethods;
+	private final CouponService couponService;
 
 	public OrderService(OrderRepository orderRepository, PackageService packageService,
-			PaymentMethods paymentMethods) {
+			PaymentMethods paymentMethods, CouponService couponService) {
+		this.couponService = couponService;
 		this.orderRepository = orderRepository;
 		this.packageService = packageService;
 		this.paymentMethods = paymentMethods;
@@ -40,6 +42,14 @@ public class OrderService {
 	public OrderResponse createOrder(CreateOrderRequest request, String clientIp) {
 		CoachingPackage coachingPackage = packageService.getActiveOrThrow(request.packageId());
 
+		// A code takes its use in this same transaction: if the order fails below, the use is rolled back with it.
+		var coupon = request.couponCode() == null || request.couponCode().isBlank()
+				? null
+				: couponService.redeem(request.couponCode());
+		long price = coupon == null
+				? coachingPackage.getPriceMinor()
+				: CouponService.discounted(coachingPackage.getPriceMinor(), coupon.getPercentOff());
+
 		Order order = new Order(
 				UUID.randomUUID(),
 				generateOrderNumber(),
@@ -48,10 +58,14 @@ public class OrderService {
 				request.email(),
 				request.phone(),
 				request.cityAge(),
-				coachingPackage.getPriceMinor(),
+				price,
 				OrderStatus.PENDING,
 				request.kvkkConsent(),
 				Instant.now());
+
+		if (coupon != null) {
+			order.setCouponCode(coupon.getCode());
+		}
 
 		// Resolved before anything is saved: an unavailable method must not leave an order behind.
 		PaymentGateway gateway = paymentMethods.resolve(request.paymentMethod());

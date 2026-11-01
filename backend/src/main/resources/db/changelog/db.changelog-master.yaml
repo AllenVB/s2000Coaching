@@ -96,3 +96,11 @@ databaseChangeLog:
       file: db/changelog/044-daily-activity.yaml
   - include:
       file: db/changelog/045-whatsapp-number.yaml
+  - include:
+      file: db/changelog/046-leads.yaml
+  - include:
+      file: db/changelog/047-coupons.yaml
+  - include:
+      file: db/changelog/048-member-goals.yaml
+  - include:
+      file: db/changelog/049-push-subscription.yaml

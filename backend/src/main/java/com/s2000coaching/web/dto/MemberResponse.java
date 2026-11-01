@@ -25,7 +25,10 @@ public record MemberResponse(
 		/** Whether a password is set; false means the member still signs in with an e-mailed code. */
 		boolean hasPassword,
 		/** Five digits, assigned once; shown to people as "#12345". */
-		int memberNumber) {
+		int memberNumber,
+		/** The member's own targets; null when not set. */
+		BigDecimal goalWeightKg,
+		BigDecimal goalBodyFatPercent) {
 
 	public static MemberResponse from(Member member) {
 		return new MemberResponse(
@@ -44,6 +47,8 @@ public record MemberResponse(
 				member.getGender(),
 				member.getAge(),
 				member.hasPassword(),
-				member.getMemberNumber());
+				member.getMemberNumber(),
+				member.getGoalWeightKg(),
+				member.getGoalBodyFatPercent());
 	}
 }

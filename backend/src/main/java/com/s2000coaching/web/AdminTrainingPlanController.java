@@ -78,6 +78,13 @@ public class AdminTrainingPlanController {
 		return trainingPlanService.updatePlan(planId, request);
 	}
 
+	/** Copies this plan (a template, or another member's plan) to each listed member and activates the copy. */
+	@PostMapping("/api/admin/training-plans/{planId}/assignments")
+	public java.util.Map<String, Integer> assign(@PathVariable UUID planId,
+			@Valid @RequestBody com.s2000coaching.web.dto.AssignPlanRequest request) {
+		return java.util.Map.of("assigned", trainingPlanService.assignCopies(planId, request.memberIds()));
+	}
+
 	@PostMapping("/api/admin/training-plans/{planId}/activation")
 	public TrainingPlanResponse activatePlan(@PathVariable UUID planId) {
 		return trainingPlanService.activatePlan(planId);

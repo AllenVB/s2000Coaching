@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom'
+
 import { useMyMemberships } from '@/api/membershipApi'
 import { formatDate } from '@/lib/date'
 import type { Membership } from '@/types/membership'
@@ -24,6 +26,7 @@ export function MembershipCard() {
         {formatDate(current.startsOn)} – <strong>{formatDate(current.endsOn)}</strong>
       </p>
       <p className={`mt-1 text-xs ${tone(current)}`}>{status(current)}</p>
+      {current.daysLeft <= RENEWAL_NOTICE_DAYS ? <RenewLink /> : null}
     </section>
   )
 }
@@ -56,7 +59,20 @@ export function RenewalNotice() {
           : 'border-warning/40 bg-warning/10 text-warning'
       }`}
     >
-      {status(current)} Devam etmek için koçunuzla iletişime geçin.
+      {status(current)} Kesintisiz devam etmek için paketinizi yenileyin; kalan günleriniz kaybolmaz, yeni süre bitişin üstüne eklenir.{' '}
+      <RenewLink />
     </p>
+  )
+}
+
+/** Takes a signed-in member to the packages with their details already filled in at checkout. */
+function RenewLink() {
+  return (
+    <Link
+      to="/#paketler"
+      className="mt-2 inline-block rounded-lg bg-primary px-3.5 py-2 text-[11px] font-bold uppercase tracking-wide text-canvas hover:bg-primary-hover"
+    >
+      Paketi Yenile
+    </Link>
   )
 }

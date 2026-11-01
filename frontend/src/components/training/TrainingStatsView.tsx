@@ -1,3 +1,6 @@
+import { useState } from 'react'
+
+import { ProgressChart } from '@/components/charts/ProgressChart'
 import { formatDate } from '@/lib/date'
 import type { TrainingStats } from '@/types/training'
 
@@ -8,6 +11,13 @@ import type { TrainingStats } from '@/types/training'
  */
 export function TrainingStatsView({ stats }: { stats: TrainingStats }) {
   const withBest = stats.exercises.filter((exercise) => exercise.best !== null)
+  const [open, setOpen] = useState<Set<string>>(new Set())
+  const toggle = (id: string) =>
+    setOpen((current) => {
+      const next = new Set(current)
+      if (!next.delete(id)) next.add(id)
+      return next
+    })
   const maxSets = Math.max(1, ...stats.weeklyVolume.map((week) => week.sets))
   const hasVolume = stats.weeklyVolume.some((week) => week.sets > 0)
 
@@ -46,9 +56,33 @@ export function TrainingStatsView({ stats }: { stats: TrainingStats }) {
                     {exercise.sessions} seans
                   </span>
                 </span>
-                <span className="font-display text-xl font-extrabold text-text-primary">
-                  {exercise.best!.estimatedOneRepMaxKg} kg
+                <span className="flex items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => toggle(exercise.exerciseId)}
+                    aria-expanded={open.has(exercise.exerciseId)}
+                    aria-label={`${exercise.name} gelişim grafiği`}
+                    className="text-xs font-semibold uppercase tracking-wide text-primary hover:underline"
+                  >
+                    {open.has(exercise.exerciseId) ? 'Grafiği gizle' : 'Gelişim'}
+                  </button>
+                  <span className="font-display text-xl font-extrabold text-text-primary">
+                    {exercise.best!.estimatedOneRepMaxKg} kg
+                  </span>
                 </span>
+                {open.has(exercise.exerciseId) ? (
+                  <div className="w-full rounded-xl border border-border bg-canvas p-3">
+                    {exercise.progress.length < 2 ? (
+                      <p className="p-2 text-xs text-text-muted">Çizgi için en az iki seanslık ağırlıklı kayıt gerekir; şimdilik {exercise.progress.length} var.</p>
+                    ) : (
+                      <ProgressChart
+                        points={exercise.progress.map((point) => ({ date: point.on, value: point.estimatedOneRepMaxKg }))}
+                        unit="kg"
+                        label={`${exercise.name} tahmini 1 tekrar maksimum`}
+                      />
+                    )}
+                  </div>
+                ) : null}
               </li>
             ))}
           </ul>

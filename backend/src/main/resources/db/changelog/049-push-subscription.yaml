@@ -1,0 +1,22 @@
+databaseChangeLog:
+  - changeSet:
+      id: 067-create-push-subscription-table
+      author: s2000
+      comment: >-
+        A phone or browser the member allowed notifications on (Web Push). The endpoint is the address the push
+        service gave that device; p256dh and auth are the keys the message is encrypted with. One row per
+        device, removed when the member turns it off, when the push service says the device is gone, or with the
+        member.
+      changes:
+        - createTable:
+            tableName: push_subscription
+            columns:
+              - column: { name: id, type: uuid, constraints: { primaryKey: true, nullable: false } }
+              - column:
+                  name: member_id
+                  type: uuid
+                  constraints: { nullable: false, foreignKeyName: fk_push_subscription_member, references: member(id) }
+              - column: { name: endpoint, type: "varchar(1000)", constraints: { nullable: false, unique: true, uniqueConstraintName: uk_push_subscription_endpoint } }
+              - column: { name: p256dh, type: "varchar(200)", constraints: { nullable: false } }
+              - column: { name: auth, type: "varchar(100)", constraints: { nullable: false } }
+              - column: { name: created_at, type: "timestamp with time zone", constraints: { nullable: false } }

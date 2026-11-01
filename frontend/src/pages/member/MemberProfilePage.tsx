@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { Link } from 'react-router-dom'
 
+import { usePushNotifications, useInstallPrompt } from '@/api/pushApi'
 import { useChangeMemberPassword, useSetReminders, useUpdateMyProfile } from '@/api/memberAuthApi'
 import { useMyQuestionnaire } from '@/api/questionnaireApi'
 import { MembershipCard } from '@/components/member/MembershipCard'
@@ -46,6 +47,7 @@ export function MemberProfilePage() {
           <ProfileCard member={member} onEdit={() => setEditing(true)} />
         )}
         <RemindersCard member={member} />
+        <AppAndNotificationsCard />
         {/* Changing the password is rare and consequential, so it sits last. */}
         <PasswordCard member={member} />
       </div>
@@ -325,6 +327,63 @@ function PasswordCard({ member }: { member: Member }) {
           {changePassword.isPending ? 'Kaydediliyor…' : member.hasPassword ? 'Şifreyi Değiştir' : 'Şifreyi Kaydet'}
         </Button>
       </form>
+    </section>
+  )
+}
+
+/** Adding the site to the home screen like an app, and phone notifications for the same reminders. */
+function AppAndNotificationsCard() {
+  const push = usePushNotifications()
+  const install = useInstallPrompt()
+
+  return (
+    <section className="rounded-2xl border border-border bg-surface p-6">
+      <h2 className="mb-2 text-sm font-bold uppercase tracking-wider text-text-primary">Uygulama ve Bildirimler</h2>
+
+      <div className="mb-5">
+        <p className="mb-2 text-xs leading-relaxed text-text-secondary">
+          Siteyi telefonunun ana ekranına uygulama gibi ekleyebilirsin; internet olmasa da son programın açılır.
+        </p>
+        {install.installed ? (
+          <p className="text-xs text-success">Uygulama olarak kullanıyorsun ✓</p>
+        ) : install.canPrompt ? (
+          <button type="button" onClick={install.install} className="rounded-lg bg-primary px-4 py-2 text-xs font-bold uppercase tracking-wide text-canvas hover:bg-primary-hover">
+            Ana Ekrana Ekle
+          </button>
+        ) : install.showIosHint ? (
+          <p className="text-xs text-text-primary">iPhone'da: Safari'de alttaki Paylaş düğmesine, sonra “Ana Ekrana Ekle”ye bas.</p>
+        ) : (
+          <p className="text-xs text-text-muted">Tarayıcı menüsünden “Ana ekrana ekle” ya da “Uygulamayı yükle” seçeneğini kullanabilirsin.</p>
+        )}
+      </div>
+
+      <div className="border-t border-border pt-4">
+        <p className="mb-3 text-xs leading-relaxed text-text-secondary">
+          Hatırlatmalar (üyelik bitişi, haftalık takip, ölçüm) bu telefona bildirim olarak da gelsin. Bildirimde sağlık
+          bilgisi yazmaz, yalnızca ne yapman gerektiği yazar. İstediğin an kapatabilirsin.
+        </p>
+        {push.state === 'unsupported' ? (
+          <p className="text-xs text-text-muted">Bu tarayıcı bildirimleri desteklemiyor. iPhone'da önce siteyi ana ekrana eklemelisin.</p>
+        ) : push.state === 'off-on-server' ? (
+          <p className="text-xs text-text-muted">Bildirimler şu an kullanılamıyor.</p>
+        ) : push.state === 'denied' ? (
+          <p className="text-xs text-warning">Bildirim izni engellenmiş. Tarayıcı ayarlarından bu site için izin verip sayfayı yenile.</p>
+        ) : push.state === 'enabled' ? (
+          <button type="button" disabled={push.busy} onClick={push.disable} className="text-xs font-semibold uppercase tracking-wide text-primary hover:underline">
+            Bu telefonda bildirimleri kapat
+          </button>
+        ) : (
+          <button
+            type="button"
+            disabled={push.busy || push.loading}
+            onClick={push.enable}
+            className="rounded-lg border border-border-strong px-4 py-2 text-xs font-bold uppercase tracking-wide text-text-primary hover:border-primary/60 disabled:opacity-50"
+          >
+            Bu telefonda bildirimleri aç
+          </button>
+        )}
+        {push.error ? <p className="mt-2 text-xs text-error">{push.error}</p> : null}
+      </div>
     </section>
   )
 }

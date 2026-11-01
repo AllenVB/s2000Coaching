@@ -58,6 +58,22 @@ class TrainingStatsCalculatorTest {
 	}
 
 	@Test
+	void shouldGiveOneProgressPointPerWeightedSessionWithItsBestSet() {
+		var facts = List.of(
+				set(TODAY.minusDays(14), 8, "80", null, "8-10"),
+				set(TODAY.minusDays(14), 5, "90", null, "8-10"),
+				set(TODAY.minusDays(7), 15, "60", null, "8-10"),
+				set(TODAY, 8, "85", null, "8-10"));
+
+		var progress = only(facts).progress();
+
+		// The 15-rep session has no usable set (above 12 reps), so it leaves a gap instead of a made-up point.
+		assertThat(progress).extracting(p -> p.on()).containsExactly(TODAY.minusDays(14), TODAY);
+		assertThat(progress.get(0).estimatedOneRepMaxKg()).isEqualByComparingTo("105.0");
+		assertThat(progress.get(1).estimatedOneRepMaxKg()).isEqualByComparingTo("107.7");
+	}
+
+	@Test
 	void shouldNotCallTheVeryFirstSessionARecord() {
 		assertThat(only(List.of(set(TODAY, 8, "80", null, "8-10"))).newRecordInLastSession()).isFalse();
 	}

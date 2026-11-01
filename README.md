@@ -650,3 +650,30 @@ Testcontainers testleri runner'ın Docker'ıyla çalışır; backend testi düş
   gruplanmış sorguyla hesaplanır; eşikler `AttentionScorer`'daki sabitlerdir.
 - **Programlarım → Bugün kartı:** bugünün antrenmanı kaydedildi mi / programdaki sıradaki gün, bugünün kalori hedefi ve
   kalan kalori (gün türüne göre), haftalık yuvarlak çizelge. Hiçbir şey ayrıca saklanmaz; girilen verilerden okunur.
+
+## Büyüme paketi: yenileme, başvuru, kod, toplu atama, özet, hedefler, bildirim
+
+- **Yenileme:** bitişe 14 gün kala üyenin Programlarım ve Paketim ekranında **Paketi Yenile** düğmesi çıkar; `/#paketler`'e
+  götürür ve ödeme penceresi giriş yapmış üyenin ad/e-posta/telefonunu doldurur. Hatırlatma e-postaları da aynı bağlantıyı
+  taşır. Erken yenilemede kalan günler kaybolmaz (yeni süre bitişin üstüne eklenir).
+- **Ücretsiz ön değerlendirme:** ana sayfada form (`#on-degerlendirme`); başvuru `lead` tablosuna düşer, koçta **Başvurular**
+  (yeni sayısı menüde rozet; Ara / WhatsApp / "dönüş yapıldı" / sil). Herkese açık uç olduğu için gizli bir bal tuzağı alanı
+  (doluysa sessizce atılır) ve adres başına saatte 5 sınırı vardır. Onay kutusu zorunlu, onay zamanı kaydedilir.
+- **İndirim kodları** (`/yonetim/kodlar`): yüzde (1–90), isteğe bağlı kullanım sınırı ve son gün. Ödeme penceresinde "Uygula";
+  geçersiz/süresi dolmuş/bitmiş kod aynı mesajı verir, kontrol adres başına saatte 30 ile sınırlıdır. Sipariş kuruşa
+  yuvarlanmış indirimli fiyatla açılır (`customer_order.coupon_code`), kullanım hakkı siparişle aynı işlemde tek SQL ile
+  düşer (son hakkı iki kişi alamaz). Başarısız ödeme hakkı geri vermez.
+- **Toplu atama** (`/yonetim/programlar/toplu`): bir şablonu ya da başka bir üyenin programını (antrenman/beslenme) seçilen
+  üyelere bağımsız kopya olarak verir; kopya her üyenin aktif programı olur. Hepsi doğrulanmadan hiçbiri yazılmaz.
+- **Haftalık özet e-postası:** her pazartesi 08:30'da koça (üye, kayıt, haftalık takip, ciro, başvuru, ilgi bekleyenler);
+  SMTP yoksa gönderilmez (`app.weekly-summary.cron` ile değişir).
+- **Hedefler ve rozetler:** Programlarım'da hedef kilo/yağ oranı ve ilerleme çubuğu (başlangıç = ilk tartı); 10 rozet
+  (antrenman sayıları, 4/12 hafta seri, 7 gün beslenme, 10.000 adım, 3 ay düzen, hedefe ulaşma) saklanmaz, verilerden
+  hesaplanır (`lib/badges.ts`, birim testli). `npm test` frontend testlerini çalıştırır (CI'da da çalışır).
+- **Rekor grafiği:** Geçmiş → Antrenman → Rekorlar'da her hareketin **Gelişim** grafiği (seans başına en iyi tahmini 1TM).
+- **Telefona ekleme ve bildirim:** Profil → Uygulama ve Bildirimler. Ana ekrana ekleme; hatırlatmalar (üyelik, haftalık
+  takip, ölçüm) **Web Push** ile telefona da gelir. `PUSH_VAPID_PUBLIC/PRIVATE` boşsa kapalıdır; anahtar çifti
+  `npx web-push generate-vapid-keys` ile bir kez üretilir. Bildirimde sağlık verisi yoktur. E-posta ve bildirim bağımsız
+  kanaldır; SMTP olmasa da bildirim gider.
+- **Yedek doğrulama ve yayın kontrolü:** `deploy/verify-backup.sh`, `deploy/check.sh pre|post`, `BACKUP_COPY_CMD`
+  (bkz. `docs/yayin-rehberi.md`).

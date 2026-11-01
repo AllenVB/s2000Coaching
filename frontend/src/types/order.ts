@@ -7,6 +7,8 @@ export interface CreateOrderInput {
   kvkkConsent: boolean
   /** Omitted means the first method the shop offers. */
   paymentMethod?: PaymentMethod
+  /** Optional discount code. */
+  couponCode?: string
 }
 
 export type PaymentMethod = 'IBAN' | 'IYZICO' | 'MOCK'

@@ -488,3 +488,19 @@ export function useFlushPendingWorkouts() {
     return () => window.removeEventListener('online', flush)
   }, [session, queryClient])
 }
+
+/** Gives each member their own active copy of a template or of another member's plan. */
+export function useAssignTrainingPlan() {
+  const { token } = useAdminAuth()
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ planId, memberIds }: { planId: string; memberIds: string[] }) =>
+      apiFetch<{ assigned: number }>(`/api/admin/training-plans/${planId}/assignments`, {
+        method: 'POST',
+        headers: adminHeaders(token!),
+        body: JSON.stringify({ memberIds }),
+      }),
+    onSuccess: () => queryClient.invalidateQueries(),
+  })
+}

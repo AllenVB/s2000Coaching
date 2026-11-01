@@ -55,6 +55,12 @@ public class Member {
 	private Instant healthDataConsentAt;
 
 	/** Whether reminder e-mails (renewal, weekly check-in, measurement) are wanted. */
+	@Column(name = "goal_weight_kg", precision = 5, scale = 1)
+	private java.math.BigDecimal goalWeightKg;
+
+	@Column(name = "goal_body_fat_percent", precision = 4, scale = 1)
+	private java.math.BigDecimal goalBodyFatPercent;
+
 	@Column(name = "reminders_enabled", nullable = false)
 	private boolean remindersEnabled = true;
 
@@ -172,6 +178,19 @@ public class Member {
 
 	public boolean isRemindersEnabled() {
 		return remindersEnabled;
+	}
+
+	public java.math.BigDecimal getGoalWeightKg() {
+		return goalWeightKg;
+	}
+
+	public java.math.BigDecimal getGoalBodyFatPercent() {
+		return goalBodyFatPercent;
+	}
+
+	public void setGoals(java.math.BigDecimal goalWeightKg, java.math.BigDecimal goalBodyFatPercent) {
+		this.goalWeightKg = goalWeightKg;
+		this.goalBodyFatPercent = goalBodyFatPercent;
 	}
 
 	public void setRemindersEnabled(boolean remindersEnabled) {

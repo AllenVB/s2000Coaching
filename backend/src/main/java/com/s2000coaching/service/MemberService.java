@@ -196,6 +196,14 @@ public class MemberService {
 		return MemberResponse.from(member);
 	}
 
+	/** The member's own targets; a null clears one. */
+	@Transactional
+	public MemberResponse setGoals(UUID memberId, java.math.BigDecimal goalWeightKg, java.math.BigDecimal goalBodyFatPercent) {
+		Member member = getOrThrow(memberId);
+		member.setGoals(goalWeightKg, goalBodyFatPercent);
+		return MemberResponse.from(member);
+	}
+
 	@Transactional
 	public void deleteMember(UUID memberId) {
 		Member member = getOrThrow(memberId);
