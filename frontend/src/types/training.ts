@@ -163,6 +163,8 @@ export interface ExerciseStats {
   best: { estimatedOneRepMaxKg: number; weightKg: number; reps: number; on: string } | null
   newRecordInLastSession: boolean
   suggestion: { kind: 'INCREASE' | 'HOLD' | 'INSUFFICIENT'; nextWeightKg: number | null; text: string }
+  /** The best estimated 1RM of each session with a usable set, oldest first. */
+  progress: { on: string; estimatedOneRepMaxKg: number }[]
 }
 
 export interface WeekVolume {

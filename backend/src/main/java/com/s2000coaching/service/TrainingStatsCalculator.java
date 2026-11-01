@@ -50,8 +50,13 @@ public final class TrainingStatsCalculator {
 	public record Suggestion(String kind, BigDecimal nextWeightKg, String text) {
 	}
 
+	/** The best estimated one-rep max of one session, for the progress chart. */
+	public record ProgressPoint(LocalDate on, BigDecimal estimatedOneRepMaxKg) {
+	}
+
 	public record ExerciseStats(UUID exerciseId, String name, int sessions, LocalDate lastSessionOn,
-			BigDecimal lastTopWeightKg, Best best, boolean newRecordInLastSession, Suggestion suggestion) {
+			BigDecimal lastTopWeightKg, Best best, boolean newRecordInLastSession, Suggestion suggestion,
+			List<ProgressPoint> progress) {
 	}
 
 	public record WeekVolume(LocalDate weekStart, int sets, BigDecimal volumeKg) {
@@ -105,8 +110,15 @@ public final class TrainingStatsCalculator {
 				.max(Comparator.naturalOrder()).orElse(null);
 		// Prescription from the most recent set, so a changed rep target is the one used.
 		String prescribed = lastSets.get(0).prescribedReps();
+		// One point per session that had a usable weighted set: that session's best estimate, oldest first.
+		List<ProgressPoint> progress = new ArrayList<>();
+		for (var entry : bySession.entrySet()) {
+			entry.getValue().stream().map(TrainingStatsCalculator::estimate).filter(e -> e != null)
+					.max(Comparator.comparing(Best::estimatedOneRepMaxKg))
+					.ifPresent(e -> progress.add(new ProgressPoint(entry.getKey(), e.estimatedOneRepMaxKg())));
+		}
 		return new ExerciseStats(any.exerciseId(), any.exerciseName(), bySession.size(), last, topWeight, best,
-				record, suggest(lastSets, prescribed, bySession.size()));
+				record, suggest(lastSets, prescribed, bySession.size()), progress);
 	}
 
 	/** Epley: weight x (1 + reps / 30), and just the weight for a single. */
