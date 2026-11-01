@@ -162,6 +162,22 @@ Bu listeyi atlamayın. Her madde gerçek bir "üye geldi ama çalışmadı" duru
 
 Denemeler bitince test üyesini ve test siparişlerini silin.
 
+### Yayına almadan önce ve sonra otomatik kontrol
+
+```bash
+deploy/check.sh pre     # `up` komutundan önce
+deploy/check.sh post    # site açıldıktan sonra
+```
+
+`pre`: `deploy/.env` dolu mu ve örnek değerler (ör. `ornek.com`) kalmış mı, `PUBLIC_URL` https ile mi başlıyor, alan adı bir
+IP'ye çözülüyor mu ve **bu sunucunun dış IP'sini** mi gösteriyor (sertifika alınabilmesi için şart), 80/443 portları boş mu,
+e-posta sunucusuna bağlanılabiliyor mu. `post`: ana sayfa ve `/api/site` açılıyor mu, uygulama içi adresler yenilenince
+çalışıyor mu, http https'e yönleniyor mu, **sertifika geçerli mi ve kaç gün var**, güvenlik başlıkları var mı.
+Her satır OK / UYARI / HATA yazar; HATA varsa çıkış kodu 1'dir.
+
+Bu betik e-posta **göndermez**: SMTP bilgileri doğru mu diye yığın açıldıktan sonra Ayarlar'daki **test e-postası** ile bakın
+(hata olursa nedeni ekranda yazar).
+
 ## 8. Yedekleme
 
 Yedeklenmesi gereken iki şey var: **veritabanı** ve **üyelerin fotoğrafları**. İkisini birden alan betik hazır:
