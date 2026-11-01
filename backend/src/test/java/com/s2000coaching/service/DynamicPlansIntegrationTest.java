@@ -92,4 +92,29 @@ class DynamicPlansIntegrationTest {
 				null, null, null));
 		assertThat(withItem.meals().get(withItem.meals().size() - 1).items()).hasSize(1);
 	}
+
+	@Test
+	void shouldGiveEachMemberAnIndependentActiveCopyOfAPlan() {
+		Member source = newMember();
+		Member first = newMember();
+		Member second = newMember();
+		var plan = nutritionPlanService.createForMember(source.getId(), new UpsertNutritionPlanRequest("Kesim", null, 2800,
+				180, 350, 80, null, 2200, 170, 220, 70), null, false);
+		var training = trainingPlanService.createForMember(source.getId(), new UpsertTrainingPlanRequest("Itme", null),
+				null, false);
+
+		int assigned = nutritionPlanService.assignCopies(plan.id(), List.of(source.getId(), first.getId(), second.getId()));
+		int trainingAssigned = trainingPlanService.assignCopies(training.id(), List.of(first.getId(), second.getId()));
+
+		// The source member is skipped: copying a plan onto its own owner would only duplicate it.
+		assertThat(assigned).isEqualTo(2);
+		assertThat(trainingAssigned).isEqualTo(2);
+		var firstPlans = nutritionPlanService.listForMember(first.getId());
+		assertThat(firstPlans).hasSize(1);
+		assertThat(firstPlans.get(0).targetCalories()).isEqualTo(2800);
+		assertThat(firstPlans.get(0).restTargetCalories()).isEqualTo(2200);
+		assertThat(firstPlans.get(0).active()).isTrue();
+		assertThat(firstPlans.get(0).id()).isNotEqualTo(plan.id());
+		assertThat(trainingPlanService.listForMember(second.getId())).hasSize(1);
+	}
 }

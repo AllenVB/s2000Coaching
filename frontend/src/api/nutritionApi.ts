@@ -235,3 +235,19 @@ export function useMyNutritionPlan() {
     enabled: Boolean(session),
   })
 }
+
+/** Gives each member their own active copy (meals and targets) of a template or of another member's plan. */
+export function useAssignNutritionPlan() {
+  const { token } = useAdminAuth()
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ planId, memberIds }: { planId: string; memberIds: string[] }) =>
+      apiFetch<{ assigned: number }>(`/api/admin/nutrition-plans/${planId}/assignments`, {
+        method: 'POST',
+        headers: adminHeaders(token!),
+        body: JSON.stringify({ memberIds }),
+      }),
+    onSuccess: () => queryClient.invalidateQueries(),
+  })
+}

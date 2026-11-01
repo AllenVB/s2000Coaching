@@ -108,6 +108,36 @@ public class NutritionPlanService {
 		return NutritionPlanResponse.from(plan);
 	}
 
+	/** Same as the training counterpart: an independent active copy (meals and targets) for each member. */
+	@Transactional
+	public int assignCopies(UUID sourcePlanId, List<UUID> memberIds) {
+		NutritionPlan source = getPlanOrThrow(sourcePlanId);
+		List<Member> members = memberIds.stream().distinct().map(memberService::requireMember).toList();
+		Instant now = Instant.now();
+		int assigned = 0;
+		for (Member member : members) {
+			if (source.getMember() != null && source.getMember().getId().equals(member.getId())) {
+				continue;
+			}
+			NutritionPlan plan = planRepository.save(new NutritionPlan(UUID.randomUUID(), member, source.getName(),
+					source.getNote(), true, now));
+			plan.setTargetCalories(source.getTargetCalories());
+			plan.setTargetProteinG(source.getTargetProteinG());
+			plan.setTargetCarbsG(source.getTargetCarbsG());
+			plan.setTargetFatG(source.getTargetFatG());
+			plan.setRestTargetCalories(source.getRestTargetCalories());
+			plan.setRestTargetProteinG(source.getRestTargetProteinG());
+			plan.setRestTargetCarbsG(source.getRestTargetCarbsG());
+			plan.setRestTargetFatG(source.getRestTargetFatG());
+			plan.setWaterLiters(source.getWaterLiters());
+			plan.setUpdatedAt(now);
+			copyInto(plan, source);
+			deactivateOtherPlans(member.getId(), plan.getId());
+			assigned++;
+		}
+		return assigned;
+	}
+
 	@Transactional
 	public NutritionPlanResponse updatePlan(UUID planId, UpsertNutritionPlanRequest request) {
 		NutritionPlan plan = getPlanOrThrow(planId);

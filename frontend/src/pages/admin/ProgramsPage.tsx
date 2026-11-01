@@ -27,9 +27,14 @@ export function ProgramsPage() {
         title="Programlar"
         description="Öğrenciyi seçin; antrenman ve beslenme programını aynı sayfada, üstteki sekmelerle yazın. Hazır bir şablonu kopyalayıp düzenleyebilir ya da sıfırdan başlayabilirsiniz."
         action={
-          <Link to="/yonetim/sablonlar" className="text-xs font-semibold uppercase tracking-wide text-primary hover:underline">
-            Şablonları yönet
-          </Link>
+          <span className="flex gap-4">
+            <Link to="/yonetim/programlar/toplu" className="text-xs font-semibold uppercase tracking-wide text-primary hover:underline">
+              Toplu atama
+            </Link>
+            <Link to="/yonetim/sablonlar" className="text-xs font-semibold uppercase tracking-wide text-primary hover:underline">
+              Şablonları yönet
+            </Link>
+          </span>
         }
       />
 

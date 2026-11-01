@@ -120,6 +120,30 @@ public class TrainingPlanService {
 		return TrainingPlanMapper.toResponse(plan);
 	}
 
+	/**
+	 * Gives each of the members their own copy of a template or of another member's plan, and makes the copy
+	 * their active plan. All members are checked before anything is written, so a bad id leaves nobody half
+	 * assigned. The members' plans are independent from then on: editing one never touches the source.
+	 */
+	@Transactional
+	public int assignCopies(UUID sourcePlanId, List<UUID> memberIds) {
+		TrainingPlan source = getPlanOrThrow(sourcePlanId);
+		List<Member> members = memberIds.stream().distinct().map(memberService::requireMember).toList();
+		Instant now = Instant.now();
+		int assigned = 0;
+		for (Member member : members) {
+			if (source.getMember() != null && source.getMember().getId().equals(member.getId())) {
+				continue;
+			}
+			TrainingPlan plan = planRepository.save(new TrainingPlan(UUID.randomUUID(), member, source.getName(),
+					source.getNote(), true, now));
+			copyInto(plan, source);
+			deactivateOtherPlans(member.getId(), plan.getId());
+			assigned++;
+		}
+		return assigned;
+	}
+
 	@Transactional
 	public TrainingPlanResponse updatePlan(UUID planId, UpsertTrainingPlanRequest request) {
 		TrainingPlan plan = getPlanOrThrow(planId);
