@@ -182,6 +182,32 @@ Yedek klasörünü düzenli olarak **başka bir yere** kopyalayın: örneğin ba
 [`restic`](https://restic.net) ile (şifreli, tekrar eden yedeği kendisi yönetir) ya da `rclone`/`rsync` ile.
 Dosyalarda sağlık verisi olduğu için **şifreli** saklayın ve erişimi kısıtlayın.
 
+Kopyayı kendiliğinden almak için `deploy/.env` içine `BACKUP_COPY_CMD` yazın; `backup.sh` her yedekten sonra onu
+çalıştırır (`BACKUP_DIR` ve `STAMP` değişkenleri kullanılabilir). Kopya başarısız olursa betik de başarısız olur,
+yani cron size e-posta atar. Örnek (şifreli bir `rclone` "crypt" uzak hedefi kurduktan sonra):
+
+```
+BACKUP_COPY_CMD=rclone copy "$BACKUP_DIR" s2000crypt: --include "*-$STAMP.*"
+```
+
+### Yedeğin gerçekten geri yüklenebildiğini kendiliğinden kontrol etme
+
+```bash
+deploy/verify-backup.sh
+```
+
+En yeni yedeği **canlı veritabanına dokunmadan**, geçici bir PostgreSQL kapsayıcısına yükler ve şunlara bakar:
+dump okunabiliyor mu, içinde koç hesabı ve şema geçmişi var mı, veritabanının işaret ettiği **her fotoğraf dosyası
+arşivde mi**, ve yedek 36 saatten (`BACKUP_MAX_AGE_HOURS`) eski değil mi (eskiyse gece yedeği durmuş demektir).
+Sorun varsa nedenini yazar ve sıfırdan farklı kodla çıkar. Haftada bir çalıştırın:
+
+```bash
+( crontab -l 2>/dev/null; echo '30 4 * * 1 /opt/s2000/deploy/verify-backup.sh >> /var/log/s2000-backup.log 2>&1' ) | crontab -
+```
+
+Betiği bir dump ile (sağlam, bozuk, fotoğrafı eksik arşiv, bayat yedek) denedim; her durumda doğru sonuç verdi.
+Cron'un kendisi ve `rclone` ile sunucu dışına kopyalama bu ortamda denenmedi.
+
 ### Geri yükleme
 
 ```bash

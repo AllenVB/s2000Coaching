@@ -45,4 +45,13 @@ mv "$BACKUP_DIR/photos-$STAMP.tar.gz.partial" "$BACKUP_DIR/photos-$STAMP.tar.gz"
 find "$BACKUP_DIR" -maxdepth 1 -type f \( -name 'db-*.dump' -o -name 'photos-*.tar.gz' \) \
   -mtime +"$KEEP_DAYS" -delete
 
+# Off-site copy: a backup that never leaves this machine dies with it. BACKUP_COPY_CMD is run once the files are
+# in place (for example: rclone copy "$BACKUP_DIR" remote:s2000 --include "*-$STAMP.*"). The variables BACKUP_DIR and
+# STAMP are available to it. If the copy fails the script fails, so a cron mail tells you.
+BACKUP_COPY_CMD="${BACKUP_COPY_CMD:-$(env_value BACKUP_COPY_CMD)}"
+if [ -n "$BACKUP_COPY_CMD" ]; then
+  export BACKUP_DIR STAMP
+  bash -c "$BACKUP_COPY_CMD"
+fi
+
 echo "Backup written: $BACKUP_DIR/db-$STAMP.dump and photos-$STAMP.tar.gz"
